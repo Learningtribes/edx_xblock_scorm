@@ -157,7 +157,7 @@ class ScormXBlock(XBlock):
                 context.update({"lesson_score": self.lesson_score})
 
         elif name in ['cmi.core.score.raw', 'cmi.score.raw'] and self.has_score:
-            self.lesson_score = int(data.get('value', 0))/100.0
+            self.lesson_score = float(data.get('value', 0))/100.0
             context.update({"lesson_score": self.lesson_score})
 
         elif name == 'cmi.core.lesson_location':
@@ -208,7 +208,7 @@ class ScormXBlock(XBlock):
         scorm_file_path = ''
         if self.scorm_file:
             scheme = 'https' if settings.HTTPS == 'on' else 'http'
-            scorm_file_path = '{}://{}{}'.format(scheme, settings.ENV_TOKENS.get('LMS_BASE'), self.scorm_file)
+            scorm_file_path = '{}://{}{}'.format(scheme, getattr(self.runtime, 'HOSTNAME', settings.ENV_TOKENS.get('LMS_BASE')), self.scorm_file)
 
         return {
             'scorm_file_path': scorm_file_path,
