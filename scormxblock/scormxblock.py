@@ -9,7 +9,7 @@ import xml.etree.ElementTree as ET
 from django.conf import settings
 from django.template import Context, Template
 from webob import Response
-
+from crum import get_current_request
 from xblock.core import XBlock
 from xblock.fields import Scope, String, Float, Boolean, Dict
 from xblock.fragment import Fragment
@@ -17,7 +17,7 @@ from xblock.fragment import Fragment
 # Make '_' a no-op so we can scrape strings
 _ = lambda text: text
 
-
+@XBlock.needs('request')
 class ScormXBlock(XBlock):
 
     display_name = String(
@@ -205,10 +205,11 @@ class ScormXBlock(XBlock):
         }
 
     def get_context_student(self):
+        request = get_current_request()
         scorm_file_path = ''
         if self.scorm_file:
             scheme = 'https' if settings.HTTPS == 'on' else 'http'
-            scorm_file_path = '{}://{}{}'.format(scheme, getattr(self.runtime, 'HOSTNAME', settings.ENV_TOKENS.get('LMS_BASE')), self.scorm_file)
+            scorm_file_path = '{}://{}{}'.format(scheme, request.site.domain, self.scorm_file)
 
         return {
             'scorm_file_path': scorm_file_path,
