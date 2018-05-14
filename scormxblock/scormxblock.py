@@ -4,7 +4,10 @@ import os
 import pkg_resources
 import zipfile
 import shutil
-import xml.etree.ElementTree as ET
+try:
+    import xml.etree.cElementTree as ET
+except ImportError:
+    import xml.etree.ElementTree as ET
 
 from django.conf import settings
 from django.template import Context, Template
@@ -118,7 +121,7 @@ class ScormXBlock(XBlock):
             zip_file = zipfile.ZipFile(file, 'r')
             path_to_file = os.path.join(settings.PROFILE_IMAGE_BACKEND['options']['location'], self.location.block_id)
             if os.path.exists(path_to_file):
-                shutil.rmtree(path_to_file)
+                shutil.rmtree(path_to_file, ignore_errors=True)
             zip_file.extractall(path_to_file)
             self.set_fields_xblock(path_to_file)
         return Response(json.dumps({'result': 'success'}), content_type='application/json')
@@ -170,6 +173,44 @@ class ScormXBlock(XBlock):
 
         context.update({"completion_status": self.get_completion_status()})
         return context
+
+    @XBlock.handler
+    def get_value(self, request, suffix=''):
+        pass
+
+    @XBlock.json_handler
+    def commit(self, data):
+        context = {'result': 'success'}
+        for name, value in data.iteritems():
+            if name in ['cmi.core.lesson_status', 'cmi.completion_status']:
+                self.lesson_status = value
+                if self.has_score and value in ['completed', 'failed', 'passed']:
+                    self.publish_grade()
+                    context.update({"lesson_score": self.lesson_score})
+
+            elif name == 'cmi.success_status':
+                self.success_status = value
+                if self.has_score:
+                    if self.success_status == 'unknown':
+                        self.lesson_score = 0
+                    self.publish_grade()
+                    context.update({"lesson_score": self.lesson_score})
+
+            elif name in ['cmi.core.score.raw', 'cmi.score.raw'] and self.has_score:
+                self.lesson_score = float(data.get(name, 0))/100.0
+                context.update({"lesson_score": self.lesson_score})
+
+            elif name == 'cmi.core.lesson_location':
+                self.lesson_location = value or ''
+
+            elif name == 'cmi.suspend_data':
+                self.suspend_data = value or ''
+            else:
+                self.data_scorm[name] = value or ''
+
+        context.update({"completion_status": self.get_completion_status()})
+        return context
+
 
     def publish_grade(self):
         if self.lesson_status == 'failed' or (self.version_scorm == 'SCORM_2004' and self.success_status in ['failed', 'unknown']):
@@ -250,6 +291,8 @@ class ScormXBlock(XBlock):
 
             if (not schemaversion is None) and (re.match('^1.2$', schemaversion.text) is None):
                 self.version_scorm = 'SCORM_2004'
+            else:
+                self.version_scorm = 'SCORM_12'
 
         self.scorm_file = os.path.join(settings.PROFILE_IMAGE_BACKEND['options']['base_url'],
                                        '{}/{}'.format(self.location.block_id, path_index_page))
