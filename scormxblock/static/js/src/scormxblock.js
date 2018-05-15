@@ -1,116 +1,99 @@
 function ScormXBlock(runtime, element, settings) {
+    const commitUrl = runtime.handlerUrl(element, 'commit');
+    const getValueUrl = runtime.handlerUrl(element, 'scorm_get_value');
+    const version = settings['version_scorm'];
+    var errorCode = 0;
 
-  function SCORM_12_API(){
-
-    this.LMSInitialize = function(){
-      console.log('LMSInitialize');
-      return "true";
-    };
-
-    this.LMSFinish = function() {
-      console.log("LMSFinish");
-      return "true";
-    };
-
-    this.LMSGetValue = GetValue;
-    this.LMSSetValue = SetValue;
-
-    this.LMSCommit = function() {
-        console.log("LMSCommit");
-        return "true";
-    };
-
-    this.LMSGetLastError = function() {
-      console.log("GetLastError");
-      return "0";
-    };
-
-    this.LMSGetErrorString = function(errorCode) {
-      console.log("LMSGetErrorString");
-      return "Some Error";
-    };
-
-    this.LMSGetDiagnostic = function(errorCode) {
-      console.log("LMSGetDiagnostic");
-      return "Some Diagnostice";
+    function Initialize(value) {
+        console.log(version + ' Initialize: ' + value);
+        return 'true';
     }
-  }
 
-  function SCORM_2004_API(){
-    this.Initialize = function(){
-      console.log('LMSInitialize');
-      return "true";
-    };
-
-    this.Terminate = function() {
-      console.log("LMSFinish");
-      return "true";
-    };
-
-    this.GetValue = GetValue;
-    this.SetValue = SetValue;
-
-    this.Commit = function() {
-        console.log("LMSCommit");
-        return "true";
-    };
-
-    this.GetLastError = function() {
-      console.log("GetLastError");
-      return "0";
-    };
-
-    this.GetErrorString = function(errorCode) {
-      console.log("LMSGetErrorString");
-      return "Some Error";
-    };
-
-    this.GetDiagnostic = function(errorCode) {
-      console.log("LMSGetDiagnostic");
-      return "Some Diagnostice";
+    function Terminate(value) {
+        console.log(version + ' Terminate: ' + value);
+        Commit(value);
+        return 'true';
     }
-  }
 
-  var GetValue = function (cmi_element) {
-    var handlerUrl = runtime.handlerUrl(element, 'scorm_get_value');
+    function GetValue(name) {
+        console.log(version + ' GetValue: ' + name);
+        var response = $.ajax({
+            type: "POST",
+            url: getValueUrl,
+            data: JSON.stringify({'name': name}),
+            async: false
+        });
+        response = JSON.parse(response.responseText);
+        return response.value;
+    }
 
-    var response = $.ajax({
-      type: "POST",
-      url: handlerUrl,
-      data: JSON.stringify({'name': cmi_element}),
-      async: false
+    var pendingValues = {};
+    function SetValue(name, value) {
+        console.log(version + ' SetValue: ' + name + ' ' + value);
+        console.log(version + 'current pending values: ' + JSON.stringify(pendingValues));
+        pendingValues[name] = value;
+        return 'true';
+    }
+
+    function Commit(value) {
+        console.log(version + ' Commit: ' + value);
+
+        $.ajax({
+            type: "POST",
+            url: commitUrl,
+            data: JSON.stringify(pendingValues),
+            async: false,
+            success: function (response) {
+                if (typeof response.lesson_score != "undefined") {
+                    $(".lesson_score", element).html(response.lesson_score);
+                }
+                $(".completion_status", element).html(response.completion_status);
+            }
+        });
+        return 'true';
+    }
+
+
+    function GetLastError() {
+        console.log(version + ' GetLastError');
+        return 'true';
+    }
+
+    function GetErrorString(errCode) {
+        console.log(version + ' GetErrorString: ' + errCode);
+        return 'true';
+    }
+
+    function GetDiagnostic(errCode) {
+        console.log(version + ' GetDiagnostic: ' + errCode);
+        return 'true';
+    }
+
+
+    function SCORM_12_API() {
+        this.LMSInitialize = Initialize;
+        this.LMSFinish = Terminate;
+        this.LMSGetValue = GetValue;
+        this.LMSSetValue = SetValue;
+        this.LMSCommit = Commit;
+        this.LMSGetLastError = GetLastError;
+        this.LMSGetErrorString = GetErrorString;
+        this.LMSGetDiagnostic = GetDiagnostic;
+    }
+
+    function SCORM_2004_API() {
+        this.Initialize = Initialize;
+        this.Terminate = Terminate;
+        this.GetValue = GetValue;
+        this.SetValue = SetValue;
+        this.Commit = Commit;
+        this.GetLastError = GetLastError;
+        this.GetErrorString = GetErrorString;
+        this.GetDiagnostic = GetDiagnostic;
+    }
+
+    $(function ($) {
+        window.API = new SCORM_12_API();
+        window.API_1484_11 = new SCORM_2004_API();
     });
-    response = JSON.parse(response.responseText);
-    console.log("Getvalue for " + cmi_element + " = " + response.value);
-    return response.value
-  };
-
-  var SetValue = function (cmi_element, value) {
-    console.log("LMSSetValue " + cmi_element + " = " + value);
-    var handlerUrl = runtime.handlerUrl( element, 'scorm_set_value');
-
-    $.ajax({
-      type: "POST",
-      url: handlerUrl,
-      data: JSON.stringify({'name': cmi_element, 'value': value}),
-      async: false,
-      success: function(response){
-        if (typeof response.lesson_score != "undefined"){
-          $(".lesson_score", element).html(response.lesson_score);
-        }
-        $(".completion_status", element).html(response.completion_status);
-      }
-    });
-
-    return "true";
-  };
-
-  $(function ($) {
-    if (settings.version_scorm == 'SCORM_12') {
-      API = new SCORM_12_API();
-    } else {
-      API_1484_11 = new SCORM_2004_API();
-    }
-    console.log("Initial SCORM data...");
-  });
 }
