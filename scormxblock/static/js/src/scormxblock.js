@@ -11,6 +11,7 @@ function ScormXBlock(runtime, element, settings) {
 
     function Terminate(value) {
         console.log(version + ' Terminate: ' + value);
+        Commit(value);
         return 'true';
     }
 
@@ -29,6 +30,7 @@ function ScormXBlock(runtime, element, settings) {
     var pendingValues = {};
     function SetValue(name, value) {
         console.log(version + ' SetValue: ' + name + ' ' + value);
+        console.log(version + 'current pending values: ' + JSON.stringify(pendingValues));
         pendingValues[name] = value;
         return 'true';
     }
@@ -90,12 +92,8 @@ function ScormXBlock(runtime, element, settings) {
         this.GetDiagnostic = GetDiagnostic;
     }
 
-
     $(function ($) {
-        if (version === 'SCORM_12') {
-            window.API = new SCORM_12_API();
-        } else {
-            window.API_1484_11 = new SCORM_2004_API();
-        }
+        window.API = new SCORM_12_API();
+        window.API_1484_11 = new SCORM_2004_API();
     });
 }

@@ -179,13 +179,12 @@ class ScormXBlock(XBlock):
         pass
 
     @XBlock.json_handler
-    def commit(self, data):
+    def commit(self, data, suffix=''):
         context = {'result': 'success'}
         for name, value in data.iteritems():
             if name in ['cmi.core.lesson_status', 'cmi.completion_status']:
                 self.lesson_status = value
                 if self.has_score and value in ['completed', 'failed', 'passed']:
-                    self.publish_grade()
                     context.update({"lesson_score": self.lesson_score})
 
             elif name == 'cmi.success_status':
@@ -193,7 +192,6 @@ class ScormXBlock(XBlock):
                 if self.has_score:
                     if self.success_status == 'unknown':
                         self.lesson_score = 0
-                    self.publish_grade()
                     context.update({"lesson_score": self.lesson_score})
 
             elif name in ['cmi.core.score.raw', 'cmi.score.raw'] and self.has_score:
@@ -207,28 +205,19 @@ class ScormXBlock(XBlock):
                 self.suspend_data = value or ''
             else:
                 self.data_scorm[name] = value or ''
-
+        self.publish_grade()
         context.update({"completion_status": self.get_completion_status()})
         return context
 
 
     def publish_grade(self):
-        if self.lesson_status == 'failed' or (self.version_scorm == 'SCORM_2004' and self.success_status in ['failed', 'unknown']):
-            self.runtime.publish(
-                self,
-                'grade',
-                {
-                    'value': 0,
-                    'max_value': self.weight,
-                })
-        else:
-            self.runtime.publish(
-                self,
-                'grade',
-                {
-                    'value': self.lesson_score,
-                    'max_value': self.weight,
-                })
+        self.runtime.publish(
+            self,
+            'grade',
+            {
+                'value': self.lesson_score,
+                'max_value': self.weight,
+            })
 
     def max_score(self):
         """
