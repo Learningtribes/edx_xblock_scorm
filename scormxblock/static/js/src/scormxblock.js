@@ -50,6 +50,7 @@ function ScormXBlock(runtime, element, settings) {
                 $(".completion_status", element).html(response.completion_status);
             }
         });
+        pendingValues = {};
         return 'true';
     }
 
@@ -95,5 +96,7 @@ function ScormXBlock(runtime, element, settings) {
     $(function ($) {
         window.API = new SCORM_12_API();
         window.API_1484_11 = new SCORM_2004_API();
+        setInterval(Commit, 1000 * 60 * 5)
+
     });
 }
