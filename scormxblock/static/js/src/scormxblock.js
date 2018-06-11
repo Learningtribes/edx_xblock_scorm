@@ -5,18 +5,18 @@ function ScormXBlock(runtime, element, settings) {
     var errorCode = 0;
 
     function Initialize(value) {
-        console.log(version + ' Initialize: ' + value);
+        // console.log(version + ' Initialize: ' + value);
         return 'true';
     }
 
     function Terminate(value) {
-        console.log(version + ' Terminate: ' + value);
+        // console.log(version + ' Terminate: ' + value);
         Commit(value);
         return 'true';
     }
 
     function GetValue(name) {
-        console.log(version + ' GetValue: ' + name);
+        // console.log(version + ' GetValue: ' + name);
         var response = $.ajax({
             type: "POST",
             url: getValueUrl,
@@ -29,8 +29,8 @@ function ScormXBlock(runtime, element, settings) {
 
     var pendingValues = {};
     function SetValue(name, value) {
-        console.log(version + ' SetValue: ' + name + ' ' + value);
-        console.log(version + 'current pending values: ' + JSON.stringify(pendingValues));
+        // console.log(version + ' SetValue: ' + name + ' ' + value);
+        // console.log(version + 'current pending values: ' + JSON.stringify(pendingValues));
         pendingValues[name] = value;
         return 'true';
     }
@@ -96,7 +96,7 @@ function ScormXBlock(runtime, element, settings) {
     $(function ($) {
         window.API = new SCORM_12_API();
         window.API_1484_11 = new SCORM_2004_API();
-        setInterval(Commit, 1000 * 60 * 5)
+        // setInterval(Commit, 1000 * 60 * 5)
 
     });
 }

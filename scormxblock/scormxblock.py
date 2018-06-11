@@ -195,7 +195,10 @@ class ScormXBlock(XBlock):
                     context.update({"lesson_score": self.lesson_score})
 
             elif name in ['cmi.core.score.raw', 'cmi.score.raw'] and self.has_score:
-                self.lesson_score = float(data.get(name, 0))/100.0
+                score = float(data.get(name, 0))
+                if score > 100.0:
+                    break
+                self.lesson_score = score/100.0
                 context.update({"lesson_score": self.lesson_score})
 
             elif name == 'cmi.core.lesson_location':
@@ -205,12 +208,14 @@ class ScormXBlock(XBlock):
                 self.suspend_data = value or ''
             else:
                 self.data_scorm[name] = value or ''
+
         self.publish_grade()
         context.update({"completion_status": self.get_completion_status()})
         return context
 
-
     def publish_grade(self):
+        if self.lesson_score > self.weight:
+            return
         self.runtime.publish(
             self,
             'grade',
