@@ -36,7 +36,7 @@ function ScormXBlock(runtime, element, settings) {
     }
 
     function Commit(value) {
-        console.log(version + ' Commit: ' + value);
+        // console.log(version + ' Commit: ' + value);
 
         $.ajax({
             type: "POST",
@@ -56,17 +56,17 @@ function ScormXBlock(runtime, element, settings) {
 
 
     function GetLastError() {
-        console.log(version + ' GetLastError');
+        // console.log(version + ' GetLastError');
         return 'true';
     }
 
     function GetErrorString(errCode) {
-        console.log(version + ' GetErrorString: ' + errCode);
+        // console.log(version + ' GetErrorString: ' + errCode);
         return 'true';
     }
 
     function GetDiagnostic(errCode) {
-        console.log(version + ' GetDiagnostic: ' + errCode);
+        // console.log(version + ' GetDiagnostic: ' + errCode);
         return 'true';
     }
 
