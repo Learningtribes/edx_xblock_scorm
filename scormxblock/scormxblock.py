@@ -17,6 +17,9 @@ from xblock.core import XBlock
 from xblock.fields import Scope, String, Float, Boolean, Dict
 from xblock.fragment import Fragment
 
+import logging
+logger = logging.getLogger(__name__)
+
 # Make '_' a no-op so we can scrape strings
 _ = lambda text: text
 
@@ -140,40 +143,6 @@ class ScormXBlock(XBlock):
         else:
             return {'value': self.data_scorm.get(name, '')}
 
-    @XBlock.json_handler
-    def scorm_set_value(self, data, suffix=''):
-        context = {'result': 'success'}
-        name = data.get('name')
-
-        if name in ['cmi.core.lesson_status', 'cmi.completion_status']:
-            self.lesson_status = data.get('value')
-            if self.has_score and data.get('value') in ['completed', 'failed', 'passed']:
-                self.publish_grade()
-                context.update({"lesson_score": self.lesson_score})
-
-        elif name == 'cmi.success_status':
-            self.success_status = data.get('value')
-            if self.has_score:
-                if self.success_status == 'unknown':
-                    self.lesson_score = 0
-                self.publish_grade()
-                context.update({"lesson_score": self.lesson_score})
-
-        elif name in ['cmi.core.score.raw', 'cmi.score.raw'] and self.has_score:
-            self.lesson_score = float(data.get('value', 0))/100.0
-            context.update({"lesson_score": self.lesson_score})
-
-        elif name == 'cmi.core.lesson_location':
-            self.lesson_location = data.get('value', '')
-
-        elif name == 'cmi.suspend_data':
-            self.suspend_data = data.get('value', '')
-        else:
-            self.data_scorm[name] = data.get('value', '')
-
-        context.update({"completion_status": self.get_completion_status()})
-        return context
-
     @XBlock.handler
     def get_value(self, request, suffix=''):
         pass
@@ -196,9 +165,12 @@ class ScormXBlock(XBlock):
 
             elif name in ['cmi.core.score.raw', 'cmi.score.raw'] and self.has_score:
                 score = float(data.get(name, 0))
-                if score > 100.0:
-                    break
                 self.lesson_score = score/100.0
+                if self.lesson_score > self.weight:
+                    logger.error("error score, user {}: {}".format(
+                        self.get_user_id(),
+                        self.data
+                    ))
                 context.update({"lesson_score": self.lesson_score})
 
             elif name == 'cmi.core.lesson_location':
@@ -214,8 +186,6 @@ class ScormXBlock(XBlock):
         return context
 
     def publish_grade(self):
-        if self.lesson_score > self.weight:
-            return
         self.runtime.publish(
             self,
             'grade',
@@ -223,6 +193,9 @@ class ScormXBlock(XBlock):
                 'value': self.lesson_score,
                 'max_value': self.weight,
             })
+
+    def get_user_id(self):
+        return getattr(self.runtime, 'user_id', None)
 
     def max_score(self):
         """
