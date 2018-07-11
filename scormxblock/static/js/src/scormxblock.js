@@ -27,11 +27,11 @@ function ScormXBlock(runtime, element, settings) {
         return response.value;
     }
 
-    var pendingValues = {};
+    window.pendingValues = {};
     function SetValue(name, value) {
         // console.log(version + ' SetValue: ' + name + ' ' + value);
         // console.log(version + 'current pending values: ' + JSON.stringify(pendingValues));
-        pendingValues[name] = value;
+        window.pendingValues[name] = value;
         return 'true';
     }
 
@@ -41,7 +41,7 @@ function ScormXBlock(runtime, element, settings) {
         $.ajax({
             type: "POST",
             url: commitUrl,
-            data: JSON.stringify(pendingValues),
+            data: JSON.stringify(window.pendingValues),
             async: false,
             success: function (response) {
                 if (typeof response.lesson_score != "undefined") {
@@ -50,7 +50,7 @@ function ScormXBlock(runtime, element, settings) {
                 $(".completion_status", element).html(response.completion_status);
             }
         });
-        pendingValues = {};
+        window.pendingValues = {};
         return 'true';
     }
 
@@ -96,6 +96,7 @@ function ScormXBlock(runtime, element, settings) {
     $(function ($) {
         window.API = new SCORM_12_API();
         window.API_1484_11 = new SCORM_2004_API();
+        window.api_version = version;
         // setInterval(Commit, 1000 * 60 * 5)
 
     });

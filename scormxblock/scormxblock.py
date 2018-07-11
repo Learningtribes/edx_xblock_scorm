@@ -4,6 +4,7 @@ import os
 import pkg_resources
 import zipfile
 import shutil
+
 try:
     import xml.etree.cElementTree as ET
 except ImportError:
@@ -18,14 +19,15 @@ from xblock.fields import Scope, String, Float, Boolean, Dict
 from xblock.fragment import Fragment
 
 import logging
+
 logger = logging.getLogger(__name__)
 
 # Make '_' a no-op so we can scrape strings
 _ = lambda text: text
 
+
 @XBlock.needs('request')
 class ScormXBlock(XBlock):
-
     display_name = String(
         display_name=_("Display Name"),
         help=_("Display name for this module"),
@@ -66,12 +68,15 @@ class ScormXBlock(XBlock):
         default=0
     )
     weight = Float(
-        default=1,
+        display_name=_('Weight'),
+        default=1.0,
+        values={"min": 0, "step": .1},
+        help=_("Weight of this Scorm, by default keep 1"),
         scope=Scope.settings
     )
     has_score = Boolean(
         display_name=_("Scored"),
-        help=_("Select True if this component will receive a numerical score from the Scorm"),
+        help=_("Select true if this component will receive a numerical score from the Scorm"),
         default=False,
         scope=Scope.settings
     )
@@ -87,6 +92,19 @@ class ScormXBlock(XBlock):
         data = pkg_resources.resource_string(__name__, path)
         return data.decode("utf8")
 
+    def get_fields_data(self, *fields):
+        data = {}
+        for k, v in self.fields.iteritems():
+            if k in fields:
+                data.update({
+                    '{}_name'.format(k): v.display_name,
+                    '{}_help'.format(k): v.help,
+                    '{}_value'.format(k): getattr(self, k),
+                    k: v
+                })
+
+        return data
+
     def student_view(self, context=None):
         context_html = self.get_context_student()
         template = self.render_template('static/html/scormxblock.html', context_html)
@@ -100,24 +118,20 @@ class ScormXBlock(XBlock):
         return frag
 
     def studio_view(self, context=None):
-        context_html = self.get_context_studio()
-        template = self.render_template('static/html/studio.html', context_html)
+        # context_html = self.get_context_studio()
+        fields_data = self.get_fields_data('display_name', 'scorm_file', 'has_score', 'weight')
+        template = self.render_template('static/html/studio.html', fields_data)
         frag = Fragment(template)
         frag.add_css(self.resource_string("static/css/scormxblock.css"))
         frag.add_javascript(self.resource_string("static/js/src/studio.js"))
         frag.initialize_js('ScormStudioXBlock')
         return frag
 
-    def author_view(self, context):
-        html = self.resource_string("static/html/author_view.html")
-        frag = Fragment(html)
-        return frag
-
     @XBlock.handler
     def studio_submit(self, request, suffix=''):
         self.display_name = request.params['display_name']
         self.has_score = request.params['has_score']
-        self.weight = request.params.get('weight', 1.0)
+        self.weight = request.params['weight']
         self.icon_class = 'problem' if self.has_score == 'True' else 'video'
         if hasattr(request.params['file'], 'file'):
             file = request.params['file'].file
@@ -128,6 +142,13 @@ class ScormXBlock(XBlock):
             zip_file.extractall(path_to_file)
             self.set_fields_xblock(path_to_file)
         return Response(json.dumps({'result': 'success'}), content_type='application/json')
+
+    def author_view(self, context):
+        html = self.resource_string("static/html/author_view.html")
+        frag = Fragment(html)
+        return frag
+
+
 
     @XBlock.json_handler
     def scorm_get_value(self, data, suffix=''):
@@ -142,10 +163,6 @@ class ScormXBlock(XBlock):
             return {'value': self.suspend_data}
         else:
             return {'value': self.data_scorm.get(name, '')}
-
-    @XBlock.handler
-    def get_value(self, request, suffix=''):
-        pass
 
     @XBlock.json_handler
     def commit(self, data, suffix=''):
@@ -165,7 +182,7 @@ class ScormXBlock(XBlock):
 
             elif name in ['cmi.core.score.raw', 'cmi.score.raw'] and self.has_score:
                 score = float(data.get(name, 0))
-                self.lesson_score = score/100.0
+                self.lesson_score = score / 100.0
                 if self.lesson_score > self.weight:
                     logger.error("error score, user {}: {}".format(
                         self.get_user_id(),
@@ -174,7 +191,7 @@ class ScormXBlock(XBlock):
                 context.update({"lesson_score": self.lesson_score})
 
             elif name == 'cmi.core.lesson_location':
-                self.lesson_location = value or ''
+                self.lesson_location = str(value) or ''
 
             elif name == 'cmi.suspend_data':
                 self.suspend_data = value or ''
@@ -240,7 +257,8 @@ class ScormXBlock(XBlock):
             pass
         else:
             namespace = ''
-            for node in [node for _, node in ET.iterparse('{}/imsmanifest.xml'.format(path_to_file), events=['start-ns'])]:
+            for node in [node for _, node in
+                         ET.iterparse('{}/imsmanifest.xml'.format(path_to_file), events=['start-ns'])]:
                 if node[0] == '':
                     namespace = node[1]
                     break
