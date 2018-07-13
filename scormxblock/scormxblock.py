@@ -22,6 +22,11 @@ from xblock.fragment import Fragment
 import os
 import logging
 
+# TODO add more function from API doc: https://openedx.atlassian.net/wiki/spaces/AC/pages/161400730/Open+edX+Runtime+XBlock+API
+# TODO old data migrate how to
+# TODO test all features
+# TODO try to store advanvced cmi data in dict form
+
 file_path = os.path.dirname(os.path.abspath(__file__))
 logger = logging.getLogger(__name__)
 
@@ -242,7 +247,19 @@ class ScormXBlock(XBlock):
     #     return context
 
     def is_cmi_data_expired(self, package_date):
-        return self.scorm_modified and package_date and str2dt(package_date) < self.scorm_modified
+        expired = False
+        need_update = True
+        if self.scorm_modified:
+            if package_date and str2dt(package_date) < self.scorm_modified:
+                # when user still visit one scorm, but new package uploaded
+                # so, no update, only update when user next time visit new uploaded scorm
+                expired = True
+                need_update = False
+            elif self.cmi_modified and self.cmi_modified < self.scorm_modified:
+                # normal case
+                expired = True
+                need_update = True
+        return expired, need_update
 
     @XBlock.json_handler
     def scorm_get_value(self, data, suffix=''):
@@ -255,7 +272,7 @@ class ScormXBlock(XBlock):
             default = SCORM_2004_RUNTIME_DEFAULT.get(name, '')
 
         package_date = data.pop('package_date', '')
-        if self.is_cmi_data_expired(package_date):
+        if self.is_cmi_data_expired(package_date)[0]:
             value = default
         else:
             value = self.cmi_data.get(name, default)
@@ -267,12 +284,14 @@ class ScormXBlock(XBlock):
     def commit(self, data, suffix=''):
         package_date = data.pop('package_date', '')
         package_version = data.pop('package_version', '')
-        if self.is_cmi_data_expired(package_date):
+        expired, need_update = self.is_cmi_data_expired(package_date)
+        if expired:
             self.cmi_data = {}
-        else:
+        if need_update:
             self.cmi_data.update(data)
 
         self.cmi_modified = timezone.now()
+
         if self.set_lesson(data, package_version):
             self.publish_grade()
         return self.get_fields_data(True, 'success_status', 'lesson_score')
