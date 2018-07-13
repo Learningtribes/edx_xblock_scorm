@@ -1,8 +1,9 @@
 function ScormXBlock(runtime, element, settings) {
     const commitUrl = runtime.handlerUrl(element, 'commit');
     const getValueUrl = runtime.handlerUrl(element, 'scorm_get_value');
-    const version = settings['version_scorm'];
     var errorCode = 0;
+    const package_version = settings['version_scorm_value'];
+    const package_date = settings['scorm_modified_value'];
 
     function Initialize(value) {
         // console.log(version + ' Initialize: ' + value);
@@ -17,17 +18,18 @@ function ScormXBlock(runtime, element, settings) {
 
     function GetValue(name) {
         // console.log(version + ' GetValue: ' + name);
+        var data = getPackageData();
+        data['name'] = name;
         var response = $.ajax({
             type: "POST",
             url: getValueUrl,
-            data: JSON.stringify({'name': name}),
+            data: JSON.stringify(data),
             async: false
         });
         response = JSON.parse(response.responseText);
         return response.value;
     }
 
-    window.pendingValues = {};
     function SetValue(name, value) {
         // console.log(version + ' SetValue: ' + name + ' ' + value);
         // console.log(version + 'current pending values: ' + JSON.stringify(pendingValues));
@@ -37,20 +39,19 @@ function ScormXBlock(runtime, element, settings) {
 
     function Commit(value) {
         // console.log(version + ' Commit: ' + value);
-
         $.ajax({
             type: "POST",
             url: commitUrl,
             data: JSON.stringify(window.pendingValues),
             async: false,
             success: function (response) {
-                if (typeof response.lesson_score != "undefined") {
-                    $(".lesson_score", element).html(response.lesson_score);
+                if (typeof response['lesson_score_value'] !== "undefined") {
+                    $(".lesson_score", element).html(response['lesson_score_value']);
                 }
-                $(".completion_status", element).html(response.completion_status);
+                $(".success_status", element).html(response['success_status_value']);
             }
         });
-        window.pendingValues = {};
+        initPendingValues();
         return 'true';
     }
 
@@ -93,10 +94,22 @@ function ScormXBlock(runtime, element, settings) {
         this.GetDiagnostic = GetDiagnostic;
     }
 
+    function getPackageData() {
+        return {
+            'package_date': package_date,
+            'package_version': package_version
+        }
+    }
+
+    function initPendingValues() {
+        window.pendingValues = getPackageData()
+    }
+
     $(function ($) {
+        initPendingValues();
         window.API = new SCORM_12_API();
         window.API_1484_11 = new SCORM_2004_API();
-        window.api_version = version;
+
         // setInterval(Commit, 1000 * 60 * 5)
 
     });
