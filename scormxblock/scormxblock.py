@@ -28,7 +28,7 @@ import logging
 # TODO test all features
 # TODO try to store advanvced cmi data in dict form
 
-file_path = os.path.dirname(os.path.abspath(__file__))
+file_path = os.path.dirname(os.path.realpath(__file__))
 logger = logging.getLogger(__name__)
 
 # Make '_' a no-op so we can scrape strings
