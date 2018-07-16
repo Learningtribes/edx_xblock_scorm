@@ -19,10 +19,6 @@ def package_data(pkg, roots):
 
     return {pkg: data}
 
-
-pkg_data = package_data("scormxblock", ["static", "public"])
-pkg_data[''] = ['*.txt']
-
 setup(
     name='scormxblock-xblock',
     version='0.2',
@@ -38,7 +34,7 @@ setup(
             'scormxblock = scormxblock:ScormXBlock',
         ]
     },
-    package_data=pkg_data,
+    package_data=package_data("scormxblock", ["static", "public"]),
     license="Apache",
     classifiers=[
         "License :: OSI Approved :: Apache Software License",

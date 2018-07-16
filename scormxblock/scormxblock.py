@@ -21,7 +21,7 @@ from xblock.fields import Scope, String, Float, Boolean, Dict, DateTime
 from xblock.fragment import Fragment
 import os
 import logging
-
+from scorm_default import *
 # TODO After upgrade to new release, add more required function from
 # API doc: https://openedx.atlassian.net/wiki/spaces/AC/pages/161400730/Open+edX+Runtime+XBlock+API
 # TODO old data migrate how to
@@ -33,19 +33,6 @@ logger = logging.getLogger(__name__)
 
 # Make '_' a no-op so we can scrape strings
 _ = lambda text: text
-
-
-SCORM_12_RUNTIME_DEFAULT = {}
-with open(os.path.join(file_path, 'scorm_12_default.txt')) as f:
-    for line in f:
-        k, v = line.split(' ', 1)
-        SCORM_12_RUNTIME_DEFAULT[k] = eval(v)
-
-SCORM_2004_RUNTIME_DEFAULT = {}
-with open(os.path.join(file_path, 'scorm_2004_default.txt')) as f:
-    for line in f:
-        k, v = line.split(' ', 1)
-        SCORM_2004_RUNTIME_DEFAULT[k] = eval(v)
 
 def dt2str(dt):
     return dt.strftime('%Y-%m-%dT%H:%M:%S.%f%z')
