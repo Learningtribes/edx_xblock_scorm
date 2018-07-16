@@ -22,7 +22,8 @@ from xblock.fragment import Fragment
 import os
 import logging
 
-# TODO add more function from API doc: https://openedx.atlassian.net/wiki/spaces/AC/pages/161400730/Open+edX+Runtime+XBlock+API
+# TODO After upgrade to new release, add more required function from
+# API doc: https://openedx.atlassian.net/wiki/spaces/AC/pages/161400730/Open+edX+Runtime+XBlock+API
 # TODO old data migrate how to
 # TODO test all features
 # TODO try to store advanvced cmi data in dict form
@@ -123,6 +124,7 @@ class ScormXBlock(XBlock):
     )
 
     has_author_view = True
+
 
     def resource_string(self, path):
         """Handy helper for getting resources from our kit."""
