@@ -40,6 +40,9 @@ def dt2str(dt):
 def str2dt(dtstr):
     return parse_datetime(dtstr)
 
+
+@XBlock.needs('fs')
+@XBlock.needs('i18n')
 @XBlock.needs('request')
 class ScormXBlock(XBlock):
     display_name = String(
@@ -111,7 +114,6 @@ class ScormXBlock(XBlock):
     )
 
     has_author_view = True
-
 
     def resource_string(self, path):
         """Handy helper for getting resources from our kit."""
