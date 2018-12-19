@@ -1,18 +1,36 @@
 # -*- coding: utf-8 -*-
+import tempfile
+import os
 import pkg_resources
-from web_fragments.fragment import Fragment
+import uuid
+import logging
+
+try:
+    import xml.etree.cElementTree as ET
+except ImportError:
+    import xml.etree.ElementTree as ET
+
+from django.core.files.storage import FileSystemStorage
+from django.template import Context, Template
 
 from xblock.core import XBlock
 from xblock.fields import String, Scope, Dict, Boolean, Float
 from xblock.reference.plugins import Filesystem
+
+from web_fragments.fragment import Fragment
+from webob.response import Response
+from fs.copy import copy_dir
+from fs.zipfs import ZipFS
 from xblockutils.studio_editable import StudioEditableXBlockMixin
 
-from django.template import Context, Template
 
 from .fields import DateTime
 from .mixins import ScorableXBlockMixin
+logger = logging.getLogger(__name__)
 # Make '_' a no-op so we can scrape strings
 _ = lambda text: text
+
+temp_storage = FileSystemStorage(location=os.path.join(tempfile.gettempdir(), 'scormxblock'))
 
 
 @XBlock.needs('fs')
@@ -66,11 +84,20 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     )
 
     scorm_pkg = Filesystem(
+        accept="application/zip",
         default=None,
         scope=Scope.settings,
         enforce_type=True,
         display_name=_("Scorm Package"),
         help=_("Scorm package in `.zip` format")
+    )
+
+    scorm_pkg_id = String(
+        default="",
+        scope=Scope.settings,
+        enforce_type=True,
+        display_name=_('Scorm ID'),
+        help=_('Scorm Id stored in system')
     )
 
     scorm_version = String(
@@ -99,6 +126,56 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     editable_fields = ('scorm_pkg', 'display_name', 'due', 'has_score', 'icon_class', 'weight', 'scorm_allow_rescore')
     has_author_view = True
 
+    @XBlock.handler
+    def studio_upload_files(self, request, suffix=''):
+        pkg = request.POST['scorm_pkg']
+        pkg_id = uuid.uuid4().hex
+        zipfs = ZipFS(pkg.file)
+        try:
+            copy_dir(zipfs, u'/', self.scorm_pkg, pkg_id)
+        except IOError:
+            return self._raise_pyfs_error('upload_screenshot')
+        self.scorm_pkg_id = pkg_id
+        self.save()
+        resp = Response()
+        resp.status = 200
+        return resp
+
+    def set_scorm(self, path_to_file):
+        path_index_page = 'index.html'
+        try:
+            tree = ET.parse('{}/imsmanifest.xml'.format(path_to_file))
+        except IOError:
+            pass
+        else:
+            namespace = ''
+            for node in [node for _, node in
+                         ET.iterparse('{}/imsmanifest.xml'.format(path_to_file), events=['start-ns'])]:
+                if node[0] == '':
+                    namespace = node[1]
+                    break
+            root = tree.getroot()
+
+            if namespace:
+                resource = root.find('{{{0}}}resources/{{{0}}}resource'.format(namespace))
+                schemaversion = root.find('{{{0}}}metadata/{{{0}}}schemaversion'.format(namespace))
+            else:
+                resource = root.find('resources/resource')
+                schemaversion = root.find('metadata/schemaversion')
+
+            if resource:
+                path_index_page = resource.get('href')
+
+            if (not schemaversion is None) and (re.match('^1.2$', schemaversion.text) is None):
+                self.version_scorm = 'SCORM_2004'
+            else:
+                self.version_scorm = 'SCORM_12'
+
+        self.scorm_modified = timezone.now()
+        self.scorm_file = os.path.join(settings.PROFILE_IMAGE_BACKEND['options']['base_url'],
+                                       '{}/{}'.format(self.location.block_id, path_index_page))
+
+
     def allows_rescore(self):
         return self.scorm_allow_rescore
 
@@ -108,7 +185,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
     @scorm_runtime_data.setter
     def scorm_runtime_data(self, value):
-        # TODO: add validation logic
+        # TODO: add validation s
         pass
 
     def resource_string(self, path):
@@ -125,12 +202,10 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         template = self.render_template('static/html/scormxblock.html', {})
         return Fragment(template)
 
-
     def author_view(self, context):
         html = self.resource_string("static/html/author_view.html")
         frag = Fragment(html)
         return frag
-
 
     @staticmethod
     def workbench_scenarios():
