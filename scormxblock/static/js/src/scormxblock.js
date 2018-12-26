@@ -2,7 +2,7 @@ function ScormXBlock(runtime, element, settings) {
     const commitUrl = runtime.handlerUrl(element, 'commit');
     const getValueUrl = runtime.handlerUrl(element, 'scorm_get_value');
     var errorCode = 0;
-    const package_version = settings['version_scorm_value'];
+    const package_version = settings['scorm_pkg_version_value'];
     const package_date = settings['scorm_modified_value'];
 
     function Initialize(value) {
