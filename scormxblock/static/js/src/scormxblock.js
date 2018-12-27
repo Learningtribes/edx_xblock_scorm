@@ -1,39 +1,40 @@
 function ScormXBlock(runtime, element, settings) {
-    const commitUrl = runtime.handlerUrl(element, 'commit');
-    const getValueUrl = runtime.handlerUrl(element, 'scorm_get_value');
+    "use strict";
     var errorCode = 0;
+
+    const commitUrl = runtime.handlerUrl(element, 'scorm_commit');
+    const getValueUrl = runtime.handlerUrl(element, 'scorm_get_value');
     const package_version = settings['scorm_pkg_version_value'];
     const package_date = settings['scorm_modified_value'];
+    const pendingValues = getPackageData();
 
     function Initialize(value) {
-        // console.log(version + ' Initialize: ' + value);
-        return 'true';
+        return pingServer() ? "true": "false";
     }
 
     function Terminate(value) {
-        // console.log(version + ' Terminate: ' + value);
         Commit(value);
         return 'true';
     }
 
     function GetValue(name) {
-        // console.log(version + ' GetValue: ' + name);
-        var data = getPackageData();
+        const data = getPackageData();
         data['name'] = name;
-        var response = $.ajax({
+        const resp = $.ajax({
             type: "POST",
             url: getValueUrl,
             data: JSON.stringify(data),
             async: false
         });
-        response = JSON.parse(response.responseText);
-        return response.value;
+        const content = JSON.parse(resp.responseText);
+        if(content.error) {
+            alert(content.error)
+        }
+        return content.value;
     }
 
     function SetValue(name, value) {
-        // console.log(version + ' SetValue: ' + name + ' ' + value);
-        // console.log(version + 'current pending values: ' + JSON.stringify(pendingValues));
-        window.pendingValues[name] = value;
+        pendingValues[name] = value;
         return 'true';
     }
 
@@ -42,7 +43,7 @@ function ScormXBlock(runtime, element, settings) {
         $.ajax({
             type: "POST",
             url: commitUrl,
-            data: JSON.stringify(window.pendingValues),
+            data: JSON.stringify(pendingValues),
             async: false,
             success: function (response) {
                 if (typeof response['lesson_score_value'] !== "undefined") {
@@ -101,12 +102,18 @@ function ScormXBlock(runtime, element, settings) {
         }
     }
 
-    function initPendingValues() {
-        window.pendingValues = getPackageData()
+
+    function pingServer() {
+        const resp = $.ajax({
+            type: "GET",
+            url: runtime.handlerUrl(element, 'ping'),
+            async: false
+        });
+        return resp.status === 200;
+
     }
 
     $(function ($) {
-        initPendingValues();
         window.API = new SCORM_12_API();
         window.API_1484_11 = new SCORM_2004_API();
 

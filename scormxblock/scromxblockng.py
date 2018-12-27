@@ -12,7 +12,7 @@ from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 
 from xblock.core import XBlock
-from xblock.exceptions import XBlockSaveError
+from xblock.exceptions import XBlockSaveError, JsonHandlerError
 from xblock.scorable import Score
 from xblock.fields import String, Scope, Dict, Boolean, Float
 from xblock.reference.plugins import Filesystem
@@ -217,8 +217,15 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     def has_submitted_answer(self):
         return self.scorm_status in self.fields['scorm_status'].values
 
+    def get_progress(self):
+        # TODO
+        return None
+
     # endregion
 
+    @property
+    def _ugettext(self):
+        return self.runtime.service(self, 'i18n').ugettext
 
     @property
     def scorm_runtime_data(self):
@@ -275,23 +282,31 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         frag = Fragment(html)
         return frag
 
+    def raise_handler_error(self, msg):
+        _ = self._ugettext
+        raise JsonHandlerError(400, _(msg))
+
     @XBlock.json_handler
     def scorm_get_value(self, data, suffix=''):
-        name = data['name']
-        package_version = data.pop('package_version', '')
+        _ = self._ugettext
+        try:
+            name = data['name']
+            package_version = data['package_version']
+            package_date = data['package_date']
+        except KeyError:
+            self.raise_handler_error("missing parameters.")
 
-        if package_version == 'SCORM_12':
+        if package_version == ScormVersion.SCORM12:
             default = SCORM_12_RUNTIME_DEFAULT.get(name, '')
-        else:
+        elif package_version == ScormVersion.SCORM2004:
             default = SCORM_2004_RUNTIME_DEFAULT.get(name, '')
-
-        package_date = data.pop('package_date', '')
-        if self.is_runtime_data_expired(package_date)[0]:
-            value = default
         else:
-            value = self.scorm_runtime_data.get(name, default)
+            self.raise_handler_error('error scorm package version')
 
-        return {"value": value}
+        if self.is_runtime_data_expired(package_date)[0]:
+            return {'error': _('scorm package expired, refresh page to get new content.')}
+
+        return {"value": self.scorm_runtime_data.get(name, default)}
 
     def is_runtime_data_expired(self, package_date):
         expired = False
@@ -309,7 +324,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         return expired, need_update
 
     @XBlock.json_handler
-    def commit(self, data, suffix=''):
+    def scorm_commit(self, data, suffix=''):
+
         package_date = data.pop('package_date', '')
         package_version = data.pop('package_version', '')
         expired, need_update = self.is_cmi_data_expired(package_date)
@@ -354,6 +370,10 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             return self._set_lesson_12(data)
         else:
             return self._set_lesson_2004(data)
+
+    @XBlock.handler
+    def ping(self, request, suffix=''):
+        return Response(status=200)
 
     @staticmethod
     def workbench_scenarios():
