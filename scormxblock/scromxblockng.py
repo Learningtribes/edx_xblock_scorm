@@ -5,6 +5,7 @@ import pkg_resources
 import uuid
 import logging
 import re
+from collections import namedtuple
 from lxml import etree
 
 from django.template import Context, Template
@@ -24,6 +25,7 @@ from fs.zipfs import ZipFS
 from xblockutils.studio_editable import StudioEditableXBlockMixin
 from xblockutils.fields import File
 
+from xmodule.progress import Progress
 from .scorm_default import *
 from .fields import DateTime
 from .mixins import ScorableXBlockMixin
@@ -39,9 +41,11 @@ def str2dt(dtstr):
     return parse_datetime(dtstr)
 
 
-class ScormVersion(object):
-    SCORM12 = 'SCORM12'
-    SCORM2004 = 'SCORM2004'
+SCORM_STATUS = namedtuple('ScormStatus', [
+    'SUCCEED', 'FAILED', 'IN_PROGRESS', 'UNATTENDED'])(
+    'SUCCEED', 'FAILED', 'IN PROGRESS', 'UNATTENDED')
+
+SCORM_VERSION = namedtuple('ScormVersion', ['V12', 'V2004'])('SCORM12', 'SCORM2004')
 
 
 @XBlock.needs('fs')
@@ -106,9 +110,9 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     )
 
     scorm_pkg_version = String(
-        default=ScormVersion.SCORM12,
+        default=SCORM_VERSION.V12,
         scope=Scope.settings,
-        values=(ScormVersion.SCORM12, ScormVersion.SCORM2004),
+        values=SCORM_VERSION,
         enforce_type=True,
         display_name=_('Version'),
         help=_('Version of scorm, 1.2 or 2004')
@@ -135,9 +139,9 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     )
 
     scorm_status = String(
-        default='UNATTENDED',
+        default=SCORM_STATUS.UNATTENDED,
         scope=Scope.user_state,
-        values=('FAILED', 'SUCCEED', 'IN PROGRESS', 'UNATTENDED'),
+        values=SCORM_STATUS,
         enforce_type=True
     )
 
@@ -188,12 +192,12 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         root = etree.parse(manifest).getroot()
         resource = root.find('resources/resource', root.nsmap)
         schemaversion = root.find('metadata/schemaversion', root.nsmap)
-        scorm_version = ScormVersion.SCORM12
+        scorm_version = SCORM_VERSION.V12
         if resource:
             index_page = resource.get('href')
 
         if (schemaversion is not None) and (re.match('^1.2$', schemaversion.text) is None):
-            scorm_version = ScormVersion.SCORM2004
+            scorm_version = SCORM_VERSION.V2004
         return scorm_version, index_page
     # endregion
 
@@ -206,7 +210,6 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
     def set_score(self, score):
         self.scorm_score = self.max_score() * score.raw_earned / score.raw_possible
-        self.save()
 
     def get_score(self):
         return Score(raw_possible=self.max_score(), raw_earned=self.scorm_score)
@@ -215,11 +218,16 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         return self.get_score()
 
     def has_submitted_answer(self):
-        return self.scorm_status in self.fields['scorm_status'].values
+        return self.scorm_status != SCORM_STATUS.UNATTENDED
 
     def get_progress(self):
-        # TODO
-        return None
+        pg = 0
+        if self.scorm_pkg_version == SCORM_VERSION.V2004:
+            try:
+                pg = float(self.scorm_runtime_data.get('cmi.progress_measure', 0))
+            except ValueError:
+                pg = 0
+        return Progress(pg, 1)
 
     # endregion
 
@@ -234,7 +242,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     @scorm_runtime_data.setter
     def scorm_runtime_data(self, value):
         # TODO: add validation ss
-        pass
+        self._scorm_runtime_data = value
 
     def resource_string(self, path):
         """Handy helper for getting resources from our kit."""
@@ -296,17 +304,20 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         except KeyError:
             self.raise_handler_error("missing parameters.")
 
-        if package_version == ScormVersion.SCORM12:
+        if package_version == SCORM_VERSION.V12:
             default = SCORM_12_RUNTIME_DEFAULT.get(name, '')
-        elif package_version == ScormVersion.SCORM2004:
+        elif package_version == SCORM_VERSION.V2004:
             default = SCORM_2004_RUNTIME_DEFAULT.get(name, '')
         else:
             self.raise_handler_error('error scorm package version')
 
-        if self.is_runtime_data_expired(package_date)[0]:
+        if self.is_pkg_expired(package_date):
             return {'error': _('scorm package expired, refresh page to get new content.')}
 
         return {"value": self.scorm_runtime_data.get(name, default)}
+
+    def is_pkg_expired(self, package_date):
+        return self.scorm_pkg_modified and package_date and str2dt(package_date) < self.scorm_pkg_modified
 
     def is_runtime_data_expired(self, package_date):
         expired = False
@@ -328,48 +339,68 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
         package_date = data.pop('package_date', '')
         package_version = data.pop('package_version', '')
-        expired, need_update = self.is_cmi_data_expired(package_date)
+        expired, need_update = self.is_runtime_data_expired(package_date)
         if expired:
-            self.cmi_data = {}
+            self.scorm_runtime_data = {}
         if need_update:
-            self.cmi_data.update(data)
+            self.scorm_runtime_data.update(data)
 
-        self.cmi_modified = timezone.now()
+        self.scorm_runtime_modified = timezone.now()
 
-        if self.set_lesson(data, package_version):
-            self.publish_grade()
-        return self.get_fields_data(True, 'success_status', 'lesson_score')
+        self.update_scorm_status(data, package_version)
+        return self.get_fields_data(True, 'scorm_status', 'scorm_score')
 
-    def _set_lesson_12(self, data):
-        score_updated = False
+    @staticmethod
+    def extract_runtime_info_12(data):
+        info = {'status': SCORM_STATUS.IN_PROGRESS}
         if 'cmi.core.score.raw' in data:
-            score = (float(data['cmi.core.score.raw']) - float(data['cmi.core.score.min'])
-                     )/(float(data['cmi.core.score.max']) - float(data['cmi.core.score.min']))
-            self.lesson_score = score
-            score_updated = True
+            info["raw"] = float(data['cmi.core.score.raw'])
+            info["maxi"] = float(data['cmi.core.score.max'])
+            info["mini"] = float(data['cmi.core.score.min'])
 
-        if 'cmi.core.lesson_status' in data:
-            self.success_status = data['cmi.core.lesson_status']
+        lesson_status = data.get('cmi.core.lesson_status', SCORM_STATUS.IN_PROGRESS)
 
-        return score_updated
+        if lesson_status == 'passed':
+            info['status'] = SCORM_STATUS.SUCCEED
+        elif lesson_status == 'failed':
+            info['status'] = SCORM_STATUS.SUCCEED
 
-    def _set_lesson_2004(self, data):
-        score_updated = False
+        return info
+
+    @staticmethod
+    def extract_runtime_info_2004(data):
+        info = {'status': SCORM_STATUS.IN_PROGRESS}
         if 'cmi.score.scaled' in data:
-            self.lesson_score = float(data['cmi.score.scaled'])
-            score_updated = True
-        if 'cmi.success_status' in data:
-            self.success_status = data['cmi.success_status']
-        return score_updated
+            info["raw"] = float(data['cmi.score.raw'])
+            info["maxi"] = float(data['cmi.score.max'])
+            info["mini"] = float(data['cmi.score.min'])
 
-    def set_lesson(self, data, version):
-        """
-        all the score has been resize to [0, 1]
-        """
-        if version == 'SCORM_12':
-            return self._set_lesson_12(data)
+        success_status = data.get('cmi.success_status', SCORM_STATUS.IN_PROGRESS)
+        if success_status == 'passed':
+            info['status'] = SCORM_STATUS.SUCCEED
+        elif success_status == 'failed':
+            info['status'] = SCORM_STATUS.FAILED
+
+        return info
+
+    def update_scorm_status(self, data, version):
+        if version == SCORM_VERSION.V12:
+            info = self.extract_runtime_info_12(data)
+        elif version == SCORM_VERSION.V2004:
+            info = self.extract_runtime_info_2004(data)
         else:
-            return self._set_lesson_2004(data)
+            self.raise_handler_error('error scorm pkg version')
+
+        score = None
+        if 'raw' in info:
+            score = Score(raw_earned=(info["raw"] - info["mini"]),
+                          raw_possible=(info["maxi"] - info["mini"]))
+
+        if score and (not self.has_submitted_answer() or self.allows_rescore()):
+            self.set_score(score)
+            self._publish_grade(self.get_score())
+
+            self.scorm_status = info['status']
 
     @XBlock.handler
     def ping(self, request, suffix=''):

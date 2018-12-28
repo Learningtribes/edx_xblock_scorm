@@ -5,8 +5,8 @@ function ScormXBlock(runtime, element, settings) {
     const commitUrl = runtime.handlerUrl(element, 'scorm_commit');
     const getValueUrl = runtime.handlerUrl(element, 'scorm_get_value');
     const package_version = settings['scorm_pkg_version_value'];
-    const package_date = settings['scorm_modified_value'];
-    const pendingValues = getPackageData();
+    const package_date = settings['scorm_pkg_modified_value'];
+    let pendingValues = null;
 
     function Initialize(value) {
         return pingServer() ? "true": "false";
@@ -39,21 +39,23 @@ function ScormXBlock(runtime, element, settings) {
     }
 
     function Commit(value) {
-        // console.log(version + ' Commit: ' + value);
         $.ajax({
             type: "POST",
             url: commitUrl,
             data: JSON.stringify(pendingValues),
             async: false,
             success: function (response) {
-                if (typeof response['lesson_score_value'] !== "undefined") {
-                    $(".lesson_score", element).html(response['lesson_score_value']);
+                if (typeof response['scorm_score_value'] !== "undefined") {
+                    $(".lesson_score", element).html(response['scorm_score_value']);
                 }
-                $(".success_status", element).html(response['success_status_value']);
+                $(".success_status", element).html(response['scorm_status_value']);
             }
         });
         initPendingValues();
         return 'true';
+    }
+    function initPendingValues(){
+        pendingValues = getPackageData();
     }
 
 
@@ -114,10 +116,8 @@ function ScormXBlock(runtime, element, settings) {
     }
 
     $(function ($) {
+        initPendingValues();
         window.API = new SCORM_12_API();
         window.API_1484_11 = new SCORM_2004_API();
-
-        // setInterval(Commit, 1000 * 60 * 5)
-
     });
 }
