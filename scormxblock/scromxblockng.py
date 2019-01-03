@@ -48,9 +48,7 @@ SCORM_STATUS = namedtuple('ScormStatus', [
 SCORM_VERSION = namedtuple('ScormVersion', ['V12', 'V2004'])('SCORM12', 'SCORM2004')
 
 
-@XBlock.needs('fs')
-@XBlock.needs('i18n')
-@XBlock.needs('request')
+@XBlock.needs('request', 'fs', 'i18n')
 class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     """
     all fields private to `scorm` are prefix with `scorm`, in case any conflict
