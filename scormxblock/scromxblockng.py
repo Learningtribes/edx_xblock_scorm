@@ -24,8 +24,10 @@ from fs.copy import copy_dir
 from fs.zipfs import ZipFS
 from xblockutils.studio_editable import StudioEditableXBlockMixin
 from xblockutils.fields import File
-
-from xmodule.progress import Progress
+try:
+    from xmodule.progress import Progress
+except ImportError:
+    pass
 from .scorm_default import *
 from .fields import DateTime
 from .mixins import ScorableXBlockMixin
@@ -48,7 +50,7 @@ SCORM_STATUS = namedtuple('ScormStatus', [
 SCORM_VERSION = namedtuple('ScormVersion', ['V12', 'V2004'])('SCORM12', 'SCORM2004')
 
 
-@XBlock.needs('request', 'fs', 'i18n')
+@XBlock.needs('request', 'fs', 'i18n', 'user')
 class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     """
     all fields private to `scorm` are prefix with `scorm`, in case any conflict
@@ -353,8 +355,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         info = {'status': SCORM_STATUS.IN_PROGRESS}
         if 'cmi.core.score.raw' in data:
             info["raw"] = float(data['cmi.core.score.raw'])
-            info["maxi"] = float(data['cmi.core.score.max'])
-            info["mini"] = float(data['cmi.core.score.min'])
+            info["maxi"] = float(data.get('cmi.core.score.max', 1.0))
+            info["mini"] = float(data.get('cmi.core.score.min', 0.0))
 
         lesson_status = data.get('cmi.core.lesson_status', SCORM_STATUS.IN_PROGRESS)
 
@@ -368,10 +370,14 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     @staticmethod
     def extract_runtime_info_2004(data):
         info = {'status': SCORM_STATUS.IN_PROGRESS}
-        if 'cmi.score.scaled' in data:
+        if 'cmi.score.raw' in data:
             info["raw"] = float(data['cmi.score.raw'])
             info["maxi"] = float(data['cmi.score.max'])
             info["mini"] = float(data['cmi.score.min'])
+        elif 'cmi.score.scaled' in data:
+            info['raw'] = float(data['cmi.score.scaled'])
+            info['maxi'] = 1.0
+            info['mini'] = 0.0
 
         success_status = data.get('cmi.success_status', SCORM_STATUS.IN_PROGRESS)
         if success_status == 'passed':
