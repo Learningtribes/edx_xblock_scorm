@@ -232,10 +232,6 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     # endregion
 
     @property
-    def _ugettext(self):
-        return self.runtime.service(self, 'i18n').ugettext
-
-    @property
     def scorm_runtime_data(self):
         return self._scorm_runtime_data
 
@@ -291,12 +287,12 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         return frag
 
     def raise_handler_error(self, msg):
-        _ = self._ugettext
+        _ = self.ugettext
         raise JsonHandlerError(400, _(msg))
 
     @XBlock.json_handler
     def scorm_get_value(self, data, suffix=''):
-        _ = self._ugettext
+        _ = self.ugettext
         try:
             name = data['name']
             package_version = data['package_version']
