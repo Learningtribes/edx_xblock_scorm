@@ -31,7 +31,7 @@ setup(
         'lxml',
     ],
     dependency_links=[
-        'git+https://github.com/Learningtribes/xblock-utils.git@7b7f6527919420e6604859d7d01b298477be37d5#egg=xblock-utils',
+        'git+https://github.com/Learningtribes/xblock-utils.git@ec95e5e718c4144dc8a43d116a545f210d929667#egg=xblock-utils',
     ],
     entry_points={
         'xblock.v1': [
