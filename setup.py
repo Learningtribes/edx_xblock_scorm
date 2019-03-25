@@ -32,6 +32,7 @@ setup(
     ],
     dependency_links=[
         'git+https://github.com/Learningtribes/xblock-utils.git@ec95e5e718c4144dc8a43d116a545f210d929667#egg=xblock-utils',
+        'git+https://github.com/Learningtribes/django-pyfs.git@d7c345bbf3c9cc317a27c24f41b83a94782cfe91#egg=django-pyfs',
     ],
     entry_points={
         'xblock.v1': [

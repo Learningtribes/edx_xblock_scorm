@@ -7,11 +7,12 @@ import logging
 import re
 from collections import namedtuple
 from lxml import etree
+from urlparse import urlparse, urlunparse
 
 from django.template import Context, Template
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
-
+from django.conf import settings
 from xblock.core import XBlock
 from xblock.exceptions import XBlockSaveError, JsonHandlerError
 from xblock.scorable import Score
@@ -260,7 +261,12 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 data["{}_value".format(k)] = getattr(self, k)
 
         if 'scorm_pkg' in data and self.scorm_pkg:
-            data['scorm_pkg_value'] = self.fs.get_url(self.scorm_pkg)
+            pkg_url = self.fs.get_url(self.scorm_pkg)
+            if settings.DJFS['type'] == 's3fs':
+                parse = urlparse(pkg_url)
+                pkg_url = urlunparse(parse._replace(netloc=settings.DJFS['bucket']))
+            data['scorm_pkg_value'] = pkg_url
+
 
         for k, v in data.items():
             if isinstance(v, timezone.datetime):
