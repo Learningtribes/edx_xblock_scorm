@@ -264,7 +264,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             pkg_url = self.fs.get_url(self.scorm_pkg)
             if settings.DJFS['type'] == 's3fs':
                 parse = urlparse(pkg_url)
-                pkg_url = urlunparse(parse._replace(netloc=settings.DJFS['bucket']))
+                pkg_url = parse.path
             data['scorm_pkg_value'] = pkg_url
 
 
