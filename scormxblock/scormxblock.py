@@ -296,7 +296,8 @@ class ScormXBlock(XBlock):
                 score = float(data['cmi.core.score.raw'])
                 if score < 0:
                     score = float(0)
-                self.lesson_score = score
+                if self.lesson_score != float(100):
+                    self.lesson_score = score
                 score_updated = True
 
         if 'cmi.core.lesson_status' in data:
