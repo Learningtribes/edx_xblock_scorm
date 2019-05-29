@@ -288,10 +288,16 @@ class ScormXBlock(XBlock):
     def _set_lesson_12(self, data):
         score_updated = False
         if 'cmi.core.score.raw' in data:
-            score = (float(data['cmi.core.score.raw']) - float(data['cmi.core.score.min'])
-                     )/(float(data['cmi.core.score.max']) - float(data['cmi.core.score.min']))
-            self.lesson_score = score
-            score_updated = True
+            if 'cmi.core.score.min' in data and 'cmi.core.score.max' in data:
+                score = (float(data['cmi.core.score.raw']) - float(data['cmi.core.score.min']))/(float(data['cmi.core.score.max']) - float(data['cmi.core.score.min']))
+                self.lesson_score = score
+                score_updated = True
+            else:
+                score = float(data['cmi.core.score.raw'])
+                if score < 0:
+                    score = float(0)
+                self.lesson_score = score
+                score_updated = True
 
         if 'cmi.core.lesson_status' in data:
             self.success_status = data['cmi.core.lesson_status']
