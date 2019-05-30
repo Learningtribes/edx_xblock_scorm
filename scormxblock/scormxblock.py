@@ -138,6 +138,9 @@ class ScormXBlock(XBlock):
         if 'cmi_modified_value' in data and data['cmi_modified_value']:
             data['cmi_modified_value'] = dt2str(data['cmi_modified_value'])
 
+        print '##get_fields_data##'
+        print data
+
         return data
 
     def studio_view(self, context=None):
@@ -153,6 +156,8 @@ class ScormXBlock(XBlock):
     def get_student_data(self):
         fields_data = self.get_fields_data(False, 'lesson_score', 'weight',
                                            'has_score', 'success_status', 'scorm_file')
+        print '##get_student_data##'
+        print fields_data
         return fields_data
 
     def student_view(self, context=None):
@@ -266,6 +271,9 @@ class ScormXBlock(XBlock):
         else:
             value = self.cmi_data.get(name, default)
 
+        print '##scorm_get_value##'
+        print value
+
         return {"value": value}
 
 
@@ -283,6 +291,7 @@ class ScormXBlock(XBlock):
 
         if self.set_lesson(data, package_version):
             self.publish_grade()
+        print '##commit_action##'
         return self.get_fields_data(True, 'success_status', 'lesson_score')
 
     def _set_lesson_12(self, data):
@@ -299,6 +308,13 @@ class ScormXBlock(XBlock):
                 if self.lesson_score != float(100):
                     self.lesson_score = score
                 score_updated = True
+            print '***********'
+            print data
+            print self.lesson_status
+            print self.success_status
+            print self.lesson_score
+            print score_updated
+            print '***********'
 
         if 'cmi.core.lesson_status' in data:
             self.success_status = data['cmi.core.lesson_status']

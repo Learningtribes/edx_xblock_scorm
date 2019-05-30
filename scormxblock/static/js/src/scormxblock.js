@@ -6,18 +6,20 @@ function ScormXBlock(runtime, element, settings) {
     const package_date = settings['scorm_modified_value'];
 
     function Initialize(value) {
-        // console.log(version + ' Initialize: ' + value);
+        console.log('###################')
+        console.log(' Initialize: ' + value);
         return 'true';
     }
 
     function Terminate(value) {
-        // console.log(version + ' Terminate: ' + value);
+        console.log('%%%%%%%%%%%%%%%%%%%')
+        console.log(' Terminate: ' + value);
         Commit(value);
         return 'true';
     }
 
     function GetValue(name) {
-        // console.log(version + ' GetValue: ' + name);
+        console.log(' GetValue: ' + name);
         var data = getPackageData();
         data['name'] = name;
         var response = $.ajax({
@@ -27,18 +29,20 @@ function ScormXBlock(runtime, element, settings) {
             async: false
         });
         response = JSON.parse(response.responseText);
+        console.log(response.value)
         return response.value;
     }
 
     function SetValue(name, value) {
-        // console.log(version + ' SetValue: ' + name + ' ' + value);
+        console.log(' SetValue: ' + name + ' ' + value);
         // console.log(version + 'current pending values: ' + JSON.stringify(pendingValues));
         window.pendingValues[name] = value;
         return 'true';
     }
 
     function Commit(value) {
-        // console.log(version + ' Commit: ' + value);
+        console.log(' Commit: ' + value);
+        console.log(window.pendingValues)
         $.ajax({
             type: "POST",
             url: commitUrl,
@@ -57,17 +61,17 @@ function ScormXBlock(runtime, element, settings) {
 
 
     function GetLastError() {
-        // console.log(version + ' GetLastError');
+        console.log(' GetLastError');
         return 'true';
     }
 
     function GetErrorString(errCode) {
-        // console.log(version + ' GetErrorString: ' + errCode);
+        console.log(' GetErrorString: ' + errCode);
         return 'true';
     }
 
     function GetDiagnostic(errCode) {
-        // console.log(version + ' GetDiagnostic: ' + errCode);
+        console.log(' GetDiagnostic: ' + errCode);
         return 'true';
     }
 
@@ -102,7 +106,9 @@ function ScormXBlock(runtime, element, settings) {
     }
 
     function initPendingValues() {
+        console.log('initpending')
         window.pendingValues = getPackageData()
+        console.log(window.pendingValues)
     }
 
     $(function ($) {
