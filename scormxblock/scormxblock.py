@@ -317,7 +317,11 @@ class ScormXBlock(XBlock):
                 score_updated = True
 
         if 'cmi.core.lesson_status' in data:
+            self.cmi_data['cmi.core.lesson_status'] = data['cmi.core.lesson_status']
             self.success_status = data['cmi.core.lesson_status']
+            print 'cmi_data'
+            print self.cmi_data
+            print 'end emi_data'
 
         return score_updated
 
