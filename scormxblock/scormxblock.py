@@ -140,6 +140,7 @@ class ScormXBlock(XBlock):
 
         print '##get_fields_data##'
         print data
+        print '##end get_fields_data##'
 
         return data
 
@@ -156,8 +157,6 @@ class ScormXBlock(XBlock):
     def get_student_data(self):
         fields_data = self.get_fields_data(False, 'lesson_score', 'weight',
                                            'has_score', 'success_status', 'scorm_file')
-        print '##get_student_data##'
-        print fields_data
         return fields_data
 
     def student_view(self, context=None):
@@ -273,6 +272,7 @@ class ScormXBlock(XBlock):
 
         print '##scorm_get_value##'
         print value
+        print '##end scorm_get_value##'
 
         return {"value": value}
 
@@ -291,7 +291,10 @@ class ScormXBlock(XBlock):
 
         if self.set_lesson(data, package_version):
             self.publish_grade()
-        print '##commit_action##'
+        print '##commit##'
+        print self.cmi_data
+        print '##end commit##'
+
         return self.get_fields_data(True, 'success_status', 'lesson_score')
 
     def _set_lesson_12(self, data):
@@ -303,18 +306,14 @@ class ScormXBlock(XBlock):
                 score_updated = True
             else:
                 score = float(data['cmi.core.score.raw'])
+                '''
                 if score < 0:
                     score = float(0)
                 if self.lesson_score != float(100):
                     self.lesson_score = score
+                '''
+                self.lesson_score = score
                 score_updated = True
-            print '***********'
-            print data
-            print self.lesson_status
-            print self.success_status
-            print self.lesson_score
-            print score_updated
-            print '***********'
 
         if 'cmi.core.lesson_status' in data:
             self.success_status = data['cmi.core.lesson_status']

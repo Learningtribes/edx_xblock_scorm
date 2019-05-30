@@ -30,6 +30,7 @@ function ScormXBlock(runtime, element, settings) {
         });
         response = JSON.parse(response.responseText);
         console.log(response.value)
+        console.log(' GetValue --END-- ')
         return response.value;
     }
 
@@ -37,6 +38,8 @@ function ScormXBlock(runtime, element, settings) {
         console.log(' SetValue: ' + name + ' ' + value);
         // console.log(version + 'current pending values: ' + JSON.stringify(pendingValues));
         window.pendingValues[name] = value;
+        console.log(window.pendingValues)
+        console.log(' SetValue --END-- ')
         return 'true';
     }
 
@@ -56,22 +59,23 @@ function ScormXBlock(runtime, element, settings) {
             }
         });
         initPendingValues();
+        console.log(' Commit: --END-- ')
         return 'true';
     }
 
 
     function GetLastError() {
-        console.log(' GetLastError');
+        // console.log(' GetLastError');
         return 'true';
     }
 
     function GetErrorString(errCode) {
-        console.log(' GetErrorString: ' + errCode);
+        // console.log(' GetErrorString: ' + errCode);
         return 'true';
     }
 
     function GetDiagnostic(errCode) {
-        console.log(' GetDiagnostic: ' + errCode);
+        // console.log(' GetDiagnostic: ' + errCode);
         return 'true';
     }
 
@@ -109,6 +113,7 @@ function ScormXBlock(runtime, element, settings) {
         console.log('initpending')
         window.pendingValues = getPackageData()
         console.log(window.pendingValues)
+        console.log('initpending --END--')
     }
 
     $(function ($) {
