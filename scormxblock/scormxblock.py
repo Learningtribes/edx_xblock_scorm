@@ -292,6 +292,7 @@ class ScormXBlock(XBlock):
         if self.set_lesson(data, package_version):
             self.publish_grade()
         print '##commit##'
+        print data
         print self.cmi_data
         print '##end commit##'
 
