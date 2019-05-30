@@ -66,12 +66,12 @@ function ScormXBlock(runtime, element, settings) {
 
     function GetLastError() {
         // console.log(' GetLastError');
-        return 'true';
+        return 0;
     }
 
     function GetErrorString(errCode) {
         // console.log(' GetErrorString: ' + errCode);
-        return 'true';
+        return '';
     }
 
     function GetDiagnostic(errCode) {
