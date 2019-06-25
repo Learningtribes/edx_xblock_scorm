@@ -173,6 +173,7 @@ class ScormXBlock(XBlock):
             file = request.params['file'].file
             zip_file = zipfile.ZipFile(file, 'r')
             path_to_file = os.path.join(settings.PROFILE_IMAGE_BACKEND['options']['location'], self.location.block_id)
+            path_to_file = str(path_to_file)
             if os.path.exists(path_to_file):
                 shutil.rmtree(path_to_file, ignore_errors=True)
             zip_file.extractall(path_to_file)
