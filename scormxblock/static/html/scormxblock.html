@@ -1,6 +1,8 @@
+{% load i18n %}
+
 <div class="scormxblock_block">
     {% if has_score_value %}
-    <p>(<span class="lesson_score">{{ lesson_score_value }}</span>/{{ weight_value }} points)  <span class="success_status">{{ success_status_value }}</span></p>
+    <p>(<span class="lesson_score">{{ lesson_score_value }}</span>/{{ weight_value }} {% trans "points" %})  <span class="success_status">{% trans success_status_value %}</span></p>
     {% endif %}
     {% if scorm_file_value %}
     <iframe id="scorm-object-frame" class="scorm_object" src="{{ scorm_file_value }}"></iframe>
