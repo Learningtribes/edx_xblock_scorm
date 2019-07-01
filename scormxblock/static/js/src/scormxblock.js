@@ -51,7 +51,7 @@ function ScormXBlock(runtime, element, settings) {
                 if (typeof response['lesson_score_value'] !== "undefined") {
                     $(".lesson_score", element).html(response['lesson_score_value']);
                 }
-                $(".success_status", element).html(response['success_status_value']);
+                $(".success_status", element).html(gettext(response['success_status_value']));
             }
         });
         initPendingValues();
