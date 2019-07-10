@@ -61,12 +61,12 @@ function ScormXBlock(runtime, element, settings) {
 
     function GetLastError() {
         // console.log(version + ' GetLastError');
-        return 'true';
+        return 0;
     }
 
     function GetErrorString(errCode) {
         // console.log(version + ' GetErrorString: ' + errCode);
-        return 'true';
+        return '';
     }
 
     function GetDiagnostic(errCode) {
