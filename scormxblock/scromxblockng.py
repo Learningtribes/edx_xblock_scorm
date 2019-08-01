@@ -8,6 +8,7 @@ import re
 from collections import namedtuple
 from lxml import etree
 from urlparse import urlparse, urlunparse
+import urllib
 
 from django.template import Context, Template
 from django.utils import timezone
@@ -265,6 +266,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             if settings.DJFS['type'] == 's3fs':
                 parse = urlparse(pkg_url)
                 pkg_url = parse.path
+                pkg_url = urllib.unquote(pkg_url)
             data['scorm_pkg_value'] = pkg_url
 
 
