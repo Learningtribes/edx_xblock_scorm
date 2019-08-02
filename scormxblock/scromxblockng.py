@@ -374,7 +374,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     @staticmethod
     def extract_runtime_info_2004(data):
         info = {'status': SCORM_STATUS.IN_PROGRESS}
-        if 'cmi.score.raw' in data:
+        if 'cmi.score.raw' in data and 'cmi.score.max' in data and 'cmi.score.min' in data:
             info["raw"] = float(data['cmi.score.raw'])
             info["maxi"] = float(data['cmi.score.max'])
             info["mini"] = float(data['cmi.score.min'])
