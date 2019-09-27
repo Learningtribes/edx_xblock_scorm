@@ -192,11 +192,18 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     def _get_scorm_info(manifest):
         index_page = 'index.html'
         root = etree.parse(manifest).getroot()
-        resource = root.find('resources/resource', root.nsmap)
+        id_ref = root.find('organizations/organization/item', root.nsmap).get('identifierref')
+        resources = root.find('resources', root.nsmap)
+        resource = resources.findall('resource', root.nsmap)
         schemaversion = root.find('metadata/schemaversion', root.nsmap)
         scorm_version = SCORM_VERSION.V12
         if resource:
-            index_page = resource.get('href')
+            if len(resource) > 1:
+                for i in resource:
+                    if i.get('identifier') == id_ref:
+                        index_page = i.get('href')
+            else:
+                index_page = resource[0].get('href')
 
         if (schemaversion is not None) and (re.match('^1.2$', schemaversion.text) is None):
             scorm_version = SCORM_VERSION.V2004
