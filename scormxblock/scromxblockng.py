@@ -100,6 +100,15 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         help=_('Relative weight in this course section')
     )
 
+    ratio = String(
+        default="4:3",
+        scope=Scope.settings,
+        values=("4:3", "16:9", "1:1"),
+        enforce_type=True,
+        display_name=_('Ratio'),
+        help=_('Relative ratio of this course module')
+    )
+
     fs = Filesystem(scope=Scope.settings)
 
     scorm_pkg = File(
@@ -161,7 +170,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         help=_("Does this scorm allow users submit answer multiple times?")
     )
 
-    editable_fields = ('scorm_pkg', 'display_name', 'due', 'has_score', 'icon_class', 'weight', 'scorm_allow_rescore')
+    editable_fields = ('scorm_pkg', 'ratio', 'display_name', 'due', 'has_score', 'icon_class', 'weight', 'scorm_allow_rescore')
     has_author_view = True
 
     # region Studio handler
@@ -276,7 +285,6 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 pkg_url = urllib.unquote(pkg_url)
             data['scorm_pkg_value'] = pkg_url
 
-
         for k, v in data.items():
             if isinstance(v, timezone.datetime):
                 data[k] = dt2str(v)
@@ -284,7 +292,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         return data
 
     def get_student_data(self):
-        fields_data = self.get_fields_data(False, 'scorm_score', 'weight',
+        fields_data = self.get_fields_data(False, 'scorm_score', 'weight', 'ratio',
                                            'has_score', 'scorm_status', 'scorm_pkg')
         return fields_data
 
@@ -293,7 +301,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         frag = Fragment(template)
         frag.add_css(self.resource_string("static/css/scormxblock.css"))
         frag.add_javascript(self.resource_string("static/js/src/scormxblock.js"))
-        frag.initialize_js('ScormXBlock', json_args=self.get_fields_data(True, 'scorm_pkg_version', 'scorm_pkg_modified'))
+        frag.initialize_js('ScormXBlock', json_args=self.get_fields_data(True, 'scorm_pkg_version', 'scorm_pkg_modified', 'ratio'))
         return frag
 
     def author_view(self, context):
