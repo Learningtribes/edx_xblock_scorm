@@ -101,7 +101,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     )
 
     ratio = String(
-        default="4:3",
+        default="16:9",
         scope=Scope.settings,
         values=("4:3", "16:9", "1:1"),
         enforce_type=True,
