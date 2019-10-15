@@ -106,7 +106,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         values=("4:3", "16:9", "1:1"),
         enforce_type=True,
         display_name=_('Ratio'),
-        help=_('Relative ratio of this course module')
+        help=_('Display ratio of this module')
     )
 
     fs = Filesystem(scope=Scope.settings)
