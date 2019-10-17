@@ -115,9 +115,16 @@ function ScormXBlock(runtime, element, settings) {
 
     }
 
+    function disalbieOnbeforeunload() {
+        window.onbeforeunload = function () {
+              return null;
+            };
+    }
+
     $(function ($) {
         initPendingValues();
         window.API = new SCORM_12_API();
         window.API_1484_11 = new SCORM_2004_API();
+        disalbieOnbeforeunload();
     });
 }
