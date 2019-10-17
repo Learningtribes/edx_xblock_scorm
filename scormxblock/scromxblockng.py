@@ -293,7 +293,9 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         frag = Fragment(template)
         frag.add_css(self.resource_string("static/css/scormxblock.css"))
         frag.add_javascript(self.resource_string("static/js/src/scormxblock.js"))
+        frag.add_javascript(self.resource_string("static/js/src/disable_onbeforeunload.js"))
         frag.initialize_js('ScormXBlock', json_args=self.get_fields_data(True, 'scorm_pkg_version', 'scorm_pkg_modified'))
+        frag.initialize_js('DisableOnbeforeunload')
         return frag
 
     def author_view(self, context):
