@@ -1,7 +1,7 @@
 function disableOnbeforeunload() {
-    window.onbeforeunload = function () {
-          return null;
-        };
+    $('#scorm-object-frame')[0].contentWindow.onbeforeunload = function () {
+        return null;
+    };
 }
 
 disableOnbeforeunload();
