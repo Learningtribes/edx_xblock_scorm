@@ -59,7 +59,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     with internal fields.
     """
     display_name = String(
-        default="Scorm",
+        default="SCORM",
         scope=Scope.settings,
         enforce_type=True,
         display_name=_("Display Name"),
@@ -79,7 +79,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         scope=Scope.settings,
         enforce_type=True,
         display_name=_('Score'),
-        help=_("Does this scorm, need to be scored?")
+        help=_("Does this SCORM need to be scored?")
     )
 
     icon_class = String(
@@ -88,7 +88,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         values=("problem", "video", "other"),
         enforce_type=True,
         display_name=_("Icon"),
-        help=_("Icon be used in course page")
+        help=_("Icon used in course page")
     )
 
     weight = Float(
@@ -106,7 +106,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         values=("16:9", "4:3", "1:1"),
         enforce_type=True,
         display_name=_('Ratio'),
-        help=_('Display ratio of this module')
+        help=_('Aspect ratio of this module')
     )
 
     fs = Filesystem(scope=Scope.settings)
@@ -116,8 +116,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         default="",
         scope=Scope.settings,
         enforce_type=True,
-        display_name=_("Scorm Package"),
-        help=_("Scorm package in `.zip` format")
+        display_name=_("SCORM module"),
+        help=_("SCORM module in .zip format")
     )
 
     scorm_pkg_version = String(
@@ -133,7 +133,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         scope=Scope.settings,
         enforce_type=True,
         display_name=_('Upload time'),
-        help=_('Scorm package upload time utc')
+        help=_('SCORM package upload time utc')
     )
 
     _scorm_runtime_data = Dict(
@@ -146,7 +146,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         scope=Scope.user_state,
         enforce_type=True,
         display_name=_('Runtime Modified Time'),
-        help=_('Scorm runtime modified time utc')
+        help=_('SCORM runtime modified time utc')
     )
 
     scorm_status = String(
@@ -167,7 +167,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         scope=Scope.settings,
         enforce_type=True,
         display_name=_("Rescore"),
-        help=_("Does this scorm allow users submit answer multiple times?")
+        help=_("Does this SCORM allow users to submit answer multiple times?")
     )
 
     editable_fields = ('scorm_pkg', 'ratio', 'display_name', 'due', 'has_score', 'icon_class', 'weight', 'scorm_allow_rescore')
