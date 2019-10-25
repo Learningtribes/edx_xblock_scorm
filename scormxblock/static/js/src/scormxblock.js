@@ -119,5 +119,10 @@ function ScormXBlock(runtime, element, settings) {
         initPendingValues();
         window.API = new SCORM_12_API();
         window.API_1484_11 = new SCORM_2004_API();
+        setTimeout(function() {
+            $('#scorm-object-frame')[0].contentWindow.onbeforeunload = function () {
+                return null;
+            }
+        }, 10000);
     });
 }
