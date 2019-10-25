@@ -6,7 +6,26 @@ function ScormXBlock(runtime, element, settings) {
     const getValueUrl = runtime.handlerUrl(element, 'scorm_get_value');
     const package_version = settings['scorm_pkg_version_value'];
     const package_date = settings['scorm_pkg_modified_value'];
+    const ratio_value = settings['ratio_value'];
     let pendingValues = null;
+
+    function scormInit() {
+        var $scormFrame = $('#scorm-object-frame')
+        var ratios = {
+            '4:3': 0.75,
+            '16:9': 0.5625,
+            '1:1': 1,
+        }
+        var resetIframeSize = function () {
+          $scormFrame.height($scormFrame.width() * ratios[ratio_value]);
+        }
+        if ($scormFrame.length){
+          $(window).resize(function () {
+            resetIframeSize();
+          })
+          resetIframeSize();
+        }
+    }
 
     function Initialize(value) {
         return pingServer() ? "true": "false";
@@ -116,6 +135,7 @@ function ScormXBlock(runtime, element, settings) {
     }
 
     $(function ($) {
+        scormInit();
         initPendingValues();
         window.API = new SCORM_12_API();
         window.API_1484_11 = new SCORM_2004_API();
