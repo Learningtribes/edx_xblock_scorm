@@ -302,7 +302,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 if not only_value:
                     data[k] = v
                 data["{}_value".format(k)] = getattr(self, k)
-        logger.info("Original: " + str(data))
+        #logger.info("Original: " + str(data))
 
         if 'scorm_pkg' in data and self.scorm_pkg:
             pkg_url = self.fs.get_url(self.scorm_pkg)
@@ -310,13 +310,13 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             scorm_file_string = self.scorm_file[:22] + 'scorm/' + self.scorm_file[22:]
             pkg_url = self.fs.get_url(scorm_file_string)
         if pkg_url:
-            logger.info("Original URL: " + str(pkg_url))
+            #logger.info("Original URL: " + str(pkg_url))
             if settings.DJFS['type'] == 's3fs':
                 parse = urlparse(pkg_url)
                 pkg_url = parse.path
                 pkg_url = urllib.unquote(pkg_url)
             data['scorm_pkg_value'] = pkg_url
-            logger.info("Return URL: " + str(pkg_url))
+            #logger.info("Return URL: " + str(pkg_url))
 
         if 'scorm_score' in data and self.scorm_score == float(0) and self.lesson_score != float(0):
             data['scorm_score_value'] = self.lesson_score
@@ -334,7 +334,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             if isinstance(v, timezone.datetime):
                 data[k] = dt2str(v)
 
-        logger.info("Return: " + str(data))
+        #logger.info("Return: " + str(data))
 
         return data
 
