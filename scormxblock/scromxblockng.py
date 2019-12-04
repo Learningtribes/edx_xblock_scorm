@@ -120,6 +120,12 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         help=_("SCORM module in .zip format")
     )
 
+    scorm_file = String(
+        display_name=_("compatible with old version scorm file"),
+        scope=Scope.settings,
+        default="old"
+    )
+
     scorm_pkg_version = String(
         default=SCORM_VERSION.V12,
         scope=Scope.settings,
@@ -156,10 +162,20 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         enforce_type=True
     )
 
+    success_status = String(
+        scope=Scope.user_state,
+        default='unknown'
+    )
+
     scorm_score = Float(
         default=0,
         scope=Scope.user_state,
         enforce_type=True
+    )
+
+    lesson_score = Float(
+        scope=Scope.user_state,
+        default=0
     )
 
     scorm_allow_rescore = Boolean(
@@ -168,6 +184,15 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         enforce_type=True,
         display_name=_("Rescore"),
         help=_("Does this SCORM allow users to submit answer multiple times?")
+    )
+
+    version_scorm = String(
+        default="SCORM_12",
+        scope=Scope.settings,
+    )
+
+    scorm_modified = DateTime(
+        scope=Scope.settings,
     )
 
     editable_fields = ('scorm_pkg', 'ratio', 'display_name', 'due', 'has_score', 'icon_class', 'weight', 'scorm_allow_rescore')
@@ -271,29 +296,51 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     def get_fields_data(self, only_value=False, *fields):
 
         data = {}
+        pkg_url = ''
         for k, v in self.fields.iteritems():
             if k in fields:
                 if not only_value:
                     data[k] = v
                 data["{}_value".format(k)] = getattr(self, k)
+        #logger.info("Original: " + str(data))
 
         if 'scorm_pkg' in data and self.scorm_pkg:
             pkg_url = self.fs.get_url(self.scorm_pkg)
+        if 'scorm_pkg' in data and self.scorm_pkg == '' and self.scorm_file != 'old':
+            scorm_file_string = self.scorm_file[:22] + 'scorm/' + self.scorm_file[22:]
+            pkg_url = self.fs.get_url(scorm_file_string)
+        if pkg_url:
+            #logger.info("Original URL: " + str(pkg_url))
             if settings.DJFS['type'] == 's3fs':
                 parse = urlparse(pkg_url)
                 pkg_url = parse.path
                 pkg_url = urllib.unquote(pkg_url)
             data['scorm_pkg_value'] = pkg_url
+            #logger.info("Return URL: " + str(pkg_url))
+
+        if 'scorm_score' in data and self.scorm_score == float(0) and self.lesson_score != float(0):
+            data['scorm_score_value'] = self.lesson_score
+
+        if 'scorm_status' in data and self.scorm_status == SCORM_STATUS.UNATTENDED and self.success_status != 'unknown':
+            data['scorm_status_value'] = self.success_status
+
+        if 'scorm_pkg_version_value' in data and self.scorm_pkg_version == SCORM_VERSION.V12 and self.version_scorm == 'SCORM_2004':
+            data['scorm_pkg_version_value'] = SCORM_VERSION.V2004
+
+        if 'scorm_pkg_modified_value' in data and not self.scorm_pkg_modified and self.scorm_modified:
+            data['scorm_pkg_modified_value'] = self.scorm_modified
 
         for k, v in data.items():
             if isinstance(v, timezone.datetime):
                 data[k] = dt2str(v)
 
+        #logger.info("Return: " + str(data))
+
         return data
 
     def get_student_data(self):
         fields_data = self.get_fields_data(False, 'scorm_score', 'weight', 'ratio',
-                                           'has_score', 'scorm_status', 'scorm_pkg')
+                                           'has_score', 'scorm_status', 'scorm_pkg', 'scorm_file', 'lesson_score', 'success_status')
         return fields_data
 
     def student_view(self, context=None):
@@ -301,7 +348,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         frag = Fragment(template)
         frag.add_css(self.resource_string("static/css/scormxblock.css"))
         frag.add_javascript(self.resource_string("static/js/src/scormxblock.js"))
-        frag.initialize_js('ScormXBlock', json_args=self.get_fields_data(True, 'scorm_pkg_version', 'scorm_pkg_modified', 'ratio'))
+        frag.initialize_js('ScormXBlock', json_args=self.get_fields_data(True, 'scorm_pkg_version', 'scorm_pkg_modified', 'ratio', 'version_scorm', 'scorm_modified'))
         return frag
 
     def author_view(self, context):
