@@ -109,6 +109,14 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         help=_('Aspect ratio of this module')
     )
 
+    open_new_tab = Boolean(
+        default=False,
+        scope=Scope.settings,
+        enforce_type=True,
+        display_name=_('Module'),
+        help=_('Open module in a new tab')
+    )
+
     fs = Filesystem(scope=Scope.settings)
 
     scorm_pkg = File(
@@ -195,7 +203,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         scope=Scope.settings,
     )
 
-    editable_fields = ('scorm_pkg', 'ratio', 'display_name', 'due', 'has_score', 'icon_class', 'weight', 'scorm_allow_rescore')
+    editable_fields = ('scorm_pkg', 'ratio', 'open_new_tab', 'display_name', 'due', 'has_score', 'icon_class', 'weight', 'scorm_allow_rescore')
     has_author_view = True
 
     # region Studio handler
@@ -340,7 +348,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
     def get_student_data(self):
         fields_data = self.get_fields_data(False, 'scorm_score', 'weight', 'ratio',
-                                           'has_score', 'scorm_status', 'scorm_pkg', 'scorm_file', 'lesson_score', 'success_status')
+                                           'has_score', 'scorm_status', 'scorm_pkg', 'scorm_file', 'lesson_score', 'success_status', 'open_new_tab')
         return fields_data
 
     def student_view(self, context=None):
@@ -348,7 +356,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         frag = Fragment(template)
         frag.add_css(self.resource_string("static/css/scormxblock.css"))
         frag.add_javascript(self.resource_string("static/js/src/scormxblock.js"))
-        frag.initialize_js('ScormXBlock', json_args=self.get_fields_data(True, 'scorm_pkg_version', 'scorm_pkg_modified', 'ratio', 'version_scorm', 'scorm_modified'))
+        frag.initialize_js('ScormXBlock', json_args=self.get_fields_data(True, 'scorm_pkg_version', 'scorm_pkg_modified', 'ratio', 'version_scorm', 'scorm_modified', 'open_new_tab'))
         return frag
 
     def author_view(self, context):

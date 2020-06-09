@@ -7,6 +7,7 @@ function ScormXBlock(runtime, element, settings) {
     const package_version = settings['scorm_pkg_version_value'];
     const package_date = settings['scorm_pkg_modified_value'];
     const ratio_value = settings['ratio_value'];
+    const open_new_tab = settings['open_new_tab_value'];
     let pendingValues = null;
 
     function scormInit() {
@@ -24,6 +25,13 @@ function ScormXBlock(runtime, element, settings) {
             resetIframeSize();
           })
           resetIframeSize();
+        }
+
+        if (open_new_tab) {
+            $('.launch-button').click(function() {
+                $('.launch-content').toggleClass('hidden');
+                $('.button-container').addClass('hidden');
+            })
         }
     }
 
@@ -139,10 +147,12 @@ function ScormXBlock(runtime, element, settings) {
         initPendingValues();
         window.API = new SCORM_12_API();
         window.API_1484_11 = new SCORM_2004_API();
-        setTimeout(function() {
-            $('#scorm-object-frame')[0].contentWindow.onbeforeunload = function () {
-                return null;
-            }
-        }, 10000);
+        if (!open_new_tab) {
+            setTimeout(function() {
+                $('#scorm-object-frame')[0].contentWindow.onbeforeunload = function () {
+                    return null;
+                }
+            }, 10000);
+        }
     });
 }
