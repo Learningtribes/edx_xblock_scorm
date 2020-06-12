@@ -9,7 +9,9 @@ from collections import namedtuple
 from lxml import etree
 from urlparse import urlparse, urlunparse
 import urllib
+import user_agents
 
+from crum import get_current_request
 from django.template import Context, Template
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
@@ -50,6 +52,17 @@ SCORM_STATUS = namedtuple('ScormStatus', [
     'SUCCEED', 'FAILED', 'IN PROGRESS', 'UNATTENDED')
 
 SCORM_VERSION = namedtuple('ScormVersion', ['V12', 'V2004'])('SCORM12', 'SCORM2004')
+
+
+def is_compatible(request):
+    """Ignore IE/Safari browsers to open scorm content in new tab due to postMessage() limitation.
+    """
+    http_user_agent = request.META.get('HTTP_USER_AGENT')
+    user_agent = user_agents.parse(http_user_agent)
+    browser_family = user_agent.browser.family
+    if browser_family == u'IE' or u"Safari" in browser_family:
+        return False
+    return True
 
 
 @XBlock.needs('request', 'fs', 'i18n', 'user')
@@ -114,7 +127,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         scope=Scope.settings,
         enforce_type=True,
         display_name=_('Module'),
-        help=_('Open module in a new tab')
+        help=_('Open module in a new tab. This option will only apply to users with a compatible browser.')
     )
 
     fs = Filesystem(scope=Scope.settings)
@@ -349,6 +362,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     def get_student_data(self):
         fields_data = self.get_fields_data(False, 'scorm_score', 'weight', 'ratio',
                                            'has_score', 'scorm_status', 'scorm_pkg', 'scorm_file', 'lesson_score', 'success_status', 'open_new_tab')
+        request = get_current_request()
+        fields_data['open_new_tab_value'] = is_compatible(request)
         return fields_data
 
     def student_view(self, context=None):
