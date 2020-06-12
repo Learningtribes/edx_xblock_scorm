@@ -60,7 +60,7 @@ def is_compatible(request):
     http_user_agent = request.META.get('HTTP_USER_AGENT')
     user_agent = user_agents.parse(http_user_agent)
     browser_family = user_agent.browser.family
-    if browser_family == u'IE' or u"Safari" in browser_family:
+    if browser_family == 'IE' or "Safari" in browser_family:
         return False
     return True
 
