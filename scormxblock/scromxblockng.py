@@ -9,7 +9,9 @@ from collections import namedtuple
 from lxml import etree
 from urlparse import urlparse, urlunparse
 import urllib
+import user_agents
 
+from crum import get_current_request
 from django.template import Context, Template
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
@@ -50,6 +52,17 @@ SCORM_STATUS = namedtuple('ScormStatus', [
     'SUCCEED', 'FAILED', 'IN PROGRESS', 'UNATTENDED')
 
 SCORM_VERSION = namedtuple('ScormVersion', ['V12', 'V2004'])('SCORM12', 'SCORM2004')
+
+
+def is_compatible(request):
+    """Ignore IE/Safari browsers to open scorm content in new tab due to postMessage() limitation.
+    """
+    http_user_agent = request.META.get('HTTP_USER_AGENT')
+    user_agent = user_agents.parse(http_user_agent)
+    browser_family = user_agent.browser.family
+    if browser_family == 'IE' or "Safari" in browser_family:
+        return False
+    return True
 
 
 @XBlock.needs('request', 'fs', 'i18n', 'user')
@@ -107,6 +120,14 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         enforce_type=True,
         display_name=_('Ratio'),
         help=_('Aspect ratio of this module')
+    )
+
+    open_new_tab = Boolean(
+        default=False,
+        scope=Scope.settings,
+        enforce_type=True,
+        display_name=_('Module'),
+        help=_('Open module in a new tab. This option will only apply to users with a compatible browser.')
     )
 
     fs = Filesystem(scope=Scope.settings)
@@ -195,7 +216,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         scope=Scope.settings,
     )
 
-    editable_fields = ('scorm_pkg', 'ratio', 'display_name', 'due', 'has_score', 'icon_class', 'weight', 'scorm_allow_rescore')
+    editable_fields = ('scorm_pkg', 'ratio', 'open_new_tab', 'display_name', 'due', 'has_score', 'icon_class', 'weight', 'scorm_allow_rescore')
     has_author_view = True
 
     # region Studio handler
@@ -340,7 +361,10 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
     def get_student_data(self):
         fields_data = self.get_fields_data(False, 'scorm_score', 'weight', 'ratio',
-                                           'has_score', 'scorm_status', 'scorm_pkg', 'scorm_file', 'lesson_score', 'success_status')
+                                           'has_score', 'scorm_status', 'scorm_pkg', 'scorm_file', 'lesson_score', 'success_status', 'open_new_tab')
+        request = get_current_request()
+        if fields_data['open_new_tab_value']:
+            fields_data['open_new_tab_value'] = is_compatible(request)
         return fields_data
 
     def student_view(self, context=None):
@@ -348,7 +372,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         frag = Fragment(template)
         frag.add_css(self.resource_string("static/css/scormxblock.css"))
         frag.add_javascript(self.resource_string("static/js/src/scormxblock.js"))
-        frag.initialize_js('ScormXBlock', json_args=self.get_fields_data(True, 'scorm_pkg_version', 'scorm_pkg_modified', 'ratio', 'version_scorm', 'scorm_modified'))
+        frag.initialize_js('ScormXBlock', json_args=self.get_fields_data(True, 'scorm_pkg_version', 'scorm_pkg_modified', 'ratio', 'version_scorm', 'scorm_modified', 'open_new_tab'))
         return frag
 
     def author_view(self, context):

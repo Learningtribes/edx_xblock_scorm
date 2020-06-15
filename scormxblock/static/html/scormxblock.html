@@ -1,8 +1,18 @@
+{% load i18n %}
 <div class="themeable-xblock scormxblock_block">
     {% if has_score_value %}
     <p>(<span class="lesson_score">{{ scorm_score_value }}</span>/{{ weight_value }} points)  <span class="success_status">{{ scorm_status_value }}</span></p>
     {% endif %}
-    {% if scorm_pkg_value %}
-    <iframe id="scorm-object-frame" class="scorm_object" src="{{ scorm_pkg_value }}"></iframe>
+    {% if open_new_tab_value and scorm_pkg_value %}
+    <div class="launch-div">
+        <h2 class="content-title"><span class="far fa-window title-icon" aria-hidden="true"></span>{% trans "New Tab" %}</h2>
+        <p class="launch-content launch-before">{% trans "Click on the button below to open the module in a new tab." %}</p>
+        <p class="launch-content launch-after hidden">{% trans "Your e-learning module has been opened in a new tab. Please, close the new tab after you completed the module." %}</p>
+        <div class="button-container">
+            <button class="launch-button"><a href="{{ scorm_pkg_value }}" target="_blank">{% trans "Launch" %}</a></button>
+        </div>
+    </div>
+    {% elif scorm_pkg_value %}
+        <iframe id="scorm-object-frame" class="scorm_object" src="{{ scorm_pkg_value }}"></iframe>
     {% endif %}
 </div>
