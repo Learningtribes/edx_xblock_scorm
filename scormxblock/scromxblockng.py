@@ -363,7 +363,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         fields_data = self.get_fields_data(False, 'scorm_score', 'weight', 'ratio',
                                            'has_score', 'scorm_status', 'scorm_pkg', 'scorm_file', 'lesson_score', 'success_status', 'open_new_tab')
         request = get_current_request()
-        fields_data['open_new_tab_value'] = is_compatible(request)
+        if fields_data['open_new_tab_value']:
+            fields_data['open_new_tab_value'] = is_compatible(request)
         return fields_data
 
     def student_view(self, context=None):
