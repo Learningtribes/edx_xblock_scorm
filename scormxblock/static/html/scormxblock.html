@@ -1,7 +1,7 @@
 {% load i18n %}
 <div class="themeable-xblock scormxblock_block">
     {% if has_score_value %}
-    <p>(<span class="lesson_score">{{ scorm_score_value }}</span>/{{ weight_value }} points)  <span class="success_status">{{ scorm_status_value }}</span></p>
+    <p class="scorm_process"><span class="far fa-clipboard-list"></span><span class="lesson_score">{{ scorm_score_value }}/{{ weight_value }} points possible ({% trans graded_status %})</span>  <span class="success_status">{{ scorm_status_value }}</span></p>
     {% endif %}
     {% if open_new_tab_value and scorm_pkg_value %}
     <div class="launch-div">

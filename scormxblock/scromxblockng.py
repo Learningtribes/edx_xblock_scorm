@@ -365,6 +365,9 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         request = get_current_request()
         if fields_data['open_new_tab_value']:
             fields_data['open_new_tab_value'] = is_compatible(request)
+        fields_data['graded_status'] = 'ungraded'
+        if self.graded and fields_data['has_score'] and fields_data['weight'] != 0:
+            fields_data['graded_status'] = 'graded'
         return fields_data
 
     def student_view(self, context=None):
