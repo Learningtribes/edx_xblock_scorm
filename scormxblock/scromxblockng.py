@@ -360,7 +360,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         return data
 
     def get_student_data(self):
-        fields_data = self.get_fields_data(False, 'scorm_score', 'weight', 'ratio',
+        fields_data = self.get_fields_data(False, 'scorm_score', 'weight', 'ratio', 'display_name',
                                            'has_score', 'scorm_status', 'scorm_pkg', 'scorm_file', 'lesson_score', 'success_status', 'open_new_tab')
         request = get_current_request()
         if fields_data['open_new_tab_value']:
