@@ -1,12 +1,19 @@
 {% load i18n %}
 <div class="themeable-xblock scormxblock_block">
-    <h3 class="scorm-header">{{ display_name }}</h3>
-    {% if has_score_value %}
-    <p class="scorm_process"><span class="far fa-clipboard-list"></span><span class="lesson_score">{{ scorm_score_value }}/{{ weight_value }} points possible ({% trans graded_status %})</span>  <span class="success_status">{{ scorm_status_value }}</span></p>
-    {% endif %}
+    <div class="block-header-wrapper scrom-header-wrapper">
+        <h3 class="scorm-header">{{ display_name }}</h3>
+        {% if has_score_value %}
+        <p class="scorm_process"><span class="fal fa-bullseye-pointer"></span><span class="lesson_score">{{ scorm_score_value }}/{{ weight_value }} points possible ({% trans graded_status %})</span>  <span class="success_status">{{ scorm_status_value }}</span></p>
+        {% endif %}
+    </div>
+      <div class="block-label scorm-label">
+        <span class="fal fa-file-audio block-label-icon"></span>
+        <span class="block-label-text">{% trans 'SCORM' %}</span>
+      </div>
+    <hr class="sep-line">
     {% if open_new_tab_value and scorm_pkg_value %}
     <div class="launch-div">
-        <h2 class="content-title"><span class="far fa-window title-icon" aria-hidden="true"></span>{% trans "New Tab" %}</h2>
+        <h2 class="content-title"><span class="fal fa-window title-icon" aria-hidden="true"></span>{% trans "New Tab" %}</h2>
         <p class="launch-content launch-before">{% trans "Click on the button below to open the module in a new tab." %}</p>
         <p class="launch-content launch-after hidden">{% trans "Your e-learning module has been opened in a new tab. Please, close the new tab after you completed the module." %}</p>
         <div class="button-container">
