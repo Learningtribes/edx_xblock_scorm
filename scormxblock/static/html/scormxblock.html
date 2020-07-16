@@ -1,6 +1,6 @@
 {% load i18n %}
 <div class="themeable-xblock scormxblock_block">
-    <div class="block-header-wrapper scrom-header-wrapper">
+    <div class="block-header-wrapper scorm-header-wrapper">
         <h3 class="scorm-header">{{ display_name }}</h3>
         {% if has_score_value %}
         <p class="scorm_process"><span class="fal fa-bullseye-pointer"></span><span class="lesson_score">{{ scorm_score_value }}/{{ weight_value }} points possible ({% trans graded_status %})</span>  <span class="success_status">{{ scorm_status_value }}</span></p>
