@@ -88,7 +88,10 @@ function ScormXBlock(runtime, element, settings) {
                 $(".lesson_score", element).html(response['scorm_score_value']);
             }
             $(".success_status", element).html(response['scorm_status_value']);
-        });
+        })
+        .then((res) => res.json())
+        .then((data) => console.log(data))
+        .catch((error) => console.log(error));
         initPendingValues();
         return 'true';
     }
