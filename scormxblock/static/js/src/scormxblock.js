@@ -81,7 +81,8 @@ function ScormXBlock(runtime, element, settings) {
         fetch(commitUrl, {
             method: 'POST',
             body: JSON.stringify(pendingValues),
-            keepalive: true
+            keepalive: true,
+            credentials: "include"
         })
         // .then(function (response) {
         //     if (typeof response['scorm_score_value'] !== "undefined") {
