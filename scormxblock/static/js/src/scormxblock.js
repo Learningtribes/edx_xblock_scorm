@@ -83,12 +83,12 @@ function ScormXBlock(runtime, element, settings) {
             body: JSON.stringify(pendingValues),
             keepalive: true
         })
-        .then(function (response) {
-            if (typeof response['scorm_score_value'] !== "undefined") {
-                $(".lesson_score", element).html(response['scorm_score_value']);
-            }
-            $(".success_status", element).html(response['scorm_status_value']);
-        })
+        // .then(function (response) {
+        //     if (typeof response['scorm_score_value'] !== "undefined") {
+        //         $(".lesson_score", element).html(response['scorm_score_value']);
+        //     }
+        //     $(".success_status", element).html(response['scorm_status_value']);
+        // })
         .then((res) => res.json())
         .then((data) => console.log(data))
         .catch((error) => console.log(error));
