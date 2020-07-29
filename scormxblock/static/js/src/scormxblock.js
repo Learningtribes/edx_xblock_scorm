@@ -66,33 +66,41 @@ function ScormXBlock(runtime, element, settings) {
     }
 
     function Commit(value) {
-        // $.ajax({
-        //     type: "POST",
-        //     url: commitUrl,
-        //     data: JSON.stringify(pendingValues),
-        //     async: false,
-        //     success: function (response) {
-        //         if (typeof response['scorm_score_value'] !== "undefined") {
-        //             $(".lesson_score", element).html(response['scorm_score_value']);
-        //         }
-        //         $(".success_status", element).html(response['scorm_status_value']);
-        //     }
-        // });
+        function getCookie(name) {
+          if (!document.cookie) {
+            return null;
+          }
+          const xsrfCookies = document.cookie.split(';')
+            .map(c => c.trim())
+            .filter(c => c.startsWith(name + '='));
+          if (xsrfCookies.length === 0) {
+            return null;
+          }
+          return decodeURIComponent(xsrfCookies[0].split('=')[1]);
+        }
+
+        const csrftoken = getCookie('csrftoken');
         fetch(commitUrl, {
             method: 'POST',
+            headers: {
+              'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+              'X-CSRFToken': csrftoken
+            },
             body: JSON.stringify(pendingValues),
-            keepalive: true,
-            credentials: "include"
+            credentials: 'same-origin',
+            keepalive: true
         })
-        // .then(function (response) {
-        //     if (typeof response['scorm_score_value'] !== "undefined") {
-        //         $(".lesson_score", element).html(response['scorm_score_value']);
-        //     }
-        //     $(".success_status", element).html(response['scorm_status_value']);
-        // })
-        .then((res) => res.json())
-        .then((data) => console.log(data))
-        .catch((error) => console.log(error));
+          .then(response => {
+            if (response.ok) {
+              return response.json();
+            }
+          })
+          .then(data => {
+            if (typeof data['scorm_score_value'] !== "undefined") {
+              $(".lesson_score", element).html(data['scorm_score_value']);
+            }
+            $(".success_status", element).html(data['scorm_status_value']);
+          });
         initPendingValues();
         return 'true';
     }
