@@ -125,24 +125,24 @@ function ScormXBlock(runtime, element, settings) {
             initPendingValues();
             return 'true';
         }
-    } else {
-        function Commit(value) {
-            $.ajax({
-                type: "POST",
-                url: commitUrl,
-                data: JSON.stringify(pendingValues),
-                async: false,
-                success: function (response) {
-                    if (typeof response['scorm_score_value'] !== "undefined") {
-                        $(".lesson_score", element).html(response['scorm_score_value']);
-                    }
-                    $(".success_status", element).html(response['scorm_status_value']);
-                }
-            });
-            initPendingValues();
-            return 'true';
-        }    
     }
+    
+    function Commit(value) {
+        $.ajax({
+            type: "POST",
+            url: commitUrl,
+            data: JSON.stringify(pendingValues),
+            async: false,
+            success: function (response) {
+                if (typeof response['scorm_score_value'] !== "undefined") {
+                    $(".lesson_score", element).html(response['scorm_score_value']);
+                }
+                $(".success_status", element).html(response['scorm_status_value']);
+            }
+        });
+        initPendingValues();
+        return 'true';
+    }    
 
     function initPendingValues(){
         pendingValues = getPackageData();
