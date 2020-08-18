@@ -185,7 +185,7 @@ function ScormXBlock(runtime, element, settings) {
         this.Terminate = Terminate;
         this.GetValue = GetValue;
         this.SetValue = SetValue;
-        this.LMSCommit = Commit;
+        this.Commit = Commit;
         this.GetLastError = GetLastError;
         this.GetErrorString = GetErrorString;
         this.GetDiagnostic = GetDiagnostic;
