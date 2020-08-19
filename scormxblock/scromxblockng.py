@@ -16,6 +16,7 @@ from django.template import Context, Template
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.conf import settings
+from django.contrib.auth.models import User
 from xblock.core import XBlock
 from xblock.exceptions import XBlockSaveError, JsonHandlerError
 from xblock.scorable import Score
@@ -216,6 +217,11 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         scope=Scope.settings,
     )
 
+    scorm_launch_data = String(
+        default="",
+        scope=Scope.settings
+    )
+
     editable_fields = ('scorm_pkg', 'ratio', 'open_new_tab', 'display_name', 'due', 'has_score', 'icon_class', 'weight', 'scorm_allow_rescore')
     has_author_view = True
 
@@ -227,10 +233,13 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             return Response(status=400)
         zipfs = ZipFS(pkg.file)
         with zipfs.open(u'imsmanifest.xml') as mf:
-            self.scorm_pkg_version, scorm_index = self._get_scorm_info(mf)
+            self.scorm_pkg_version, scorm_index, scorm_launch = self._get_scorm_info(mf)
+            logger.info('uploadfile: ' +str(self.scorm_pkg_version) + str(scorm_index) + str(scorm_launch))
         pkg_id = self._upload_scorm_pkg(zipfs)
         self.scorm_pkg = os.path.join(pkg_id, scorm_index)
         self.scorm_pkg_modified = timezone.now()
+        if scorm_launch is not None:
+            self.scorm_launch_data = str(scorm_launch)
         return Response(status=200)
 
     def _upload_scorm_pkg(self, fs):
@@ -246,6 +255,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     @staticmethod
     def _get_scorm_info(manifest):
         index_page = 'index.html'
+        launch_data = None
+        datafromlms = 'organizations/organization/item/adlcp:datafromlms'
         root = etree.parse(manifest).getroot()
         id_ref = root.find('organizations/organization/item', root.nsmap).get('identifierref')
         resources = root.find('resources', root.nsmap)
@@ -262,7 +273,11 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
         if (schemaversion is not None) and (re.match('^1.2$', schemaversion.text) is None):
             scorm_version = SCORM_VERSION.V2004
-        return scorm_version, index_page
+            datafromlms = 'organizations/organization/item/adlcp:dataFromLMS'
+        launch_data = root.find(datafromlms, root.nsmap)
+        if launch_data is not None:
+            launch_data = launch_data.text
+        return scorm_version, index_page, launch_data
     # endregion
 
     # region Runtime functions
@@ -400,13 +415,27 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
         if package_version == SCORM_VERSION.V12:
             default = SCORM_12_RUNTIME_DEFAULT.get(name, '')
+            if name == 'cmi.core.student_id':
+                default = str(self.runtime.user_id)
+            elif name == 'cmi.core.student_name':
+                user = User.objects.get(id=self.runtime.user_id)
+                default = user.username
         elif package_version == SCORM_VERSION.V2004:
             default = SCORM_2004_RUNTIME_DEFAULT.get(name, '')
+            if name == 'cmi.learner_id':
+                default = str(self.runtime.user_id)
+            elif name == 'cmi.learner_name':
+                user = User.objects.get(id=self.runtime.user_id)
+                default = user.username
         else:
             self.raise_handler_error('error scorm package version')
 
+        if name == 'cmi.launch_data':
+            default = self.scorm_launch_data
+
         if self.is_pkg_expired(package_date):
             return {'error': _('scorm package expired, refresh page to get new content.')}
+        logger.info('get_value: ' + str(self.scorm_runtime_data.get(name, default)))
 
         return {"value": self.scorm_runtime_data.get(name, default)}
 
