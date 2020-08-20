@@ -234,7 +234,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         zipfs = ZipFS(pkg.file)
         with zipfs.open(u'imsmanifest.xml') as mf:
             self.scorm_pkg_version, scorm_index, scorm_launch = self._get_scorm_info(mf)
-            logger.info('uploadfile: ' +str(self.scorm_pkg_version) + str(scorm_index) + str(scorm_launch))
+            #logger.info('uploadfile: ' +str(self.scorm_pkg_version) + str(scorm_index) + str(scorm_launch))
         pkg_id = self._upload_scorm_pkg(zipfs)
         self.scorm_pkg = os.path.join(pkg_id, scorm_index)
         self.scorm_pkg_modified = timezone.now()
@@ -435,7 +435,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
         if self.is_pkg_expired(package_date):
             return {'error': _('scorm package expired, refresh page to get new content.')}
-        logger.info('get_value: ' + str(self.scorm_runtime_data.get(name, default)))
+        #logger.info('get_value: ' + str(self.scorm_runtime_data.get(name, default)))
 
         return {"value": self.scorm_runtime_data.get(name, default)}
 
