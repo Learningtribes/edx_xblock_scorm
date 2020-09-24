@@ -473,6 +473,13 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         self.update_scorm_status(data, package_version)
         return self.get_fields_data(True, 'scorm_status', 'scorm_score')
 
+    @XBlock.handler
+    def sync_score_value(self, request, suffix=''):
+        """
+        Fix double refresh bug cause of unexpected terminal action
+        """
+        return self.get_fields_data(True, 'scorm_score')
+
     @staticmethod
     def extract_runtime_info_12(data):
         info = {'status': SCORM_STATUS.IN_PROGRESS}
