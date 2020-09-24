@@ -478,7 +478,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         """
         Fix double refresh bug cause of unexpected terminal action
         """
-        return Response(self.get_fields_data(True, 'scorm_score'))
+        score_value = self.get_fields_data(True, 'scorm_score')
+        return Response(json_body=score_value, content_type='application/json')
 
     @staticmethod
     def extract_runtime_info_12(data):
