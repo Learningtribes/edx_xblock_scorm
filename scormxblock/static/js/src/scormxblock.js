@@ -4,10 +4,12 @@ function ScormXBlock(runtime, element, settings) {
 
     const commitUrl = runtime.handlerUrl(element, 'scorm_commit');
     const getValueUrl = runtime.handlerUrl(element, 'scorm_get_value');
+    const syncScoreUrl = runtime.handlerUrl(element, 'sync_score_value')
     const package_version = settings['scorm_pkg_version_value'];
     const package_date = settings['scorm_pkg_modified_value'];
     const ratio_value = settings['ratio_value'];
     const open_new_tab = settings['open_new_tab_value'];
+    var timerId;
     let pendingValues = null;
 
     function scormInit() {
@@ -33,6 +35,9 @@ function ScormXBlock(runtime, element, settings) {
                 $('.button-container').addClass('hidden');
             })
         }
+
+        // Get runtime score value due to unexpected terminal action
+        timerId = setInterval(syncScoreValue, 2000);
     }
 
     function Initialize(value) {
@@ -41,6 +46,7 @@ function ScormXBlock(runtime, element, settings) {
 
     function Terminate(value) {
         Commit(value);
+        clearInterval(timerId);
         return 'true';
     }
 
@@ -207,6 +213,17 @@ function ScormXBlock(runtime, element, settings) {
         });
         return resp.status === 200;
 
+    }
+
+    function syncScoreValue() {
+        $.ajax({
+            type: "GET",
+            url: syncScoreUrl,
+            async: true,
+            success: function(response) {
+                $(".lesson_score", element).html(response['scorm_score_value']);
+            }
+        });
     }
 
     $(function ($) {
