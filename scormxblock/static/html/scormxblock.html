@@ -6,7 +6,7 @@
         <p class="scorm_process">
             <span class="fal fa-bullseye-pointer"></span>
             <span class="lesson_score">{{ scorm_score_value }}</span>
-            <span>/{% blocktrans count weight_value as num_points %}{{ num_points }} point possible{% plural %}{{num_points }} points possible{% endblocktrans %} ({% trans graded_status %})</span>
+            <span class="static_score">/{% blocktrans count weight_value as num_points %}{{ num_points }} point possible{% plural %}{{num_points }} points possible{% endblocktrans %} ({% trans graded_status %})</span>
             <span class="success_status">{{ scorm_status_value }}</span>
         </p>
         {% endif %}
