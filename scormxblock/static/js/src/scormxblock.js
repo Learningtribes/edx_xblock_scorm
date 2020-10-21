@@ -234,6 +234,7 @@ function ScormXBlock(runtime, element, settings) {
         if (!open_new_tab) {
             setTimeout(function() {
                 $('#scorm-object-frame')[0].contentWindow.onbeforeunload = function () {
+                    Commit('value');
                     return null;
                 }
             }, 10000);
