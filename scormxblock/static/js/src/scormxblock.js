@@ -105,6 +105,16 @@ function ScormXBlock(runtime, element, settings) {
         return isSafari;
     }
 
+    function CheckSafariMobile() {
+        var isSafariMobile = false;
+        var winNav = window.navigator;
+        if (winNav.userAgent.indexOf('Safari') != -1 && winNav.userAgent.indexOf('Chrome') == -1 && winNav.userAgent.indexOf('Mobile') != -1) {
+            isSafariMobile = true
+        }
+
+        return isSafariMobile;
+    }
+
     function GetCookie(name) {
       if (!document.cookie) {
         return null;
@@ -120,7 +130,7 @@ function ScormXBlock(runtime, element, settings) {
 
 
     function Commit(value) {
-        if (CheckChrome()) {
+        if (CheckChrome() || CheckSafari()) {
             const csrftoken = GetCookie('csrftoken');
             fetch(commitUrl, {
                 method: 'POST',
@@ -241,7 +251,7 @@ function ScormXBlock(runtime, element, settings) {
         window.API = new SCORM_12_API();
         window.API_1484_11 = new SCORM_2004_API();
         if (!open_new_tab) {
-            if (CheckSafari()) {
+            if (CheckSafariMobile()) {
                 $('#scorm-object-frame')[0].contentWindow.onpagehide = function () {
                     Commit('value');
                 }
