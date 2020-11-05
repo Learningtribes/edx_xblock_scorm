@@ -95,6 +95,15 @@ function ScormXBlock(runtime, element, settings) {
         return chrome_commit;
     }
 
+    function CheckSafari() {
+        var isSafari = false;
+        var winNav = window.navigator;
+        if (winNav.userAgent.indexOf('Safari') != -1 && winNav.userAgent.indexOf('Chrome') == -1) {
+            isSafari = true
+        }
+
+        return isSafari;
+    }
 
     function GetCookie(name) {
       if (!document.cookie) {
@@ -232,12 +241,14 @@ function ScormXBlock(runtime, element, settings) {
         window.API = new SCORM_12_API();
         window.API_1484_11 = new SCORM_2004_API();
         if (!open_new_tab) {
-            setTimeout(function() {
+            if (CheckSafari()) {
+                $('#scorm-object-frame')[0].contentWindow.onpagehide = function () {
+                    Commit('value');
+                }
+            } else {
                 $('#scorm-object-frame')[0].contentWindow.onbeforeunload = function () {
                     Commit('value');
-                    return null;
-                }
-            }, 10000);
+            }               
         }
     });
 }
