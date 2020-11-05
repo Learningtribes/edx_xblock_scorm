@@ -130,7 +130,7 @@ function ScormXBlock(runtime, element, settings) {
 
 
     function Commit(value) {
-        if (CheckChrome() || CheckSafari()) {
+        if ((CheckChrome() || CheckSafari()) && !CheckSafariMobile()) {
             const csrftoken = GetCookie('csrftoken');
             fetch(commitUrl, {
                 method: 'POST',
