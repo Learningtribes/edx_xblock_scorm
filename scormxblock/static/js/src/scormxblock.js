@@ -249,6 +249,7 @@ function ScormXBlock(runtime, element, settings) {
             } else {
                 scorm_iframe.contentWindow.onbeforeunload = function () {
                     Commit('value');
+                }
             }               
         }
     });
