@@ -241,13 +241,12 @@ function ScormXBlock(runtime, element, settings) {
         window.API = new SCORM_12_API();
         window.API_1484_11 = new SCORM_2004_API();
         if (!open_new_tab) {
-            const scorm_iframe = document.getElementById("scorm-object-frame")[0];
             if (CheckSafari()) {
-                scorm_iframe.contentWindow.onpagehide = function () {
+                $('#scorm-object-frame')[0].contentWindow.onpagehide = function () {
                     Commit('value');
                 }
             } else {
-                scorm_iframe.contentWindow.onbeforeunload = function () {
+                $('#scorm-object-frame')[0].contentWindow.onbeforeunload = function () {
                     Commit('value');
                 }
             }               
