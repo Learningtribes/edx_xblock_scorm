@@ -252,7 +252,7 @@ function ScormXBlock(runtime, element, settings) {
         window.API_1484_11 = new SCORM_2004_API();
         if (!open_new_tab) {
             if (CheckSafariMobile()) {
-                $('#scorm-object-frame')[0].contentWindow.onpagehide = function () {
+                $('#scorm-object-frame')[0].contentWindow.onvisibilitychange = function () {
                     Commit('value');
                 }
             } else {
