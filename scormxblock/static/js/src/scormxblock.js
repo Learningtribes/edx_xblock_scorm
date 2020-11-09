@@ -245,12 +245,6 @@ function ScormXBlock(runtime, element, settings) {
         });
     }
 
-    document.addEventListener('visibilitychange', function() {
-        if (document.visibilityState == 'hidden') {
-            Commit('value');
-        }
-    });
-
     $(function ($) {
         scormInit();
         initPendingValues();
@@ -258,9 +252,9 @@ function ScormXBlock(runtime, element, settings) {
         window.API_1484_11 = new SCORM_2004_API();
         if (!open_new_tab) {
             if (CheckSafariMobile()) {
-                document.onvisibilitychange = function () {
+                $(document).on('visibilitychange', function () {
                     Commit('value');
-                }
+                })
             } else {
                 $('#scorm-object-frame')[0].contentWindow.onbeforeunload = function () {
                     Commit('value');
