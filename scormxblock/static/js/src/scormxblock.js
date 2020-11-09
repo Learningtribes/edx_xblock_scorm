@@ -245,6 +245,12 @@ function ScormXBlock(runtime, element, settings) {
         });
     }
 
+    document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState == 'hidden') {
+            Commit('value');
+        }
+    });
+
     $(function ($) {
         scormInit();
         initPendingValues();
