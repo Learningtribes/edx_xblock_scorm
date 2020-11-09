@@ -130,7 +130,7 @@ function ScormXBlock(runtime, element, settings) {
 
 
     function Commit(value) {
-        if ((CheckChrome() || CheckSafari()) && !CheckSafariMobile()) {
+        if (CheckChrome() || CheckSafari()) {
             const csrftoken = GetCookie('csrftoken');
             fetch(commitUrl, {
                 method: 'POST',
@@ -252,10 +252,9 @@ function ScormXBlock(runtime, element, settings) {
         window.API_1484_11 = new SCORM_2004_API();
         if (!open_new_tab) {
             if (CheckSafariMobile()) {
-                document.addEventListener("visibilitychange", function () {
-                    console.log( document.visibilityState );
+                $('#scorm-object-frame')[0].contentWindow.document.onvisibilitychange = function () {
                     Commit('value');
-                });
+                }
             } else {
                 $('#scorm-object-frame')[0].contentWindow.onbeforeunload = function () {
                     Commit('value');
