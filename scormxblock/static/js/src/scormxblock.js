@@ -252,9 +252,10 @@ function ScormXBlock(runtime, element, settings) {
         window.API_1484_11 = new SCORM_2004_API();
         if (!open_new_tab) {
             if (CheckSafariMobile()) {
-                document.onvisibilitychange = function () {
+                document.addEventListener("visibilitychange", function () {
+                    console.log( document.visibilityState );
                     Commit('value');
-                }
+                });
             } else {
                 $('#scorm-object-frame')[0].contentWindow.onbeforeunload = function () {
                     Commit('value');
