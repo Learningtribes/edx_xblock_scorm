@@ -134,10 +134,9 @@ function ScormXBlock(runtime, element, settings) {
             console.log('pagehide logging');
             console.log(pendingValues);
             const csrftoken = GetCookie('csrftoken');
-            var urlencoded = new URLSearchParams();
-            urlencoded.append(JSON.stringify(pendingValues), []);
-            urlencoded.append('csrfmiddlewaretoken', csrftoken);
-            navigator.sendBeacon(commitUrl, urlencoded);   
+            pendingValues['csrfmiddlewaretoken'] = csrftoken;
+            var params = new URLSearchParams(pendingValues);
+            navigator.sendBeacon(commitUrl, params);   
         }             
         /*
         var form_data = new FormData();
