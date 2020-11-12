@@ -129,8 +129,29 @@ function ScormXBlock(runtime, element, settings) {
     }
 
 
+    window.onpagehide = function () {
+        if (CheckSafariMobile()) {
+            console.log('pagehide logging');
+            console.log(pendingValues);
+            const csrftoken = GetCookie('csrftoken');
+            var urlencoded = new URLSearchParams();
+            urlencoded.append(JSON.stringify(pendingValues), []);
+            urlencoded.append('csrfmiddlewaretoken', csrftoken);
+            navigator.sendBeacon(commitUrl, urlencoded);   
+        }             
+        /*
+        var form_data = new FormData();
+        for ( var key in pendingValues ) {
+            form_data.append(key, pendingValues[key]);
+        }
+        form_data.append('csrfmiddlewaretoken', csrftoken);
+        navigator.sendBeacon(commitUrl, form_data);
+        */
+
+    };
+
     function Commit(value) {
-        if (CheckChrome() || CheckSafari()) {
+        if (CheckChrome() || CheckSafari() && !CheckSafariMobile()) {
             const csrftoken = GetCookie('csrftoken');
             fetch(commitUrl, {
                 method: 'POST',
@@ -251,14 +272,8 @@ function ScormXBlock(runtime, element, settings) {
         window.API = new SCORM_12_API();
         window.API_1484_11 = new SCORM_2004_API();
         if (!open_new_tab) {
-            if (CheckSafariMobile()) {
-                $(document).on('visibilitychange', function () {
-                    Commit('value');
-                })
-            } else {
-                $('#scorm-object-frame')[0].contentWindow.onbeforeunload = function () {
-                    Commit('value');
-                }
+            $('#scorm-object-frame')[0].contentWindow.onbeforeunload = function () {
+                Commit('value');
             }               
         }
     });
