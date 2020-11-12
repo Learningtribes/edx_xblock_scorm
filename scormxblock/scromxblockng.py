@@ -474,6 +474,25 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         return self.get_fields_data(True, 'scorm_status', 'scorm_score')
 
     @XBlock.handler
+    def ios_scorm_commit(self, request, suffix=''):
+        logger.info(request.POST)
+        package_date = request.POST.pop('package_date', '')
+        package_version = request.POST.pop('package_version', '')
+        expired, need_update = self.is_runtime_data_expired(package_date)
+        if expired:
+            self.scorm_runtime_data = {}
+        if need_update:
+            logger.info(request.POST)
+            for k,v in request.POST:
+                logger.info(k,v)
+            #self.scorm_runtime_data.update(request.POST)
+
+        self.scorm_runtime_modified = timezone.now()
+
+        #self.update_scorm_status(data, package_version)
+        return self.get_fields_data(True, 'scorm_status', 'scorm_score')
+
+    @XBlock.handler
     def sync_score_value(self, request, suffix=''):
         """
         Fix double refresh bug cause of unexpected terminal action

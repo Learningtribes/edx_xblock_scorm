@@ -3,6 +3,7 @@ function ScormXBlock(runtime, element, settings) {
     var errorCode = 0;
 
     const commitUrl = runtime.handlerUrl(element, 'scorm_commit');
+    const ios_commitUrl = runtime.handlerUrl(element, 'scorm_ios_commit');
     const getValueUrl = runtime.handlerUrl(element, 'scorm_get_value');
     const syncScoreUrl = runtime.handlerUrl(element, 'sync_score_value')
     const package_version = settings['scorm_pkg_version_value'];
@@ -136,7 +137,7 @@ function ScormXBlock(runtime, element, settings) {
             const csrftoken = GetCookie('csrftoken');
             pendingValues['csrfmiddlewaretoken'] = csrftoken;
             var params = new URLSearchParams(pendingValues);
-            navigator.sendBeacon(commitUrl, params);   
+            navigator.sendBeacon(ios_commitUrl, params);   
         }             
         /*
         var form_data = new FormData();
