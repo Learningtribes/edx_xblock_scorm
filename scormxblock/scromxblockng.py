@@ -478,8 +478,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
         post_data = request.POST.copy()
         post_data.pop('csrfmiddlewaretoken', '')
-        package_date = request.POST.pop('package_date', '')
-        package_version = request.POST.pop('package_version', '')
+        package_date = post_data.pop('package_date', '')
+        package_version = post_data.pop('package_version', '')
         expired, need_update = self.is_runtime_data_expired(package_date)
         update_data = {}
         for x,y in post_data.iteritems():
