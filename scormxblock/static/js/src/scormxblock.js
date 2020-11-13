@@ -136,6 +136,12 @@ function ScormXBlock(runtime, element, settings) {
         }             
     };
 
+    document.onvisibilitychange = function () {
+        if (CheckSafariMobile() && (document.visibilityState === 'hidden')) {
+            Extra_Commit();
+        }
+    };
+
     window.onbeforeunload = function () {
         Extra_Commit();
     };
