@@ -474,23 +474,26 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         return self.get_fields_data(True, 'scorm_status', 'scorm_score')
 
     @XBlock.handler
-    def ios_scorm_commit(self, request, suffix=''):
-        logger.info(request.POST)
+    def scorm_ios_commit(self, request, suffix=''):
+
+        post_data = request.POST.copy()
+        post_data.pop('csrfmiddlewaretoken', '')
         package_date = request.POST.pop('package_date', '')
         package_version = request.POST.pop('package_version', '')
         expired, need_update = self.is_runtime_data_expired(package_date)
+        update_data = {}
+        for x,y in post_data.iteritems():
+            update_data[x] = y
         if expired:
             self.scorm_runtime_data = {}
         if need_update:
-            logger.info(request.POST)
-            for k,v in request.POST:
-                logger.info(k,v)
-            #self.scorm_runtime_data.update(request.POST)
+            self.scorm_runtime_data.update(update_data)
 
         self.scorm_runtime_modified = timezone.now()
 
-        #self.update_scorm_status(data, package_version)
-        return self.get_fields_data(True, 'scorm_status', 'scorm_score')
+        self.update_scorm_status(update_data, package_version)
+        response_data = self.get_fields_data(True, 'scorm_status', 'scorm_score')
+        return Response(json_body=response_data, content_type='application/json')
 
     @XBlock.handler
     def sync_score_value(self, request, suffix=''):
