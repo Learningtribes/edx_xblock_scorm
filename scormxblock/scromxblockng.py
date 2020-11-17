@@ -473,6 +473,22 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         self.update_scorm_status(data, package_version)
         return self.get_fields_data(True, 'scorm_status', 'scorm_score')
 
+    @XBlock.json_handler
+    def scorm_enforce_commit(self, data, suffix=''):
+
+        package_date = data.pop('package_date', '')
+        package_version = data.pop('package_version', '')
+        expired, need_update = self.is_runtime_data_expired(package_date)
+        if expired:
+            self.scorm_runtime_data = {}
+        if need_update:
+            self.scorm_runtime_data.update(data)
+
+        self.scorm_runtime_modified = timezone.now()
+
+        self.update_scorm_status(data, package_version)
+        return self.get_fields_data(True, 'scorm_status', 'scorm_score')
+
     @XBlock.handler
     def scorm_ios_commit(self, request, suffix=''):
 

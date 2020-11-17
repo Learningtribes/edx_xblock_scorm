@@ -4,6 +4,7 @@ function ScormXBlock(runtime, element, settings) {
 
     const commitUrl = runtime.handlerUrl(element, 'scorm_commit');
     const ios_commitUrl = runtime.handlerUrl(element, 'scorm_ios_commit');
+    const enforce_commitUrl = runtime.handlerUrl(element, 'scorm_enforce_commit');
     const getValueUrl = runtime.handlerUrl(element, 'scorm_get_value');
     const syncScoreUrl = runtime.handlerUrl(element, 'sync_score_value')
     const package_version = settings['scorm_pkg_version_value'];
@@ -38,7 +39,7 @@ function ScormXBlock(runtime, element, settings) {
         }
 
         // Get runtime score value due to unexpected terminal action
-        timerId = setInterval(syncScoreValue, 2000);
+        timerId = setInterval(Enforce_Commit, 2000);
     }
 
     function Initialize(value) {
@@ -198,6 +199,24 @@ function ScormXBlock(runtime, element, settings) {
             initPendingValues();
             return 'true';
         }
+    }
+
+    function Enforce_Commit() {
+        if (('cmi.score.raw' in pendingValues && 'cmi.score.max' in pendingValues && 'cmi.score.min' in pendingValues) || ('cmi.core.score.raw' in pendingValues && 'cmi.core.score.max' in pendingValues && 'cmi.core.score.min' in pendingValues) || ('cmi.score.scaled' in pendingValues)) {
+            $.ajax({
+                type: "POST",
+                url: enforce_commitUrl,
+                data: JSON.stringify(pendingValues),
+                async: false,
+                success: function (response) {
+                    if (typeof response['scorm_score_value'] !== "undefined") {
+                        $(".lesson_score", element).html(response['scorm_score_value']);
+                    }
+                    $(".success_status", element).html(response['scorm_status_value']);
+                }
+            });   
+        }        
+        return 'true';
     }
 
     function Commit(value) {
