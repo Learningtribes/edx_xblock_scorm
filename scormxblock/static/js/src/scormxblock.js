@@ -3,6 +3,7 @@ function ScormXBlock(runtime, element, settings) {
     var errorCode = 0;
 
     const commitUrl = runtime.handlerUrl(element, 'scorm_commit');
+    const ios_commitUrl = runtime.handlerUrl(element, 'scorm_ios_commit');
     const getValueUrl = runtime.handlerUrl(element, 'scorm_get_value');
     const syncScoreUrl = runtime.handlerUrl(element, 'sync_score_value')
     const package_version = settings['scorm_pkg_version_value'];
@@ -129,8 +130,24 @@ function ScormXBlock(runtime, element, settings) {
     }
 
 
-    function Commit(value) {
-        if ((CheckChrome() || CheckSafari()) && !CheckSafariMobile()) {
+    window.onpagehide = function () {
+        if (CheckSafariMobile()) {
+            Extra_Commit();   
+        }             
+    };
+
+    document.onvisibilitychange = function () {
+        if (CheckSafariMobile() && (document.visibilityState === 'hidden')) {
+            Extra_Commit();
+        }
+    };
+
+    window.onbeforeunload = function () {
+        Extra_Commit();
+    };
+
+    function Extra_Commit() {
+        if (CheckChrome() || CheckSafari() && !CheckSafariMobile()) {
             const csrftoken = GetCookie('csrftoken');
             fetch(commitUrl, {
                 method: 'POST',
@@ -155,6 +172,16 @@ function ScormXBlock(runtime, element, settings) {
               });
             initPendingValues();
             return 'true';
+        } else if (CheckSafariMobile()) {
+            const csrftoken = GetCookie('csrftoken');
+            pendingValues['csrfmiddlewaretoken'] = csrftoken;
+            var params = new URLSearchParams(pendingValues);
+            navigator.sendBeacon(ios_commitUrl, params);
+            setTimeout(function(){ syncScoreValue()},2000);
+            setTimeout(function(){ syncScoreValue()},5000);
+            setTimeout(function(){ syncScoreValue()},10000);
+            initPendingValues();
+            return 'true';
         } else {
             $.ajax({
                 type: "POST",
@@ -171,6 +198,74 @@ function ScormXBlock(runtime, element, settings) {
             initPendingValues();
             return 'true';
         }
+    }
+
+    function Commit(value) {
+        $.ajax({
+            type: "POST",
+            url: commitUrl,
+            data: JSON.stringify(pendingValues),
+            async: false,
+            success: function (response) {
+                if (typeof response['scorm_score_value'] !== "undefined") {
+                    $(".lesson_score", element).html(response['scorm_score_value']);
+                }
+                $(".success_status", element).html(response['scorm_status_value']);
+            }
+        });
+        initPendingValues();
+        return 'true';
+        // if (CheckChrome() || CheckSafari() && !CheckSafariMobile()) {
+        //     const csrftoken = GetCookie('csrftoken');
+        //     fetch(commitUrl, {
+        //         method: 'POST',
+        //         headers: {
+        //           'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+        //           'X-CSRFToken': csrftoken
+        //         },
+        //         body: JSON.stringify(pendingValues),
+        //         credentials: 'same-origin',
+        //         keepalive: true
+        //     })
+        //       .then(response => {
+        //         if (response.ok) {
+        //           return response.json();
+        //         }
+        //       })
+        //       .then(data => {
+        //         if (typeof data['scorm_score_value'] !== "undefined") {
+        //           $(".lesson_score", element).html(data['scorm_score_value']);
+        //         }
+        //         $(".success_status", element).html(data['scorm_status_value']);
+        //       });
+        //     initPendingValues();
+        //     return 'true';
+        // } else if (CheckSafariMobile()) {
+        //     const csrftoken = GetCookie('csrftoken');
+        //     pendingValues['csrfmiddlewaretoken'] = csrftoken;
+        //     var params = new URLSearchParams(pendingValues);
+        //     navigator.sendBeacon(ios_commitUrl, params);
+        //     setTimeout(function(){ syncScoreValue()},2000);
+        //     setTimeout(function(){ syncScoreValue()},5000);
+        //     setTimeout(function(){ syncScoreValue()},10000);
+        //     initPendingValues();
+        //     return 'true';
+        // } else {
+        //     $.ajax({
+        //         type: "POST",
+        //         url: commitUrl,
+        //         data: JSON.stringify(pendingValues),
+        //         async: false,
+        //         success: function (response) {
+        //             if (typeof response['scorm_score_value'] !== "undefined") {
+        //                 $(".lesson_score", element).html(response['scorm_score_value']);
+        //             }
+        //             $(".success_status", element).html(response['scorm_status_value']);
+        //         }
+        //     });
+        //     initPendingValues();
+        //     return 'true';
+        // }
     }    
 
     function initPendingValues(){
@@ -250,16 +345,10 @@ function ScormXBlock(runtime, element, settings) {
         initPendingValues();
         window.API = new SCORM_12_API();
         window.API_1484_11 = new SCORM_2004_API();
-        if (!open_new_tab) {
-            if (CheckSafariMobile()) {
-                $('#scorm-object-frame')[0].contentWindow.onvisibilitychange = function () {
-                    Commit('value');
-                }
-            } else {
-                $('#scorm-object-frame')[0].contentWindow.onbeforeunload = function () {
-                    Commit('value');
-                }
-            }               
-        }
+        // if (!open_new_tab) {
+        //     $('#scorm-object-frame')[0].contentWindow.onbeforeunload = function () {
+        //         Commit('value');
+        //     }               
+        // }
     });
 }
