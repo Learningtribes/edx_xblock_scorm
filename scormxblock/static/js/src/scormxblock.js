@@ -215,7 +215,8 @@ function ScormXBlock(runtime, element, settings) {
                     $(".success_status", element).html(response['scorm_status_value']);
                 }
             });   
-        }        
+        } 
+        initPendingValues();       
         return 'true';
     }
 
