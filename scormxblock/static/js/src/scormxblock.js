@@ -40,6 +40,9 @@ function ScormXBlock(runtime, element, settings) {
 
         // Get runtime score value due to unexpected terminal action
         timerId = setInterval(Enforce_Commit, 2000);
+        setTimeout(function(){ syncScoreValue()},2000);
+        setTimeout(function(){ syncScoreValue()},5000);
+        setTimeout(function(){ syncScoreValue()},10000);
     }
 
     function Initialize(value) {
