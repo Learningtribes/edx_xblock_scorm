@@ -124,9 +124,15 @@ function ScormXBlock(runtime, element, settings) {
       if (!document.cookie) {
         return null;
       }
+      // const xsrfCookies = document.cookie.split(';')
+      //   .map(c => c.trim())
+      //   .filter(c => c.startsWith(name + '='));
       const xsrfCookies = document.cookie.split(';')
-        .map(c => c.trim())
-        .filter(c => c.startsWith(name + '='));
+        .map(function(c) {
+            return c.trim();
+        }).filter(function(c) {
+            return c.startsWith(name + '=');
+        });
       if (xsrfCookies.length === 0) {
         return null;
       }
