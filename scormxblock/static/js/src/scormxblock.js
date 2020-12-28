@@ -169,17 +169,28 @@ function ScormXBlock(runtime, element, settings) {
                 credentials: 'same-origin',
                 keepalive: true
             })
-              .then(response => {
+              // .then(response => {
+              //   if (response.ok) {
+              //     return response.json();
+              //   }
+              // })
+              // .then(data => {
+              //   if (typeof data['scorm_score_value'] !== "undefined") {
+              //     $(".lesson_score", element).html(data['scorm_score_value']);
+              //   }
+              //   $(".success_status", element).html(data['scorm_status_value']);
+              // });
+              .then(function(response) {
                 if (response.ok) {
                   return response.json();
                 }
               })
-              .then(data => {
+              .then(function(data) {
                 if (typeof data['scorm_score_value'] !== "undefined") {
                   $(".lesson_score", element).html(data['scorm_score_value']);
                 }
                 $(".success_status", element).html(data['scorm_status_value']);
-              });
+              }); 
             initPendingValues();
             return 'true';
         } else if (CheckSafariMobile()) {
