@@ -124,9 +124,15 @@ function ScormXBlock(runtime, element, settings) {
       if (!document.cookie) {
         return null;
       }
+      // const xsrfCookies = document.cookie.split(';')
+      //   .map(c => c.trim())
+      //   .filter(c => c.startsWith(name + '='));
       const xsrfCookies = document.cookie.split(';')
-        .map(c => c.trim())
-        .filter(c => c.startsWith(name + '='));
+        .map(function(c) {
+            return c.trim();
+        }).filter(function(c) {
+            return c.startsWith(name + '=');
+        });
       if (xsrfCookies.length === 0) {
         return null;
       }
@@ -163,17 +169,28 @@ function ScormXBlock(runtime, element, settings) {
                 credentials: 'same-origin',
                 keepalive: true
             })
-              .then(response => {
+              // .then(response => {
+              //   if (response.ok) {
+              //     return response.json();
+              //   }
+              // })
+              // .then(data => {
+              //   if (typeof data['scorm_score_value'] !== "undefined") {
+              //     $(".lesson_score", element).html(data['scorm_score_value']);
+              //   }
+              //   $(".success_status", element).html(data['scorm_status_value']);
+              // });
+              .then(function(response) {
                 if (response.ok) {
                   return response.json();
                 }
               })
-              .then(data => {
+              .then(function(data) {
                 if (typeof data['scorm_score_value'] !== "undefined") {
                   $(".lesson_score", element).html(data['scorm_score_value']);
                 }
                 $(".success_status", element).html(data['scorm_status_value']);
-              });
+              }); 
             initPendingValues();
             return 'true';
         } else if (CheckSafariMobile()) {
