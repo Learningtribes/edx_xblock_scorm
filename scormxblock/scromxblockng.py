@@ -420,6 +420,10 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             elif name == 'cmi.core.student_name':
                 user = User.objects.get(id=self.runtime.user_id)
                 default = user.username
+            elif name == 'cmi.core.entry':
+                if self.scorm_runtime_data.get('cmi.core.exit', None):
+                    if self.scorm_runtime_data.get('cmi.core.exit') == 'suspend':
+                        default = 'resume'
         elif package_version == SCORM_VERSION.V2004:
             default = SCORM_2004_RUNTIME_DEFAULT.get(name, '')
             if name == 'cmi.learner_id':
@@ -427,6 +431,10 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             elif name == 'cmi.learner_name':
                 user = User.objects.get(id=self.runtime.user_id)
                 default = user.username
+            elif name == 'cmi.entry':
+                if self.scorm_runtime_data.get('cmi.exit', None):
+                    if self.scorm_runtime_data.get('cmi.exit') == 'suspend':
+                        default = 'resume'
         else:
             self.raise_handler_error('error scorm package version')
 
