@@ -540,7 +540,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         if lesson_status == 'passed':
             info['status'] = SCORM_STATUS.SUCCEED
         elif lesson_status == 'failed':
-            info['status'] = SCORM_STATUS.SUCCEED
+            info['status'] = SCORM_STATUS.FAILED
 
         return info
 
