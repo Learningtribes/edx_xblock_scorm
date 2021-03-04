@@ -1,3 +1,11 @@
+{% load i18n %}
+
 <div class="themeable-xblock scormxblock_block">
-    <p>Look in LMS</p>
+    {% if scorm_file %}
+        <p class="iframe-preview-text">{% trans "Look in LMS"%}</p>
+    {% else %}
+        <p class="iframe-default-text">
+            {% trans "Use this component to add elearning modules to your course. Elearning modules must be in 2004 or 1.2 format."%}
+        </p>
+    {% endif %}
 </div>

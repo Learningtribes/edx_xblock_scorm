@@ -395,7 +395,11 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         return frag
 
     def author_view(self, context):
-        html = self.resource_string("static/html/author_view.html")
+        data = dict(
+            scorm_file=self.scorm_pkg
+        )
+        # html = self.resource_string("static/html/author_view.html")
+        html = self.render_template("static/html/author_view.html", data)
         frag = Fragment(html)
         return frag
 
