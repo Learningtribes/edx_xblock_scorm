@@ -236,7 +236,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         with ZipFile(pkg.file, 'r') as zip_fs:
             mf = zip_fs.read('imsmanifest.xml')
             self.scorm_pkg_version, scorm_index, scorm_launch = self._get_scorm_info(mf)
-            logger.info('uploadfile: ' +str(self.scorm_pkg_version) + str(scorm_index) + str(scorm_launch))
+            #logger.info('uploadfile: ' +str(self.scorm_pkg_version) + str(scorm_index) + str(scorm_launch))
         input_zip=ZipFile(pkg.file)
         new_zip = {}
         for filename in input_zip.namelist():
