@@ -240,7 +240,10 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         input_zip=ZipFile(pkg.file)
         new_zip = {}
         for filename in input_zip.namelist():
-            newname = filename.encode('utf-8')
+            if isinstance(filename, unicode):
+              newname = filename.encode('utf-8')
+            elif isinstance(filename, str):
+              newname = filename
             new_zip[newname] = input_zip.read(filename)
         in_memory = BytesIO()
         zf = ZipFile(in_memory, mode="w")
@@ -250,13 +253,6 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         in_memory.seek(0)
         zipfs = ZipFS(in_memory)
         pkg_id = self._upload_scorm_pkg(zipfs)
-        '''
-        zipfs = ZipFS(pkg.file)
-        with zipfs.open(u'imsmanifest.xml') as mf:
-            self.scorm_pkg_version, scorm_index, scorm_launch = self._get_scorm_info(mf)
-            #logger.info('uploadfile: ' +str(self.scorm_pkg_version) + str(scorm_index) + str(scorm_launch))
-        pkg_id = self._upload_scorm_pkg(zipfs)
-        '''
         self.scorm_pkg = os.path.join(pkg_id, scorm_index)
         self.scorm_pkg_modified = timezone.now()
         if scorm_launch is not None:
