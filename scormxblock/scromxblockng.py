@@ -241,9 +241,14 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         new_zip = {}
         for filename in input_zip.namelist():
             if isinstance(filename, unicode):
-              newname = filename.encode('utf-8')
+                newname = filename.encode('utf-8')
             elif isinstance(filename, str):
-              newname = filename
+                try:
+                    filename.decode('utf-8')
+                    newname = filename
+                except UnicodeDecodeError:
+                    uname = filename.decode('latin-1')
+                    newname = uname.encode('utf-8')
             new_zip[newname] = input_zip.read(filename)
         in_memory = BytesIO()
         zf = ZipFile(in_memory, mode="w")
