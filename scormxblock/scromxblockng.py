@@ -495,10 +495,15 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
     @XBlock.json_handler
     def scorm_commit(self, data, suffix=''):
-
+        logger.info("======== scorm_commit ========")
+        logger.info(data)
         package_date = data.pop('package_date', '')
         package_version = data.pop('package_version', '')
         expired, need_update = self.is_runtime_data_expired(package_date)
+        logger.info("======= runtime data =======")
+        logger.info(self.scorm_runtime_data)
+        logger.info(expired)
+        logger.info(need_update)
         if expired:
             self.scorm_runtime_data = {}
         if need_update:
