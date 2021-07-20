@@ -552,7 +552,9 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         """
         Fix double refresh bug cause of unexpected terminal action
         """
+        print("============ sync_score_value ===========")
         score_value = self.get_fields_data(True, 'scorm_score')
+        print(score_value)
         return Response(json_body=score_value, content_type='application/json')
 
     @staticmethod
