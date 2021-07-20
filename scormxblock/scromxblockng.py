@@ -406,8 +406,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         if self.graded and fields_data['has_score'] and fields_data['weight'] != 0:
             fields_data['graded_status'] = 'graded'
         fields_data['display_name'] = self.display_name
-        print("======== ng.py get_student_data ===========")
-        print(fields_data)
+        logger.info("======== ng.py get_student_data ===========")
+        logger.info(fields_data)
         return fields_data
 
     def student_view(self, context=None):
@@ -552,9 +552,9 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         """
         Fix double refresh bug cause of unexpected terminal action
         """
-        print("============ sync_score_value ===========")
+        logger.info("============ sync_score_value ===========")
         score_value = self.get_fields_data(True, 'scorm_score')
-        print(score_value)
+        logger.info(score_value)
         return Response(json_body=score_value, content_type='application/json')
 
     @staticmethod
