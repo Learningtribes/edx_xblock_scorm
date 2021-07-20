@@ -139,7 +139,8 @@ class ScormXBlock(XBlock):
             data['scorm_modified_value'] = dt2str(data['scorm_modified_value'])
         if 'cmi_modified_value' in data and data['cmi_modified_value']:
             data['cmi_modified_value'] = dt2str(data['cmi_modified_value'])
-
+        print("========== get_fileds_data ===========")
+        print(data)
         return data
 
     def studio_view(self, context=None):
@@ -155,6 +156,8 @@ class ScormXBlock(XBlock):
     def get_student_data(self):
         fields_data = self.get_fields_data(False, 'lesson_score', 'weight',
                                            'has_score', 'success_status', 'scorm_file')
+        print("============= get_student_data ===============")
+        print(fields_data)
         return fields_data
 
     def student_view(self, context=None):
@@ -267,12 +270,15 @@ class ScormXBlock(XBlock):
             value = default
         else:
             value = self.cmi_data.get(name, default)
-
+        print("========== scorm_get_value ===========")
+        print(value)
         return {"value": value}
 
 
     @XBlock.json_handler
     def commit(self, data, suffix=''):
+        print("========= commit ===========")
+        print(data)
         package_date = data.pop('package_date', '')
         package_version = data.pop('package_version', '')
         expired, need_update = self.is_cmi_data_expired(package_date)

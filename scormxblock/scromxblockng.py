@@ -406,6 +406,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         if self.graded and fields_data['has_score'] and fields_data['weight'] != 0:
             fields_data['graded_status'] = 'graded'
         fields_data['display_name'] = self.display_name
+        print("======== ng.py get_student_data ===========")
+        print(fields_data)
         return fields_data
 
     def student_view(self, context=None):
