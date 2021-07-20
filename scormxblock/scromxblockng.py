@@ -407,7 +407,6 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             fields_data['graded_status'] = 'graded'
         fields_data['display_name'] = self.display_name
         logger.info("======== ng.py get_student_data ===========")
-        logger.info(fields_data)
         return fields_data
 
     def student_view(self, context=None):
@@ -554,7 +553,6 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         """
         logger.info("============ sync_score_value ===========")
         score_value = self.get_fields_data(True, 'scorm_score')
-        logger.info(score_value)
         return Response(json_body=score_value, content_type='application/json')
 
     @staticmethod
