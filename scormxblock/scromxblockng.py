@@ -517,6 +517,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     @XBlock.json_handler
     def scorm_enforce_commit(self, data, suffix=''):
 
+        print("========= scorm_enforce_commit ===========")
+        print(data)
         package_date = data.pop('package_date', '')
         package_version = data.pop('package_version', '')
         expired, need_update = self.is_runtime_data_expired(package_date)
