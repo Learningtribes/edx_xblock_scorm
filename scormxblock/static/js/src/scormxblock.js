@@ -381,6 +381,7 @@ function ScormXBlock(runtime, element, settings) {
     }
 
     $(function ($) {
+        console.log("======== Scorm ========");
         scormInit();
         initPendingValues();
         window.API = new SCORM_12_API();
