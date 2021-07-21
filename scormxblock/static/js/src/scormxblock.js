@@ -314,17 +314,17 @@ function ScormXBlock(runtime, element, settings) {
 
 
     function GetLastError() {
-        // console.log(version + ' GetLastError');
+        console.log(version + ' GetLastError');
         return 0;
     }
 
     function GetErrorString(errCode) {
-        // console.log(version + ' GetErrorString: ' + errCode);
+        console.log(version + ' GetErrorString: ' + errCode);
         return '';
     }
 
     function GetDiagnostic(errCode) {
-        // console.log(version + ' GetDiagnostic: ' + errCode);
+        console.log(version + ' GetDiagnostic: ' + errCode);
         return 'true';
     }
 
