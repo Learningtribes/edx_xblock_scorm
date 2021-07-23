@@ -46,12 +46,14 @@ function ScormXBlock(runtime, element, settings) {
     }
 
     function Initialize(value) {
+        console.log("======== Initialize ========")
         return pingServer() ? "true": "false";
     }
 
     function Terminate(value) {
         Commit(value);
         clearInterval(timerId);
+        console.log("======== terminate ========")
         return 'true';
     }
 
@@ -68,11 +70,13 @@ function ScormXBlock(runtime, element, settings) {
         if(content.error) {
             alert(content.error)
         }
+        console.log("======== getValue ========")
         return content.value;
     }
 
     function SetValue(name, value) {
         pendingValues[name] = value;
+        console.log("======== setValue ========")
         return 'true';
     }
 
@@ -254,6 +258,7 @@ function ScormXBlock(runtime, element, settings) {
             }
         });
         initPendingValues();
+        console.log("========== commit =========")
         return 'true';
         // if (CheckChrome() || CheckSafari() && !CheckSafariMobile()) {
         //     const csrftoken = GetCookie('csrftoken');
