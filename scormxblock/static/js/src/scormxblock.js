@@ -13,6 +13,9 @@ function ScormXBlock(runtime, element, settings) {
     const open_new_tab = settings['open_new_tab_value'];
     var timerId;
     let pendingValues = null;
+    var _NoError = {"code":"0","string":"No Error","diagnostic":"No Error"},
+        _GeneralException = {"code":"101","string":"General Exception","diagnostic":"General Exception"},
+        _AlreadyInitialized = {"code":"103","string":"Already Initialized","diagnostic":"Already Initialized"};
 
     function scormInit() {
         var $scormFrame = $('#scorm-object-frame')
@@ -339,7 +342,7 @@ function ScormXBlock(runtime, element, settings) {
         this.LMSGetValue = GetValue;
         this.LMSSetValue = SetValue;
         this.LMSCommit = Commit;
-        this.LMSGetLastError = GetLastError;
+        //this.LMSGetLastError = GetLastError;
         this.LMSGetErrorString = GetErrorString;
         this.LMSGetDiagnostic = GetDiagnostic;
     }
@@ -350,7 +353,7 @@ function ScormXBlock(runtime, element, settings) {
         this.GetValue = GetValue;
         this.SetValue = SetValue;
         this.Commit = Commit;
-        this.GetLastError = GetLastError;
+        //this.GetLastError = GetLastError;
         this.GetErrorString = GetErrorString;
         this.GetDiagnostic = GetDiagnostic;
     }
