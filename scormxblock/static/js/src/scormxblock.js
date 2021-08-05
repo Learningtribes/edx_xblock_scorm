@@ -318,9 +318,8 @@ function ScormXBlock(runtime, element, settings) {
     }
 
 
-    function GetLastError(version) {
-        console.log(version + ' GetLastError');
-        return 0;
+    function GetLastError() {
+        return "0";
     }
 
     function GetErrorString(errCode) {
