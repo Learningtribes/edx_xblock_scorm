@@ -342,7 +342,7 @@ function ScormXBlock(runtime, element, settings) {
         this.LMSGetValue = GetValue;
         this.LMSSetValue = SetValue;
         this.LMSCommit = Commit;
-        //this.LMSGetLastError = GetLastError;
+        this.LMSGetLastError = GetLastError;
         this.LMSGetErrorString = GetErrorString;
         this.LMSGetDiagnostic = GetDiagnostic;
     }
@@ -353,7 +353,7 @@ function ScormXBlock(runtime, element, settings) {
         this.GetValue = GetValue;
         this.SetValue = SetValue;
         this.Commit = Commit;
-        //this.GetLastError = GetLastError;
+        this.GetLastError = GetLastError;
         this.GetErrorString = GetErrorString;
         this.GetDiagnostic = GetDiagnostic;
     }
