@@ -398,5 +398,8 @@ function ScormXBlock(runtime, element, settings) {
         //         Commit('value');
         //     }               
         // }
+        $("#scorm-object-frame").on('error', function () {
+            console.log('failed to load')
+        })
     });
 }
