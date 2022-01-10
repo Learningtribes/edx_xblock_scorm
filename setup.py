@@ -31,6 +31,7 @@ setup(
         'lxml==3.8.0',
         'web-fragments==0.2.2',
         'user-agents==2.1',
+        'fs==2.4.13',
     ],
     dependency_links=[
         'git+https://github.com/Learningtribes/xblock-utils.git@ec95e5e718c4144dc8a43d116a545f210d929667#egg=xblock-utils',
