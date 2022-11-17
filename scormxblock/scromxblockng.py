@@ -38,6 +38,10 @@ except ImportError:
 from .scorm_default import *
 from .fields import DateTime
 from .mixins import ScorableXBlockMixin
+
+from .config import SupportedExternalResources, SUPPORTED_EXTERNAL_RESOURCES
+
+
 logger = logging.getLogger(__name__)
 # Make '_' a no-op so we can scrape strings
 _ = lambda text: text
@@ -421,7 +425,16 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             scorm_file=self.scorm_pkg
         )
         # html = self.resource_string("static/html/author_view.html")
-        html = self.render_template("static/html/author_view.html", data)
+        html = self.render_template(
+                'static/html/author_view.html',
+                {'self': self, 'fields': self.xblock_field_list(['display_name', 'iframe_url'])}
+                if self.iframe_url else {
+                    'self': self,
+                    'external_resources': SUPPORTED_EXTERNAL_RESOURCES,
+                    'usd_svg': self.resource_string('static/images/dollar.svg')
+                }
+            )
+        
         frag = Fragment(html)
         return frag
 
