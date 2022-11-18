@@ -39,7 +39,7 @@ from .scorm_default import *
 from .fields import DateTime
 from .mixins import ScorableXBlockMixin
 
-from .config import SupportedExternalResources, SUPPORTED_EXTERNAL_RESOURCES
+from .config import SupportedScromResources, SUPPORTED_SCROM_RESOURCES
 
 
 logger = logging.getLogger(__name__)
@@ -430,7 +430,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 {'self': self, 'fields': self.xblock_field_list(['display_name', 'iframe_url'])}
                 if self.iframe_url else {
                     'self': self,
-                    'external_resources': SUPPORTED_EXTERNAL_RESOURCES,
+                    'external_resources': SUPPORTED_SCROM_RESOURCES,
                     'usd_svg': self.resource_string('static/images/dollar.svg')
                 }
             )
