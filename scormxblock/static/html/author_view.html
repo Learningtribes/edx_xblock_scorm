@@ -21,12 +21,9 @@
                         <div class="item-tags-bar">
                             <span class="item-tags-prefix">
                             {% for tag_name in resource.tags %}
-                            <!-- Infographics Presentation -->
-                                <!-- {% if tag_name == 'eLearning authoring tools' %} -->
-                                {% if tag_name == 'Infographics' %}
+                                {% if tag_name == 'eLearning authoring tools' %}
                                 <span class="item-green-tag">{% trans tag_name %}</span>
-                                <!-- {% elif tag_name == 'Video' %} -->
-                                {% elif tag_name == 'Presentation' %}
+                                {% elif tag_name == 'Video' %}
                                 <span class="item-purple-tag">{% trans tag_name %}</span>
                                 {% endif %}
                             {% endfor %}
