@@ -48,7 +48,7 @@ class SupportedScromResources(object):
         self._resources = []
 
         self._add_resource(
-            icon='static/images/canva.svg', name='Kumullus',
+            icon='static/images/kumullus.svg', name='Kumullus',
             tags=[_ScromComponent.TAG_VIDEO, _ScromComponent.TAG_QUIZ],
             paying=True,
             site_link=r'https://kumullus.com/',
