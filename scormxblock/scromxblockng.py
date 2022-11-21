@@ -359,6 +359,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         return data.decode("utf8")
 
     def render_template(self, template_path, context):
+        print("----------------------------start")
 
         """Evaluate a template by resource path, applying the provided context"""
         SupportedScromResources.assign_scrom_handle(self)
@@ -451,11 +452,11 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
 
     def author_view(self, context):
-        data = dict(
-            scorm_file=self.scorm_pkg
-        )
-        # html = self.resource_string("static/html/author_view.html")
-        html = self.render_template(
+    
+        """View of Studio Courses page"""
+        frag = Fragment()
+        frag.add_content(
+            self.render_template(
                 'static/html/author_view.html',
                 {'self': self, 'fields': self.xblock_field_list(['display_name', 'iframe_url'])}
                 if self.iframe_url else {
@@ -464,9 +465,16 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                     'usd_svg': self.resource_string('static/images/dollar.svg')
                 }
             )
-        
-        frag = Fragment(html)
+        )
+        frag.add_css(self.resource_string('static/css/scormxblock.css'))
+        # Inject js Script to <head> in file: cms/static/js/views/xblock.js#L218
+        frag.add_javascript(self.resource_string('static/js/src/scormxblock.js'))
+        frag.initialize_js('ScormXBlock')
+
         return frag
+
+
+ 
 
     def raise_handler_error(self, msg):
         _ = self.ugettext
