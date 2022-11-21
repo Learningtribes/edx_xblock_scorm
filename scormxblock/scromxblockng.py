@@ -453,25 +453,13 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
     def author_view(self, context):
     
-        """View of Studio Courses page"""
-        frag = Fragment()
-        frag.add_content(
-            self.render_template(
-                'static/html/author_view.html',
-                {'self': self, 'fields': self.xblock_field_list(['display_name', 'iframe_url'])}
-                if self.iframe_url else {
-                    'self': self,
-                    'external_resources': SUPPORTED_SCROM_RESOURCES,
-                   # 'usd_svg': self.resource_string('static/images/dollar.svg')
-                }
-            )
+        data = dict(
+            scorm_file=self.scorm_pkg
         )
-        frag.add_css(self.resource_string('static/css/scormxblock.css'))
-        # Inject js Script to <head> in file: cms/static/js/views/xblock.js#L218
-        frag.add_javascript(self.resource_string('static/js/src/scormxblock.js'))
-        frag.initialize_js('ScormXBlock')
-
-        return frag
+        # html = self.resource_string("static/html/author_view.html")
+        html = self.render_template("static/html/author_view.html", data)
+        frag = Fragment(html)
+        return frag                 
 
 
  
