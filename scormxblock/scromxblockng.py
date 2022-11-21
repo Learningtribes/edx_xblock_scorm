@@ -359,9 +359,17 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         return data.decode("utf8")
 
     def render_template(self, template_path, context):
-        template_str = self.resource_string(template_path)
-        template = Template(template_str)
+
+        """Evaluate a template by resource path, applying the provided context"""
+        SupportedScromResources.assign_scrom_handle(self)
+
+        template = Template(self.resource_string(template_path))
+
         return template.render(Context(context))
+
+
+
+     
 
     def get_fields_data(self, only_value=False, *fields):
 
