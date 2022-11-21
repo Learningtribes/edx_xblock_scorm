@@ -462,7 +462,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 if self.iframe_url else {
                     'self': self,
                     'external_resources': SUPPORTED_SCROM_RESOURCES,
-                    'usd_svg': self.resource_string('static/images/dollar.svg')
+                   # 'usd_svg': self.resource_string('static/images/dollar.svg')
                 }
             )
         )
