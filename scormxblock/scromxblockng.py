@@ -356,7 +356,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     def resource_string(self, path):
         """Handy helper for getting resources from our kit."""
         data = pkg_resources.resource_string(__name__, path)
-        return data.decode("utf8")
+        return data if isinstance(data, unicode) else data.decode("utf8")
 
     def render_template(self, template_path, context):
         print("----------------------------start")
