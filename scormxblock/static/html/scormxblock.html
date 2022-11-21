@@ -1,31 +1,14 @@
 {% load i18n %}
-<div class="themeable-xblock scormxblock_block">
-    <div class="block-header-wrapper scorm-header-wrapper">
-        <h3 class="scorm-header">{{ display_name }}</h3>
-        {% if has_score_value %}
-        <p class="scorm_process">
-            <span class="fal fa-bullseye-pointer"></span>
-            <span class="lesson_score">{{ scorm_score_value }}</span>
-            <span class="static_score">/{% blocktrans count weight_value as num_points %}{{ num_points }} point possible{% plural %}{{num_points }} points possible{% endblocktrans %} ({% trans graded_status %})</span>
-            <span class="success_status">{{ scorm_status_value }}</span>
-        </p>
-        {% endif %}
-    </div>
-      <div class="block-label scorm-label">
-        <span class="fal fa-file-audio block-label-icon"></span>
-        <span class="block-label-text">{% trans 'SCORM' %}</span>
-      </div>
-    <hr class="sep-line">
-    {% if open_new_tab_value and scorm_pkg_value %}
-    <div class="launch-div">
-        <h2 class="content-title"><span class="fal fa-window title-icon" aria-hidden="true"></span>{% trans "New Tab" %}</h2>
-        <p class="launch-content launch-before">{% trans "Click on the button below to open the module in a new tab." %}</p>
-        <p class="launch-content launch-after hidden">{% trans "Your e-learning module has been opened in a new tab. Please, close the new tab after you completed the module." %}</p>
-        <div class="button-container">
-            <button class="launch-button"><a href="{{ scorm_pkg_value }}" rel="opener" target="_blank">{% trans "Launch" %}</a></button>
+
+<div class="externality_block">
+    <p>
+        <div class="block-header-wrapper problem-header-wrapper">
+            <h3 class="hd hd-3 block-header problem-header">{{ display_name }}</h3>
         </div>
-    </div>
-    {% elif scorm_pkg_value %}
-        <iframe id="scorm-object-frame" class="scorm_object" src="{{ scorm_pkg_value }}"></iframe>
-    {% endif %}
+        <div class="block-label problem-label">
+            <span class="fal fa-browser Pointing on a Picture-icon block-label-icon"></span>
+            <span class="Pointing on a Picture block-label-text">{% trans "External Web Content" %}</span>
+        </div>
+        <span class='count'>{{ self.iframe_url | safe }}</span>
+    </p>
 </div>
