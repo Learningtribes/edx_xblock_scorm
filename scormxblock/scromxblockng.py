@@ -228,7 +228,15 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         scope=Scope.settings
     )
 
+    
     editable_fields = ('scorm_pkg', 'ratio', 'open_new_tab', 'display_name', 'due', 'has_score', 'icon_class', 'weight', 'scorm_allow_rescore')
+    
+    iframe_url = String(
+        display_name='iFrame Code',
+        help='Paste here your iFrame Code from the authoring tool, {link_start}more...{link_end}',
+        default="",
+        scope=Scope.settings
+    )
     has_author_view = True
 
     # region Studio handler
@@ -413,12 +421,26 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         return fields_data
 
     def student_view(self, context=None):
-        template = self.render_template('static/html/scormxblock.html', self.get_student_data())
-        frag = Fragment(template)
-        frag.add_css(self.resource_string("static/css/scormxblock.css"))
-        frag.add_javascript(self.resource_string("static/js/src/scormxblock.js"))
-        frag.initialize_js('ScormXBlock', json_args=self.get_fields_data(True, 'scorm_pkg_version', 'scorm_pkg_modified', 'ratio', 'version_scorm', 'scorm_modified', 'open_new_tab'))
+
+        """The primary view of the scormxblock, shown to students when viewing courses.
+        """
+        frag = Fragment()
+        frag.add_content(
+            self.render_template(
+                'static/html/scormxblock.html',
+                {
+                    'self': self,
+                    'fields': self.xblock_field_list(['display_name', 'iframe_url']),
+                    'display_name': self.display_name,
+                }
+            )
+        )
+        frag.add_css(self.resource_string('static/css/scormxblock.css'))
+        # Inject js Script to <head> in file: cms/static/js/views/xblock.js#L218
+        frag.add_javascript(self.resource_string('static/js/src/scormxblock.js'))
+        frag.initialize_js('ScormXBlock') 
         return frag
+
 
     def author_view(self, context):
         data = dict(
