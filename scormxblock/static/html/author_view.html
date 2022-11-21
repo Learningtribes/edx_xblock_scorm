@@ -2,39 +2,34 @@
 
 <div class="externality_block">
     <p>
-{% if not self.iframe_url%}
-
-            <ul class="supported-resources">
-            {% for resource in external_resources %}
-                <li class="swiper-slide resource-item" data-status="{{ resource.tags|join:',' }}" style="display: block;">
-                    <div class="item-container" onclick=" window.open('{{ resource.site_link }}','_blank')">
-                        <div class="item-title-bar">
-                            <span class="item-title-prefix">
-                            {{ resource.svg_image | safe }}
-                            <a class="item-name">{{ resource.name }}</a>
-                            </span>
-                            {% if resource.paying %}
-                            <span class="item-title-tail">{{ usd_svg | safe }}</span>
-                            {% endif %}
-                        </div>
-                        <div class="item-description">{% trans resource.description %}</div>
-                        <div class="item-tags-bar">
-                            <span class="item-tags-prefix">
-                            {% for tag_name in resource.tags %}
-                                {% if tag_name == 'eLearning authoring tools' %}
-                                <span class="item-green-tag">{% trans tag_name %}</span>
-                                {% elif tag_name == 'Video' %}
-                                <span class="item-purple-tag">{% trans tag_name %}</span>
-                                {% endif %}
-                            {% endfor %}
-                            </span>
-                        </div>
+        <ul class="supported-resources">
+        {% for resource in external_resources %}
+            <li class="swiper-slide resource-item" data-status="{{ resource.tags|join:',' }}" style="display: block;">
+                <div class="item-container" onclick=" window.open('{{ resource.site_link }}','_blank')">
+                    <div class="item-title-bar">
+                        <span class="item-title-prefix">
+                        {{ resource.svg_image | safe }}
+                        <a class="item-name">{{ resource.name }}</a>
+                        </span>
+                        {% if resource.paying %}
+                        <span class="item-title-tail">{{ usd_svg | safe }}</span>
+                        {% endif %}
                     </div>
-                </li>
-            {% endfor %}
-            </ul>
-{% else %}
-        <span class='count'>{{ self.iframe_url | safe }}</span>
-{% endif %}
+                    <div class="item-description">{% trans resource.description %}</div>
+                    <div class="item-tags-bar">
+                        <span class="item-tags-prefix">
+                        {% for tag_name in resource.tags %}
+                            {% if tag_name == 'eLearning authoring tools' %}
+                            <span class="item-green-tag">{% trans tag_name %}</span>
+                            {% elif tag_name == 'Video' %}
+                            <span class="item-purple-tag">{% trans tag_name %}</span>
+                            {% endif %}
+                        {% endfor %}
+                        </span>
+                    </div>
+                </div>
+            </li>
+        {% endfor %}
+        </ul>
     </p>
 </div>
