@@ -426,12 +426,11 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         )
         # html = self.resource_string("static/html/author_view.html")
         html = self.render_template(
-                'static/html/author_view.html',
-                {'self': self, 'fields': self.xblock_field_list(['display_name'])},
-                'self': self,
-                'external_resources': SUPPORTED_SCROM_RESOURCES,
-                'usd_svg': self.resource_string('static/images/dollar.svg')
-            )
+            'static/html/author_view.html', 
+            {'self': self,
+            'external_resources': SUPPORTED_SCROM_RESOURCES,
+            'usd_svg': self.resource_string('static/images/dollar.svg')}
+        )
         
         frag = Fragment(html)
         return frag
