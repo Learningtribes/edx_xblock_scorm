@@ -473,9 +473,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         frag = Fragment()
         frag.add_content(
             self.render_template(
-                'static/html/scormxblock.html',
-                {'self': self, 'fields': self.xblock_field_list(['display_name', 'iframe_url']),
-               
+                'static/html/author_view.html',
+                {'self': self,
                 'external_resources': SUPPORTED_SCROM_RESOURCES,
                 'usd_svg': self.resource_string('static/images/dollar.svg')
                 }
