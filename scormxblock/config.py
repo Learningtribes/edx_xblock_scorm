@@ -66,21 +66,21 @@ class SupportedScromResources(object):
         self._add_resource(
             icon='static/images/Loom.svg', name='iSpring Suite',
             tags=_ScromComponent.TAG_ELEARNING_AUTHORING_RECORDER,
-            paying=None,
+            paying=True,
             site_link=r'https://www.ispringsolutions.com/ispring-suite',
             description=r'Create interactive courses and assessments in record time.'
         )
         self._add_resource(
             icon='static/images/Loom.svg', name='Adobe Captivate',
             tags=_ScromComponent.TAG_ELEARNING_AUTHORING_RECORDER,
-            paying=None,
+            paying=True,
             site_link=r'https://www.adobe.com/products/captivate.html',
             description=r'Create stunning courses in minutes.'
         )
         self._add_resource(
             icon='static/images/Loom.svg', name='Knowbly',
             tags=_ScromComponent.TAG_ELEARNING_AUTHORING_RECORDER,
-            paying=None,
+            paying=True,
             site_link=r'https://echo360.com/the-echosystem/echoauthor/',
             description=r'Quickly create and customize beautiful interactive learning that works seamlessly on mobile and in any learning environment.'
         )

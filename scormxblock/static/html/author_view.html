@@ -23,6 +23,9 @@
                             <a class="item-name">{{ resource.name }}</a>
 
                             </span>
+                            {% if resource.paying %}
+                            <span class="item-title-tail">{{ usd_svg | safe }}</span>
+                            {% endif %}
                         </div>
                         
                     </div>
