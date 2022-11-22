@@ -682,7 +682,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         """A canned scenario for display in the workbench."""
         return [
             ("ScormXBlock", 
-            """<scormxblock/>""""
+            """<scormxblock/>
+            """
 
             ),
             ("multiple ScormXBlock",
