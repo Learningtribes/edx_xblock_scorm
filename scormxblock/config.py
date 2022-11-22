@@ -61,7 +61,7 @@ class SupportedScromResources(object):
             tags=_ScromComponent.TAG_ELEARNING_AUTHORING_RECORDER,
             paying=True,
             site_link=r'https://articulate.com/360',
-            description=r'Use Storyline 360 to create courses with custom interactivity or Rise 360 to create responsive courses right in your web browser.'
+            description=r'Use Storyline 360 to create courses with custom interactivity or Rise to create responsive courses right in your web browser.'
         )
         self._add_resource(
             icon='static/images/Loom.svg', name='iSpring Suite',
