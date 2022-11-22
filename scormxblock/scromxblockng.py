@@ -445,16 +445,6 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
 
 
-
-
-
-
-
-
-
-
-
-
     def student_view(self, context=None):
 
         """The primary view of the scormxblock, shown to students when viewing courses.
@@ -691,9 +681,16 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     def workbench_scenarios():
         """A canned scenario for display in the workbench."""
         return [
-            ("ScormXBlock",
+            ("ScormXBlock", 
+            """<scormxblock/>""""
+
+            ),
+            ("multiple ScormXBlock",
              """<vertical_demo>
                 <scormxblock/>
+                <scormxblock/>
+                <scormxblock/>
+                
                 </vertical_demo>
              """),
         ]
