@@ -31,20 +31,23 @@
                             <span class="item-tags-prefix">
                                 {% for tag_name in resource.tags %}
                                 {% if tag_name == 'Video' %}
-                                <span class="item-pink-tag">{% trans tag_name %}</span>
+                                <span class="item-green-tag">{% trans tag_name %}</span>
                                 
 
                                 {% elif tag_name == 'Quiz' %}
-                                <span class="item-pink-tag">{% trans tag_name %}</span>
-                                {
+                                <span class="item-green-tag">{% trans tag_name %}</span>
+                                
 
                                 {% elif tag_name == 'eLearning authoring tools' %}
-                                <span class="item-pink-tag">{% trans tag_name %}</span>
+                                <span class="item-green-tag">{% trans tag_name %}</span>
                                 {% endif %}
 
                                 {% endfor %}
 
                             </span>
+                            <button class="item-tags-tail sequence-nav-button button-next" title="Access this website" onclick=" window.open('{{ resource.site_link }}','_blank')">
+                                <span class="icon far fa-arrow-right" aria-hidden="true"></span>
+                            </button>
                         </div>
                                 
                         
