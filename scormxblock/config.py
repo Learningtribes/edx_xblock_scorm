@@ -50,35 +50,35 @@ class SupportedScromResources(object):
         self._resources = []
 
         self._add_resource(
-            icon='static/images/kumullus.svg', name='Kumullus',
+            icon='static/images/canva.svg', name='Kumullus',
             tags=[_ScromComponent.TAG_VIDEO, _ScromComponent.TAG_QUIZ],
             paying=None,
             site_link=r'https://kumullus.com/',
             description=r'Add interactive video to your course'
         )
         self._add_resource(
-            icon='static/images/articulate-360.svg', name='Articulate 360',
+            icon='static/images/canva.svg', name='Articulate 360',
             tags=_ScromComponent.TAG_ELEARNING_AUTHORING_RECORDER,
             paying=None,
             site_link=r'https://articulate.com/360',
             description=r'Use Storyline 360 to create courses with custom interactivity or Rise 360 to create responsive courses right in your web browser.'
         )
         self._add_resource(
-            icon='static/images/ispring-suite.svg', name='iSpring Suite',
+            icon='static/images/canva.svg', name='iSpring Suite',
             tags=_ScromComponent.TAG_ELEARNING_AUTHORING_RECORDER,
             paying=None,
             site_link=r'https://www.ispringsolutions.com/ispring-suite',
             description=r'Create interactive courses and assessments in record time.'
         )
         self._add_resource(
-            icon='static/images/adope-captivate.svg', name='Adobe Captivate',
+            icon='static/images/canva.svg', name='Adobe Captivate',
             tags=_ScromComponent.TAG_ELEARNING_AUTHORING_RECORDER,
             paying=None,
             site_link=r'https://www.adobe.com/products/captivate.html',
             description=r'Create stunning courses in minutes.'
         )
         self._add_resource(
-            icon='static/images/knowbly.svg', name='Knowbly',
+            icon='static/images/canva.svg', name='Knowbly',
             tags=_ScromComponent.TAG_ELEARNING_AUTHORING_RECORDER,
             paying=None,
             site_link=r'https://echo360.com/the-echosystem/echoauthor/',
