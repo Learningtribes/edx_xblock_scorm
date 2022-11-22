@@ -30,9 +30,18 @@
                         <div class="item-tags-bar">
                             <span class="item-tags-prefix">
                                 {% for tag_name in resource.tags %}
-                                {% if tag_name == 'Video' %}
+                                {% elif tag_name == 'Video' %}
+                                <span class="item-pink-tag">{% trans tag_name %}</span>
+                                
+
+                                {% elif tag_name == 'Quiz' %}
+                                <span class="item-pink-tag">{% trans tag_name %}</span>
+                                {
+
+                                {% elif tag_name == 'eLearning authoring tools' %}
                                 <span class="item-pink-tag">{% trans tag_name %}</span>
                                 {% endif %}
+
                                 {% endfor %}
 
                             </span>
