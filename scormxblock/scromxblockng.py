@@ -429,6 +429,32 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         fields_data['display_name'] = self.display_name
         return fields_data
 
+    def xblock_field_list(self, field_names):
+        """Handy helper for getting a dictionary of fields"""
+        xblock = self
+
+        return [
+            {
+                'name': field,
+                'value': getattr(xblock, field),
+                'help': getattr(xblock.__class__, field).help,
+                'display_name': getattr(xblock.__class__, field).display_name,
+                'type': type(getattr(xblock.__class__, field)).__name__
+            } for field in field_names
+        ]        
+
+
+
+
+
+
+
+
+
+
+
+
+
     def student_view(self, context=None):
 
         """The primary view of the scormxblock, shown to students when viewing courses.
