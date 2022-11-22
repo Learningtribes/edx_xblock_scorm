@@ -30,7 +30,7 @@
                         <div class="item-tags-bar">
                             <span class="item-tags-prefix">
                                 {% for tag_name in resource.tags %}
-                                {% elif tag_name == 'Video' %}
+                                {% if tag_name == 'Video' %}
                                 <span class="item-pink-tag">{% trans tag_name %}</span>
                                 
 
