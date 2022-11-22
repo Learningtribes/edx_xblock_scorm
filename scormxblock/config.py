@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import pkg_resources
+
 
 class _ScromComponent(object):
     """Hold information of an scrom web content component on Studio page.
@@ -24,7 +26,6 @@ class _ScromComponent(object):
 
         if not all([tag in _ScromComponent.ALL_TAGS for tag in self.tags]):
             raise NameError('Unsupported tags : {}'.format(str(self.tags)))
-
     def get_tags_set(self):
         return set(self.tags)
 
@@ -35,6 +36,7 @@ class _ScromComponent(object):
 
     def __str__(self):
         return self.name
+    
 
 
 class SupportedScromResources(object):
