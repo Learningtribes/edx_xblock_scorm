@@ -50,35 +50,35 @@ class SupportedScromResources(object):
         self._add_resource(
             icon='static/images/canva.svg', name='canva',
             tags=[_ScromComponent.TAG_VIDEO, _ScromComponent.TAG_QUIZ],
-            paying=True,
+            paying=None,
             site_link=r'https://kumullus.com/',
             description=r'Add interactive video to your course'
         )
         self._add_resource(
             icon='static/images/canva.svg', name='Articulate 360',
             tags=_ScromComponent.TAG_ELEARNING_AUTHORING_RECORDER,
-            paying=True,
+            paying=None,
             site_link=r'https://articulate.com/360',
             description=r'Use Storyline 360 to create courses with custom interactivity or Rise 360 to create responsive courses right in your web browser.'
         )
         self._add_resource(
             icon='static/images/canva.svg', name='iSpring Suite',
             tags=_ScromComponent.TAG_ELEARNING_AUTHORING_RECORDER,
-            paying=True,
+            paying=None,
             site_link=r'https://www.ispringsolutions.com/ispring-suite',
             description=r'Create interactive courses and assessments in record time.'
         )
         self._add_resource(
             icon='static/images/canva.svg', name='Adobe Captivate',
             tags=_ScromComponent.TAG_ELEARNING_AUTHORING_RECORDER,
-            paying=True,
+            paying=None,
             site_link=r'https://www.adobe.com/products/captivate.html',
             description=r'Create stunning courses in minutes.'
         )
         self._add_resource(
             icon='static/images/canva.svg', name='Knowbly',
             tags=_ScromComponent.TAG_ELEARNING_AUTHORING_RECORDER,
-            paying=True,
+            paying=None,
             site_link=r'https://echo360.com/the-echosystem/echoauthor/',
             description=r'Quickly create and customize beautiful interactive learning that works seamlessly on mobile and in any learning environment.'
         )
