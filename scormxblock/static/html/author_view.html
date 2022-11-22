@@ -20,14 +20,38 @@
                         <div class="item-title-bar">
                             <span class="item-title-prefix">
                                 {{ resource.svg_image | safe }}
-                                <a class="item-name">{{ resource.name }}</a>
+                            <a class="item-name">{{ resource.name }}</a>
 
                             </span>
                             {% if resource.paying %}
-                            <span class="item-title-tail"></span>
+                            <span class="item-title-tail">{{ usd_svg | safe }}</span>
                             {% endif %}
                         </div>
                         <div class="item-description">{% trans resource.description %}</div>
+                        <div class="item-tags-bar">
+                            <span class="item-tags-prefix">
+                                {% for tag_name in resource.tags %}
+                                {% if tag_name == 'Video' %}
+                                <span class="item-green-tag">{% trans tag_name %}</span>
+                                
+
+                                {% elif tag_name == 'Quiz' %}
+                                <span class="item-green-tag">{% trans tag_name %}</span>
+                                
+
+                                {% elif tag_name == 'eLearning authoring tools' %}
+                                <span class="item-green-tag">{% trans tag_name %}</span>
+                                {% endif %}
+
+                                {% endfor %}
+
+                            </span>
+                            <button class="item-tags-tail sequence-nav-button button-next" title="Access this website" onclick=" window.open('{{ resource.site_link }}','_blank')">
+                                
+                            </button>
+                        </div>
+                                
+                        
                     </div>
                 </li>
                 
