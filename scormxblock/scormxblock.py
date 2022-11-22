@@ -22,6 +22,7 @@ from xblock.fragment import Fragment
 import os
 import logging
 from scorm_default import *
+from .config import SupportedScromResources, SUPPORTED_SCROM_RESOURCES
 # TODO After upgrade to new release, add more required function from
 # API doc: https://openedx.atlassian.net/wiki/spaces/AC/pages/161400730/Open+edX+Runtime+XBlock+API
 # TODO old data migrate how to
@@ -182,8 +183,23 @@ class ScormXBlock(XBlock):
         return Response(json.dumps({'result': 'success'}), content_type='application/json')
 
     def author_view(self, context):
-        html = self.resource_string("static/html/author_view.html")
-        frag = Fragment(html)
+        """View of Studio Courses page"""
+        frag = Fragment()
+        frag.add_content(
+            self.render_template(
+                'static/html/scormxblock.html',
+                {'self': self, 'fields': self.xblock_field_list(['display_name', 'iframe_url']),
+               
+                'external_resources': SUPPORTED_SCROM_RESOURCES,
+                'usd_svg': self.resource_string('static/images/dollar.svg')
+                }
+            )
+        )
+        frag.add_css(self.resource_string('static/css/scormxblock.css'))
+        # Inject js Script to <head> in file: cms/static/js/views/xblock.js#L218
+        frag.add_javascript(self.resource_string('static/js/src/scormxblock.js'))
+        frag.initialize_js('ScormXBlock')
+
         return frag
 
     # @XBlock.json_handler
@@ -338,8 +354,13 @@ class ScormXBlock(XBlock):
 
 
     def render_template(self, template_path, context):
-        template_str = self.resource_string(template_path)
-        template = Template(template_str)
+        print("----------------------------start")
+
+        """Evaluate a template by resource path, applying the provided context"""
+        SupportedScromResources.assign_scrom_handle(self)
+
+        template = Template(self.resource_string(template_path))
+
         return template.render(Context(context))
 
     def set_scorm(self, path_to_file):
