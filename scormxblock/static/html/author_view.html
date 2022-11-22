@@ -13,42 +13,6 @@
                 </li>
                 {% endfor %}
             </ul>
-            <ul class="supported-resources">
-            {% for resource in external_resources %}
-                <li class="swiper-slide resource-item" data-status="{{ resource.tags|join:',' }}" style="display: block;">
-                    <div class="item-container">
-                        <div class="item-title-bar">
-                            <span class="item-title-prefix">
-                            {{ resource.svg_image | safe }}
-                            <a class="item-name">{{ resource.name }}</a>
-                            </span>
-                            {% if resource.paying %}
-                            <span class="item-title-tail">{{ usd_svg | safe }}</span>
-                            {% endif %}
-                        </div>
-                        <div class="item-description">{% trans resource.description %}</div>
-                        <div class="item-tags-bar">
-                            <span class="item-tags-prefix">
-                            {% for tag_name in resource.tags %}
-                                {% if tag_name == 'Video' %}
-                                <span class="item-pink-tag">{% trans tag_name %}</span>
-                                {% elif tag_name == 'Quiz' %}
-                                <span class="item-yellow-tag">{% trans tag_name %}</span>
-                                {% elif tag_name == 'eLearning authoring tools' %}
-                                <span class="item-blue-tag">{% trans tag_name %}</span>
-                                {% else %}
-                                <span class="item-yellow-tag">{% trans tag_name %}</span>
-                                {% endif %}
-                            {% endfor %}
-                            </span>
-                            <button class="item-tags-tail sequence-nav-button button-next" title="Access this website" onclick=" window.open('{{ resource.site_link }}','_blank')">
-                                <span class="icon far fa-arrow-right" aria-hidden="true"></span>
-                            </button>
-                        </div>
-                    </div>
-                </li>
-            {% endfor %}
-            </ul>
         </div>
 
     </p>
