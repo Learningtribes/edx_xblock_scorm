@@ -7,11 +7,6 @@
                 <li class="nav-item" id="all-tags">
                     <button class="btn-link active-section" title="All tags">{% trans "All" %}</button>
                 </li>
-                {% for tag_name in external_resources.listed_tags %}
-                <li class="nav-item" id="{{ tag_name }}">
-                    <button class="btn-link" title="{{ tag_name }}">{% trans tag_name %}</button>
-                </li>
-                {% endfor %}
             </ul>
             <ul class="supported-resources">
                 {% for resource in external_resources %}
@@ -46,9 +41,7 @@
                                 {% endfor %}
 
                             </span>
-                            <button class="item-tags-tail sequence-nav-button button-next" title="Access this website" onclick=" window.open('{{ resource.site_link }}','_blank')">
-                                
-                            </button>
+                           
                         </div>
                                 
                         
