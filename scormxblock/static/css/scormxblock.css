@@ -1,11 +1,11 @@
 /* CSS for ScormXBlock */
 /* CSS for ExternalContentXBlock */
 
-.externality_block .count {
+.scorm_block .count {
     font-weight: bold;
 }
 
-.externality_block p {
+.scorm_block p {
     cursor: pointer;
 }
 
