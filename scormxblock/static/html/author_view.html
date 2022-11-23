@@ -2,21 +2,11 @@
 
 <div class="externality_block">
     <p>
-        <div class="supported-tags" id="supported-tags">
-            <ul class="supported-tags-nav" id="supported-tags-nav">
-                <li class="nav-item" id="all-tags">
-                    <button class="btn-link active-section" title="All tags">{% trans "All" %}</button>
-                </li>
-                {% for tag_name in external_resources.listed_tags %}
-                <li class="nav-item" id="{{ tag_name }}">
-                    <button class="btn-link" title="{{ tag_name }}">{% trans tag_name %}</button>
-                </li>
-                {% endfor %}
-            </ul>
+        <div class="supported-tags" id="supported-tags">    
             <ul class="supported-resources">
                 {% for resource in external_resources %}
                 <li class="swiper-slide resource-item" data-status="{{ resource.tags|join:',' }}" style="display: block;">
-                    <div class="item-container">
+                    <div class="item-container" onclick=" window.open('{{ resource.site_link }}','_blank')">
                         <div class="item-title-bar">
                             <span class="item-title-prefix">
                                 {{ resource.svg_image | safe }}
@@ -46,9 +36,7 @@
                                 {% endfor %}
 
                             </span>
-                            <button class="item-tags-tail sequence-nav-button button-next" title="Access this website" onclick=" window.open('{{ resource.site_link }}','_blank')">
-                                
-                            </button>
+                           
                         </div>
                                 
                         
