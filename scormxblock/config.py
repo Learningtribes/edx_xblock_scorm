@@ -78,7 +78,7 @@ class SupportedScromResources(object):
             description=r'Create stunning courses in minutes.'
         )
         self._add_resource(
-            icon='static/images/Loom.svg', name='Knowbly',
+            icon='static/images/knowbly.svg', name='Knowbly',
             tags=_ScromComponent.TAG_ELEARNING_AUTHORING_RECORDER,
             paying=True,
             site_link=r'https://echo360.com/the-echosystem/echoauthor/',
