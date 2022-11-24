@@ -432,41 +432,13 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         fields_data['display_name'] = self.display_name
         return fields_data
 
-    def xblock_field_list(self, field_names):
-        """Handy helper for getting a dictionary of fields"""
-        xblock = self
-
-        return [
-            {
-                'name': field,
-                'value': getattr(xblock, field),
-                'help': getattr(xblock.__class__, field).help,
-                'display_name': getattr(xblock.__class__, field).display_name,
-                'type': type(getattr(xblock.__class__, field)).__name__
-            } for field in field_names
-        ]        
-
-
-
     def student_view(self, context=None):
 
-        """The primary view of the scormxblock, shown to students when viewing courses.
-        """
-        frag = Fragment()
-        frag.add_content(
-            self.render_template(
-                'static/html/scormxblock.html',
-                {
-                    'self': self,
-                    'fields': self.xblock_field_list(['display_name', 'iframe_url']),
-                    'display_name': self.display_name,
-                }
-            )
-        )
-        frag.add_css(self.resource_string('static/css/scormxblock.css'))
-        # Inject js Script to <head> in file: cms/static/js/views/xblock.js#L218
-        frag.add_javascript(self.resource_string('static/js/src/scormxblock.js'))
-        frag.initialize_js('ScormXBlock') 
+        template = self.render_template('static/html/scormxblock.html', self.get_student_data())
+        frag = Fragment(template)
+        frag.add_css(self.resource_string("static/css/scormxblock.css"))
+        frag.add_javascript(self.resource_string("static/js/src/scormxblock.js"))
+        frag.initialize_js('ScormXBlock', json_args=self.get_fields_data(True, 'scorm_pkg_version', 'scorm_pkg_modified', 'ratio', 'version_scorm', 'scorm_modified', 'open_new_tab'))
         return frag
 
 
@@ -683,17 +655,9 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     def workbench_scenarios():
         """A canned scenario for display in the workbench."""
         return [
-            ("ScormXBlock", 
-            """<scormxblock/>
-            """
-
-            ),
-            ("multiple ScormXBlock",
+            ("ScormXBlock",
              """<vertical_demo>
                 <scormxblock/>
-                <scormxblock/>
-                <scormxblock/>
-                
                 </vertical_demo>
              """),
         ]
