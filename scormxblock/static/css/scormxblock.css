@@ -185,6 +185,15 @@
 	background-color: #dcdcff;
 }
 
+.supported-tags .supported-resources .resource-item .item-container .item-tags-bar .item-tags-prefix .item-lightblue-tag {
+	margin: 0 10px 5px 0;
+	padding: 3px 9px 3px 9px;
+	border: 0;
+	border-radius: 5px;
+	color: #6EE0E8;
+	background-color: #D8FCFF;
+}
+
 .supported-tags .supported-resources .resource-item .item-container .item-tags-bar .item-tags-prefix .item-red-tag {
 	margin: 0 10px 5px 0;
 	padding: 3px 9px 3px 9px;
@@ -199,8 +208,8 @@
 	padding: 3px 9px 3px 9px;
 	border: 0;
 	border-radius: 5px;
-	color: #83c682;
-	background-color: #d9fad9;
+	color: #31C937;
+	background-color: #E7FFDC;
 }
 
 .supported-tags .supported-resources .resource-item .item-container .item-tags-bar .item-tags-prefix .item-purple-tag {
