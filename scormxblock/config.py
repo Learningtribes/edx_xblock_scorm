@@ -50,7 +50,7 @@ class SupportedScromResources(object):
         self._resources = []
 
         self._add_resource(
-            icon='static/images/canva.svg', name='Adobe Captivate',
+            icon='static/images/adobe_captivate.svg', name='Adobe Captivate',
             tags=_ScromComponent.TAG_ELEARNING_AUTHORING_RECORDER,
             paying=True,
             site_link=r'https://www.adobe.com/products/captivate.html',
@@ -58,7 +58,7 @@ class SupportedScromResources(object):
         )
 
         self._add_resource(
-            icon='static/images/Genially.svg', name='Articulate 360',
+            icon='static/images/articulate-360.svg', name='Articulate 360',
             tags=_ScromComponent.TAG_ELEARNING_AUTHORING_RECORDER,
             paying=True,
             site_link=r'https://articulate.com/360',
@@ -66,7 +66,7 @@ class SupportedScromResources(object):
         )
 
         self._add_resource(
-            icon='static/images/H5P.svg', name='iSpring Suite',
+            icon='static/images/ispring_suite.svg', name='iSpring Suite',
             tags=_ScromComponent.TAG_ELEARNING_AUTHORING_RECORDER,
             paying=True,
             site_link=r'https://www.ispringsolutions.com/ispring-suite',
@@ -74,7 +74,7 @@ class SupportedScromResources(object):
         )
 
         self._add_resource(
-            icon='static/images/Loom.svg', name='Knowbly',
+            icon='static/images/knowbly.svg', name='Knowbly',
             tags=_ScromComponent.TAG_ELEARNING_AUTHORING_RECORDER,
             paying=True,
             site_link=r'https://echo360.com/the-echosystem/echoauthor/',
@@ -82,7 +82,7 @@ class SupportedScromResources(object):
         )
 
         self._add_resource(
-            icon='static/images/Padlet.svg', name='Kumullus',
+            icon='static/images/kumullus.svg', name='Kumullus',
             tags=[_ScromComponent.TAG_VIDEO, _ScromComponent.TAG_QUIZ],
             paying=True,
             site_link=r'https://kumullus.com/',
