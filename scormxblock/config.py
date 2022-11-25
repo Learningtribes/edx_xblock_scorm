@@ -50,7 +50,7 @@ class SupportedScromResources(object):
         self._resources = []
 
         self._add_resource(
-            icon='static/images/adobe_captivate.svg', name='Adobe Captivate',
+            icon='static/images/adope-captivate.svg', name='Adobe Captivate',
             tags=_ScromComponent.TAG_ELEARNING_AUTHORING_RECORDER,
             paying=True,
             site_link=r'https://www.adobe.com/products/captivate.html',
@@ -66,7 +66,7 @@ class SupportedScromResources(object):
         )
 
         self._add_resource(
-            icon='static/images/ispring_suite.svg', name='iSpring Suite',
+            icon='static/images/ispring-suite.svg', name='iSpring Suite',
             tags=_ScromComponent.TAG_ELEARNING_AUTHORING_RECORDER,
             paying=True,
             site_link=r'https://www.ispringsolutions.com/ispring-suite',
