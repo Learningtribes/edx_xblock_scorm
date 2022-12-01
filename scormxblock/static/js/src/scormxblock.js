@@ -18,7 +18,7 @@
         };
 
         function updateResList(activeTab) {
-            var $resources = $(".supported-resources li.resource-item");
+            var $resources = $(".supp-resources li.resource-itm");
             var activeStatus = activeTab;
 
             $resources.each(function () {

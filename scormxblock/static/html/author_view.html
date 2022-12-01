@@ -2,30 +2,30 @@
 
 <div class="scorm_xblock">
     <p>
-        <div class="supported-tags" id="supported-tags">    
-            <ul class="supported-resources">
+        <div class="supp-tags" id="supp-tags">    
+            <ul class="supp-resources">
                 {% for resource in external_resources %}
-                <li class="swiper-slide resource-item" data-status="{{ resource.tags|join:',' }}" style="display: block;">
-                    <div class="item-container" onclick=" window.open('{{ resource.site_link }}','_blank')">
-                        <div class="item-title-bar">
-                            <span class="item-title-prefix">
+                <li class="swiper-slide resource-itm" data-status="{{ resource.tags|join:',' }}" style="display: block;">
+                    <div class="itm-container" onclick=" window.open('{{ resource.site_link }}','_blank')">
+                        <div class="itm-title-bar">
+                            <span class="itm-title-prefix">
                                 {{ resource.svg_image | safe }}
-                                <a class="item-name">{{ resource.name }}</a>
+                                <a class="itm-name">{{ resource.name }}</a>
                             </span>
                             {% if resource.paying %}
-                            <span class="item-title-tail">{{ usd_svg | safe }}</span>
+                            <span class="itm-title-tail">{{ usd_svg | safe }}</span>
                             {% endif %}
                         </div>
-                        <div class="item-description">{% trans resource.description %}</div>
-                        <div class="item-tags-bar">
-                            <span class="item-tags-prefix">
+                        <div class="itm-description">{% trans resource.description %}</div>
+                        <div class="itm-tags-bar">
+                            <span class="itm-tags-prefix">
                             {% for tag_name in resource.tags %}
                                 {% if tag_name == 'Video' %}
-                                <span class="item-blue-tag">{% trans tag_name %}</span>
+                                <span class="itm-blue-tag">{% trans tag_name %}</span>
                                 {% elif tag_name == 'Quiz' %}
-                                <span class="item-lightblue-tag">{% trans tag_name %}</span>
+                                <span class="itm-lightblue-tag">{% trans tag_name %}</span>
                                 {% elif tag_name == 'eLearning authoring tools' %}
-                                <span class="item-lightgreen-tag">{% trans tag_name %}</span>
+                                <span class="itm-lightgreen-tag">{% trans tag_name %}</span>
                                 {% endif %}
                             {% endfor %}
                             </span>
