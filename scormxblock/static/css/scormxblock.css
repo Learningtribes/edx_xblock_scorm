@@ -23,7 +23,7 @@
     cursor: pointer;
 }
 /* Override file : "cms/static/sass/_courseware.scss" */
-.scorm_xblock.view-container .wrapper-content .content-primary>.wrapper-xblock .reorderable-container .studio-xblock-wrapper section .xblock-render>.xblock {
+.scorm_xblock .view-container .wrapper-content .content-primary>.wrapper-xblock .reorderable-container .studio-xblock-wrapper section .xblock-render>.xblock {
 	width: 100%;
 	max-width: 1800px;
 }
