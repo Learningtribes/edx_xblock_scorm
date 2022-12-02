@@ -362,8 +362,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         return data if isinstance(data, unicode) else data.decode("utf8")
 
     def render_template(self, template_path, context={}):
-        print("----------------------------start")
-
+    
         """Evaluate a template by resource path, applying the provided context"""
         SupportedScromResources.assign_scrom_handle(self)
 
