@@ -51,7 +51,9 @@
     display: flex;
     clear: both;
 	flex-wrap: wrap;
-
+	min-height: 300px;
+	padding: 0;
+	justify-content: flex-start;
 	align-content: space-around;
 }
 
@@ -80,7 +82,10 @@
 	margin-top: 25px;
 	padding: 21px;
 	border: 3px solid #FFFFFF;
-
+	border-radius: 12px;
+	width: 337px;
+	height: auto;
+	background-color: #f8f8fc;
 	cursor: pointer;
 }
 
@@ -133,7 +138,10 @@
 	padding: 0;
 	margin: 0;
 	display: flex;
-
+	flex-wrap: wrap;
+	color: #727272;
+	font-family: 'Open Sans';
+	font-size: 10px;
 	font-weight: 600;
 }
 
@@ -141,7 +149,8 @@
 	margin: 0 10px 5px 0;
 	padding: 3px 9px 3px 9px;
 	border: 0;
-
+	border-radius: 5px;
+	color: #ebb801;
 	background-color: #fff2c1;
 }
 
@@ -149,7 +158,8 @@
 	margin: 0 10px 5px 0;
 	padding: 3px 9px 3px 9px;
 	border: 0;
-
+	border-radius: 5px;
+	color: #eb03aa;
 	background-color: #ffc2f2;
 }
 
@@ -157,7 +167,8 @@
 	margin: 0 10px 5px 0;
 	padding: 3px 9px 3px 9px;
 	border: 0;
-
+	border-radius: 5px;
+	color: #465df0;
 	background-color: #dcdcff;
 }
 
@@ -165,7 +176,8 @@
 	margin: 0 10px 5px 0;
 	padding: 3px 9px 3px 9px;
 	border: 0;
-
+	border-radius: 5px;
+	color: #6EE0E8;
 	background-color: #D8FCFF;
 }
 
@@ -173,7 +185,8 @@
 	margin: 0 10px 5px 0;
 	padding: 3px 9px 3px 9px;
 	border: 0;
-
+	border-radius: 5px;
+	color: #ed1615;
 	background-color: #ffc2c3;
 }
 
@@ -181,7 +194,8 @@
 	margin: 0 10px 5px 0;
 	padding: 3px 9px 3px 9px;
 	border: 0;
-
+	border-radius: 5px;
+	color: #31C937;
 	background-color: #E7FFDC;
 }
 
@@ -189,7 +203,8 @@
 	margin: 0 10px 5px 0;
 	padding: 3px 9px 3px 9px;
 	border: 0;
-
+	border-radius: 5px;
+	color: #ed46f0;
 	background-color: #f7dcff;
 }
 
@@ -212,7 +227,20 @@
     border: 0;
     background-image: none;
     text-transform: none;
-
+    border-radius: 8px;
+    font-weight: 600;
+    text-shadow: none;
+    cursor: pointer;
+    outline: none;
+    display: inline-flex;
+    align-items: center;
+    -webkit-font-smoothing: antialiased;
+    padding: 18px 25px;
+    font-size: 16px;
+    transition-duration: 0.25s;
+    color: #fff;
+    background-color: #e7413c;
+    box-shadow: 1px 1px 4px rgba(231,65,60,0.35);
     min-width: 0;
 }
 
@@ -238,7 +266,15 @@
 	font-size: 14px;
 	color: grey;
 	font-weight: 300;
-
+	text-decoration: none !important;
+	letter-spacing: normal;
+	line-height: initial;
+	padding-bottom: 10px;
+	padding-top: 0;
+	line-height: 20px;
+	border: none;
+	padding-left: 0;
+	padding-right: 0;
 	background-color: white;
 }
 
