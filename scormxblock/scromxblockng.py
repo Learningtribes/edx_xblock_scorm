@@ -231,12 +231,6 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     
     editable_fields = ('scorm_pkg', 'ratio', 'open_new_tab', 'display_name', 'due', 'has_score', 'icon_class', 'weight', 'scorm_allow_rescore')
     
-    iframe_url = String(
-        display_name='iFrame Code',
-        help='Paste here your iFrame Code from the authoring tool, {link_start}more...{link_end}',
-        default="",
-        scope=Scope.settings
-    )
     has_author_view = True
 
     # region Studio handler
