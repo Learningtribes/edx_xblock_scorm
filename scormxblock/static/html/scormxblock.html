@@ -1,31 +1,31 @@
 {% load i18n %}
-
-<%!
-import cgi
-%>
-<%  
-	player_config_attrs = ''
-%>	
-
-<% 
-for item in list({player_config}.items()):
-    player_config_attrs += 'data-{{}}="{{}}" '.format(item[0], cgi.escape(item[1], quote=True))
-%>
-
-<div class="scorm_xblock">
-    <h3 class="scorm_name">{self.display_name} (External Resource) <span class="scorm_weight">{self.weight} points possible</span></h3>
-    <div class="scorm_description">{self.description}
-        <div class="scorm_launch"><button id="scorm-launch-{self.url_name}">Launch module</button></div>
+<div class="themeable-xblock scormxblock_block">
+    <div class="block-header-wrapper scorm-header-wrapper">
+        <h3 class="scorm-header">{{ display_name }}</h3>
+        {% if has_score_value %}
+        <p class="scorm_process">
+            <span class="fal fa-bullseye-pointer"></span>
+            <span class="lesson_score">{{ scorm_score_value }}</span>
+            <span class="static_score">/{% blocktrans count weight_value as num_points %}{{ num_points }} point possible{% plural %}{{num_points }} points possible{% endblocktrans %} ({% trans graded_status %})</span>
+            <span class="success_status">{{ scorm_status_value }}</span>
+        </p>
+        {% endif %}
     </div>
+      <div class="block-label scorm-label">
+        <span class="fal fa-file-audio block-label-icon"></span>
+        <span class="block-label-text">{% trans 'SCORM' %}</span>
+      </div>
+    <hr class="sep-line">
+    {% if open_new_tab_value and scorm_pkg_value %}
+    <div class="launch-div">
+        <h2 class="content-title"><span class="fal fa-window title-icon" aria-hidden="true"></span>{% trans "New Tab" %}</h2>
+        <p class="launch-content launch-before">{% trans "Click on the button below to open the module in a new tab." %}</p>
+        <p class="launch-content launch-after hidden">{% trans "Your e-learning module has been opened in a new tab. Please, close the new tab after you completed the module." %}</p>
+        <div class="button-container">
+            <button class="launch-button"><a href="{{ scorm_pkg_value }}" rel="opener" target="_blank">{% trans "Launch" %}</a></button>
+        </div>
+    </div>
+    {% elif scorm_pkg_value %}
+        <iframe id="scorm-object-frame" class="scorm_object" src="{{ scorm_pkg_value }}"></iframe>
+    {% endif %}
 </div>
-
-
-<iframe class="scormxblock_hostframe" id="scormxblock-{self.url_name}" src="" data-block_id="{self.url_name}"  
-data-player_url="{scorm_player_url}" data-display_type="{self.display_type}" data-display_width="{self.display_width}"
-data-display_height="{self.display_height}"
-data-get_url="{get_url}" data-set_url="{set_url}"
-data-course_location="{scorm_file}/" data-course_id="{self.course_id}"
-data-student_name="{self.student_name}" data-student_id="{self.student_id}"
-data-csrftoken=""
-${{player_config_attrs}}
-></iframe>
