@@ -1,7 +1,6 @@
 # -*- coding: utf-8 -*-
 import pkg_resources
 
-
 class _ScromComponent(object):
     """Hold information of an scrom web content component on Studio page.
     """
@@ -38,7 +37,6 @@ class _ScromComponent(object):
         return self.name
     
 
-
 class SupportedScromResources(object):
     """An iterable object definition for listed `Tags` & `Sites`
     """
@@ -74,14 +72,6 @@ class SupportedScromResources(object):
         )
 
         self._add_resource(
-            icon='static/images/knowbly.svg', name='Knowbly',
-            tags=_ScromComponent.TAG_ELEARNING_AUTHORING_RECORDER,
-            paying=True,
-            site_link=r'https://echo360.com/the-echosystem/echoauthor/',
-            description=r'Quickly create and customize beautiful interactive learning that works seamlessly on mobile and in any learning environment.'
-        )
-
-        self._add_resource(
             icon='static/images/kumullus.svg', name='Kumullus',
             tags=[_ScromComponent.TAG_VIDEO, _ScromComponent.TAG_QUIZ],
             paying=True,
@@ -89,11 +79,6 @@ class SupportedScromResources(object):
             description=r'Add interactive video to your course.'
         )
         
-       
-        
-        
-      
-
     def _add_resource(self, *args, **kwargs):
         """Add new Scrom Web Content Configuration to vector"""
         # append get method obj. of xblock instance method
