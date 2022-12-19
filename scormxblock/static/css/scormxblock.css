@@ -1,4 +1,15 @@
 /* CSS for ScormXBlock */
+/* CSS for ScormXBlock */
+.scormxblock_block .scorm_object {
+	width: 100%;
+	height: 675px;
+	border: none;
+ }
+ .success_status {
+	 display: none;
+ }
+
+
 .scormxblock_hostframe {
 	border: 0;
 	height: 300px;
