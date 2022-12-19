@@ -1,5 +1,8 @@
 {% load i18n %}
-
+<div class="themeable-xblock scormxblock_block"></div>
+{% if scorm_file %}
+<p class="scorm-preview-text">{% trans "Look in LMS"%}</p>
+{% endif %}
 <div class="scorm_xblock">
     <p>
         <div class="supported-tags" id="supported-tags">    
