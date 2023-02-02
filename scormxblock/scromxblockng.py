@@ -38,6 +38,10 @@ except ImportError:
 from .scorm_default import *
 from .fields import DateTime
 from .mixins import ScorableXBlockMixin
+
+from .config import SupportedScromResources, SUPPORTED_SCROM_RESOURCES
+
+
 logger = logging.getLogger(__name__)
 # Make '_' a no-op so we can scrape strings
 _ = lambda text: text
@@ -224,7 +228,9 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         scope=Scope.settings
     )
 
+    
     editable_fields = ('scorm_pkg', 'ratio', 'open_new_tab', 'display_name', 'due', 'has_score', 'icon_class', 'weight', 'scorm_allow_rescore')
+    
     has_author_view = True
 
     # region Studio handler
@@ -344,12 +350,24 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     def resource_string(self, path):
         """Handy helper for getting resources from our kit."""
         data = pkg_resources.resource_string(__name__, path)
-        return data.decode("utf8")
+        
+        #if isinstance(data, unicode):
+            #raise ValueError("isinstance")
+        return data if isinstance(data, unicode) else data.decode("utf8")
 
-    def render_template(self, template_path, context):
-        template_str = self.resource_string(template_path)
-        template = Template(template_str)
+    def render_template(self, template_path, context={}):
+        print("----------------------------start")
+
+        """Evaluate a template by resource path, applying the provided context"""
+        SupportedScromResources.assign_scrom_handle(self)
+
+        template = Template(self.resource_string(template_path))
+
         return template.render(Context(context))
+
+
+
+     
 
     def get_fields_data(self, only_value=False, *fields):
 
@@ -409,6 +427,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         return fields_data
 
     def student_view(self, context=None):
+
         template = self.render_template('static/html/scormxblock.html', self.get_student_data())
         frag = Fragment(template)
         frag.add_css(self.resource_string("static/css/scormxblock.css"))
@@ -416,14 +435,27 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         frag.initialize_js('ScormXBlock', json_args=self.get_fields_data(True, 'scorm_pkg_version', 'scorm_pkg_modified', 'ratio', 'version_scorm', 'scorm_modified', 'open_new_tab'))
         return frag
 
+
     def author_view(self, context):
-        data = dict(
-            scorm_file=self.scorm_pkg
+
+        """View of Studio Courses page"""
+        frag = Fragment()
+        frag.add_content(
+            self.render_template(
+                'static/html/author_view.html',
+                {'self': self,
+                'external_resources': SUPPORTED_SCROM_RESOURCES,
+                'usd_svg': self.resource_string('static/images/dollar.svg')
+                }
+            )
         )
-        # html = self.resource_string("static/html/author_view.html")
-        html = self.render_template("static/html/author_view.html", data)
-        frag = Fragment(html)
+        frag.add_css(self.resource_string('static/css/scormxblock.css'))
+        # Inject js Script to <head> in file: cms/static/js/views/xblock.js#L218
+        frag.add_javascript(self.resource_string('static/js/src/scormxblock.js'))
+        frag.initialize_js('ScormXBlock')
+
         return frag
+
 
     def raise_handler_error(self, msg):
         _ = self.ugettext
