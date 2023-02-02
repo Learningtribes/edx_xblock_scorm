@@ -7,7 +7,7 @@ import logging
 import re
 from collections import namedtuple
 from lxml import etree
-from urlparse import urlparse, urlunparse
+from urlparse import urlparse
 import urllib
 import user_agents
 
@@ -32,7 +32,9 @@ from io import BytesIO
 from xblockutils.studio_editable import StudioEditableXBlockMixin
 from xblockutils.fields import File
 try:
+    from contentstore.views.assets import update_course_run_asset
     from xmodule.progress import Progress
+    from xmodule.contentstore.content import StaticContent
 except ImportError:
     pass
 from .scorm_default import *
@@ -133,7 +135,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         default=False,
         scope=Scope.settings,
         enforce_type=True,
-        display_name=_('Module'),
+        display_name=_('New Tab'),
         help=_('Open module in a new tab. This option will only apply to users with a compatible browser.')
     )
 
@@ -145,7 +147,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         scope=Scope.settings,
         enforce_type=True,
         display_name=_("SCORM module"),
-        help=_("SCORM module in .zip format")
+        help=_("SCORM module in .zip format") + '; ' + _("Size limit: ") + '300MB',
+        extra_description=_("Required")
     )
 
     scorm_file = String(
@@ -228,23 +231,59 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         scope=Scope.settings
     )
 
-    
-    editable_fields = ('scorm_pkg', 'ratio', 'open_new_tab', 'display_name', 'due', 'has_score', 'icon_class', 'weight', 'scorm_allow_rescore')
-    
+    instruction = String(
+        default="",
+        scope=Scope.settings,
+        enforce_type=True,
+        display_name=_("Instruction")
+    )
+
+    cover_image = File(
+        accept="image/*",
+        default="",
+        scope=Scope.settings,
+        enforce_type=True,
+        display_name=_("Cover Image"),
+        help=_("Size recommandation : 965x270px"),
+        extra_description=_("Size recommandation : 965x270px")
+    )
+
+    editable_fields = (
+        'scorm_pkg', 'display_name', 'due',
+        'has_score', 'weight', 'scorm_allow_rescore',
+        'open_new_tab', 'instruction', 'cover_image'
+    )
     has_author_view = True
 
     # region Studio handler
     @XBlock.handler
     def studio_upload_files(self, request, suffix=''):
         pkg = request.POST.get('scorm_pkg', None)
-        if not pkg:
+        cover_image = request.FILES.get('cover_image', None)
+
+        if not pkg and not cover_image:
             return Response(status=400)
-        with ZipFile(pkg.file, 'r') as zip_fs:
-            mf = zip_fs.read('imsmanifest.xml')
-            self.scorm_pkg_version, scorm_index, scorm_launch = self._get_scorm_info(mf)
-            #logger.info('uploadfile: ' +str(self.scorm_pkg_version) + str(scorm_index) + str(scorm_launch))
-        input_zip=ZipFile(pkg.file)
+
+        if pkg:
+            with ZipFile(pkg.file, 'r') as zip_fs:
+                mf = zip_fs.read('imsmanifest.xml')
+                self.scorm_pkg_version, scorm_index, scorm_launch = self._get_scorm_info(mf)
+
+            pkg_id = self._upload_scorm_pkg(pkg)
+            self.scorm_pkg = os.path.join(pkg_id, scorm_index)
+            self.scorm_pkg_modified = timezone.now()
+            if scorm_launch is not None:
+                self.scorm_launch_data = str(scorm_launch)
+
+        if cover_image:
+            self.cover_image = self._upload_cover_image(cover_image)
+
+        return Response(status=200)
+
+    def _read_zip(self, pkg):
+        input_zip = ZipFile(pkg.file)
         new_zip = {}
+
         for filename in input_zip.namelist():
             if isinstance(filename, unicode):
                 newname = filename.encode('utf-8')
@@ -256,29 +295,31 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                     uname = filename.decode('latin-1')
                     newname = uname.encode('utf-8')
             new_zip[newname] = input_zip.read(filename)
+
         in_memory = BytesIO()
         zf = ZipFile(in_memory, mode="w")
         for x,y in new_zip.items():
             zf.writestr(x,y)
         zf.close()
         in_memory.seek(0)
-        zipfs = ZipFS(in_memory)
-        pkg_id = self._upload_scorm_pkg(zipfs)
-        self.scorm_pkg = os.path.join(pkg_id, scorm_index)
-        self.scorm_pkg_modified = timezone.now()
-        if scorm_launch is not None:
-            self.scorm_launch_data = str(scorm_launch)
-        return Response(status=200)
 
-    def _upload_scorm_pkg(self, fs):
+        return ZipFS(in_memory)
+
+    def _upload_scorm_pkg(self, pkg):
+        fs = self._read_zip(pkg)
         _ = self.runtime.service(self, 'i18n').ugettext
 
         pkg_id = uuid.uuid4().hex
         try:
-            copy_dir(fs, u'/', self.fs, pkg_id)
+            copy_dir(fs, u'/', self.fs, pkg_id.decode('utf-8'))
         except IOError:
             raise XBlockSaveError([], ['scorm_pkg'], _('Error in uploading scorm package'))
         return pkg_id
+
+    def _upload_cover_image(self, cover_image):
+        content = update_course_run_asset(self.course_id, cover_image.file)
+
+        return StaticContent.serialize_asset_key_with_slash(content.location)
 
     @staticmethod
     def _get_scorm_info(manifest):
@@ -350,7 +391,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     def resource_string(self, path):
         """Handy helper for getting resources from our kit."""
         data = pkg_resources.resource_string(__name__, path)
-        
+
         #if isinstance(data, unicode):
             #raise ValueError("isinstance")
         return data if isinstance(data, unicode) else data.decode("utf8")
@@ -367,7 +408,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
 
 
-     
+
 
     def get_fields_data(self, only_value=False, *fields):
 
@@ -378,7 +419,6 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 if not only_value:
                     data[k] = v
                 data["{}_value".format(k)] = getattr(self, k)
-        #logger.info("Original: " + str(data))
 
         if 'scorm_pkg' in data and self.scorm_pkg:
             pkg_url = self.fs.get_url(self.scorm_pkg)
@@ -386,13 +426,18 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             scorm_file_string = self.scorm_file[:22] + 'scorm/' + self.scorm_file[22:]
             pkg_url = self.fs.get_url(scorm_file_string)
         if pkg_url:
-            #logger.info("Original URL: " + str(pkg_url))
             if settings.DJFS['type'] == 's3fs':
                 parse = urlparse(pkg_url)
                 pkg_url = parse.path
                 pkg_url = urllib.unquote(pkg_url)
             data['scorm_pkg_value'] = pkg_url
-            #logger.info("Return URL: " + str(pkg_url))
+
+        if 'cover_image' in data and self.cover_image:
+            cover_image_url = self.fs.get_url(self.cover_image)
+            if cover_image_url:
+                if settings.DJFS['type'] == 's3fs':
+                    cover_image_url = urllib.unquote(urlparse(cover_image_url).path)
+                data['cover_image_value'] = cover_image_url
 
         if 'scorm_score' in data and self.scorm_score == float(0) and self.lesson_score != float(0):
             data['scorm_score_value'] = self.lesson_score
@@ -416,7 +461,9 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
     def get_student_data(self):
         fields_data = self.get_fields_data(False, 'scorm_score', 'weight', 'ratio',
-                                           'has_score', 'scorm_status', 'scorm_pkg', 'scorm_file', 'lesson_score', 'success_status', 'open_new_tab')
+                                           'has_score', 'scorm_status', 'scorm_pkg',
+                                           'scorm_file', 'lesson_score', 'success_status',
+                                           'open_new_tab', 'instruction', 'cover_image')
         request = get_current_request()
         if fields_data['open_new_tab_value']:
             fields_data['open_new_tab_value'] = is_compatible(request)

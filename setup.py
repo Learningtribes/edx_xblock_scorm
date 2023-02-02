@@ -22,7 +22,7 @@ def package_data(pkg, roots):
 setup(
     name='scormxblock-xblock',
     version='0.2',
-    description='scormxblock XBlock',   # TODO: write a better description.
+    description='scormxblock XBlock',
     packages=[
         'scormxblock',
     ],
@@ -31,10 +31,10 @@ setup(
         'lxml==3.8.0',
         'web-fragments==0.2.2',
         'user-agents==2.1',
-        'fs==2.0.18',
+        'fs==2.4.16',
     ],
     dependency_links=[
-        'git+https://github.com/Learningtribes/xblock-utils.git@ec95e5e718c4144dc8a43d116a545f210d929667#egg=xblock-utils',
+        'git+https://github.com/Learningtribes/xblock-utils.git@hawthorn#egg=xblock-utils',
         'git+https://github.com/Learningtribes/django-pyfs.git@d52e58dc88d755e332bdcc4ab1dd0b004e11ad11#egg=django-pyfs',
     ],
     entry_points={
