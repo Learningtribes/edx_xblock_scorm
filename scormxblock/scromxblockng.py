@@ -97,7 +97,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     )
 
     has_score = Boolean(
-        default=True,
+        default=False,
         scope=Scope.settings,
         enforce_type=True,
         display_name=_('Score'),
@@ -259,7 +259,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     @XBlock.handler
     def studio_upload_files(self, request, suffix=''):
         pkg = request.POST.get('scorm_pkg', None)
-        cover_image = request.FILES.get('cover_image', None)
+        cover_image = request.POST.get('cover_image', None)
 
         if not pkg and not cover_image:
             return Response(status=400)
@@ -397,7 +397,6 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         return data if isinstance(data, unicode) else data.decode("utf8")
 
     def render_template(self, template_path, context={}):
-        print("----------------------------start")
 
         """Evaluate a template by resource path, applying the provided context"""
         SupportedScromResources.assign_scrom_handle(self)
@@ -502,7 +501,6 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         frag.initialize_js('ScormXBlock')
 
         return frag
-
 
     def raise_handler_error(self, msg):
         _ = self.ugettext
