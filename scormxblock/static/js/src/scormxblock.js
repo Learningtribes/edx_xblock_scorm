@@ -1,4 +1,3 @@
-//$(document).ready(
     function ScormXBlock(runtime, element, settings) {
         "use strict";
 
