@@ -478,27 +478,28 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         frag = Fragment(template)
         frag.add_css(self.resource_string("static/css/scormxblock.css"))
         frag.add_javascript(self.resource_string("static/js/src/scormxblock.js"))
-        frag.initialize_js('ScormXBlock', json_args=self.get_fields_data(True, 'scorm_pkg_version', 'scorm_pkg_modified', 'ratio', 'version_scorm', 'scorm_modified', 'open_new_tab'))
+        frag.initialize_js('ScormXBlock', json_args=self.get_fields_data(True, 'scorm_pkg_version', 'scorm_pkg_modified', 'ratio', 'version_scorm', 'scorm_modified'))
         return frag
 
 
     def author_view(self, context):
 
         """View of Studio Courses page"""
+        fields_data = self.get_fields_data(True,
+            'scorm_pkg',
+            'open_new_tab', 'instruction', 'cover_image'
+        )
         frag = Fragment()
         frag.add_content(
-            self.render_template(
-                'static/html/author_view.html',
-                {'self': self,
-                'external_resources': SUPPORTED_SCROM_RESOURCES,
-                'usd_svg': self.resource_string('static/images/dollar.svg')
-                }
-            )
+            self.render_template('static/html/author_view.html', dict(fields_data,
+                external_resources=SUPPORTED_SCROM_RESOURCES,
+                usd_svg=self.resource_string('static/images/dollar.svg')
+            ))
         )
         frag.add_css(self.resource_string('static/css/scormxblock.css'))
         # Inject js Script to <head> in file: cms/static/js/views/xblock.js#L218
         frag.add_javascript(self.resource_string('static/js/src/scormxblock.js'))
-        frag.initialize_js('ScormXBlock')
+        frag.initialize_js('ScormXBlock', json_args=self.get_fields_data(True, 'scorm_pkg_version', 'scorm_pkg_modified', 'ratio', 'version_scorm', 'scorm_modified'))
 
         return frag
 

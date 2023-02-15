@@ -1,8 +1,25 @@
 {% load i18n %}
-<div class="themeable-xblock scormxblock_block"></div>
-{% if scorm_file %}
-<p class="scorm-preview-text">{% trans "Look in LMS"%}</p>
+<div class="themeable-xblock scormxblock_block">
+{% if open_new_tab_value and scorm_pkg_value %}
+    <div class="launch-div">
+        <div class="instruction">{{ instruction_value }}</div>
+        <div class="preview">{% if cover_image_value %}<img src="{{ cover_image_value }}" alt="preview" />{% endif %}</div>
+        <div class="description">
+            <h2 class="content-title">{% trans "Open in a new tab" %}</h2>
+            <p class="launch-content launch-before">{% trans "Click on the button below to open the module in a new tab. If the module does not open properly, please refresh the page" %}</p>
+            <p class="launch-content launch-after hidden">{% trans "Your e-learning module has been opened in a new tab. Please, close the new tab after you completed the module." %}</p>
+            <div class="button-container">
+                <button class="launch-button"><a href="{{ scorm_pkg_value }}" rel="opener" target="_blank">{% trans "Launch" %}</a></button>
+                <a role="button" class="fresh-button btn" href="javascript:window.location.reload();"><i class="fal fa-redo-alt"></i>{% trans "Refresh" %}</a>
+            </div>
+        </div>
+    </div>
+    <hr class="sep-line">
+{% elif scorm_pkg_value %}
+    <iframe id="scorm-object-frame" class="scorm_object" src="{{ scorm_pkg_value }}"></iframe>
+    <hr class="sep-line">
 {% endif %}
+</div>
 <div class="scorm_xblock">
     <p>
         <div class="supported-tags" id="supported-tags">

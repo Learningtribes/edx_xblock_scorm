@@ -1,7 +1,6 @@
 //$(document).ready(
     function ScormXBlock(runtime, element, settings) {
         "use strict";
-        var errorCode = 0;
 
         const commitUrl = runtime.handlerUrl(element, 'scorm_commit');
         const ios_commitUrl = runtime.handlerUrl(element, 'scorm_ios_commit');
@@ -11,7 +10,6 @@
         const package_version = settings['scorm_pkg_version_value'];
         const package_date = settings['scorm_pkg_modified_value'];
         const ratio_value = settings['ratio_value'];
-        const open_new_tab = settings['open_new_tab_value'];
         var timerId;
         let pendingValues = null;
 
@@ -32,12 +30,9 @@
               resetIframeSize();
             }
 
-            if (open_new_tab) {
-                $('.launch-button').click(function() {
-                    $('.launch-content').toggleClass('hidden');
-                    $('.button-container').addClass('hidden');
-                })
-            }
+            $('.launch-button').click(function() {
+                $('.launch-button').addClass('disabled');
+            })
 
             // Get runtime score value due to unexpected terminal action
             timerId = setInterval(Enforce_Commit, 2000);
