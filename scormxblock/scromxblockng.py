@@ -97,7 +97,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     )
 
     has_score = Boolean(
-        default=True,
+        default=False,
         scope=Scope.settings,
         enforce_type=True,
         display_name=_('Score'),
@@ -259,7 +259,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     @XBlock.handler
     def studio_upload_files(self, request, suffix=''):
         pkg = request.POST.get('scorm_pkg', None)
-        cover_image = request.FILES.get('cover_image', None)
+        cover_image = request.POST.get('cover_image', None)
 
         if not pkg and not cover_image:
             return Response(status=400)
@@ -397,7 +397,6 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         return data if isinstance(data, unicode) else data.decode("utf8")
 
     def render_template(self, template_path, context={}):
-        print("----------------------------start")
 
         """Evaluate a template by resource path, applying the provided context"""
         SupportedScromResources.assign_scrom_handle(self)
@@ -479,29 +478,36 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         frag = Fragment(template)
         frag.add_css(self.resource_string("static/css/scormxblock.css"))
         frag.add_javascript(self.resource_string("static/js/src/scormxblock.js"))
-        frag.initialize_js('ScormXBlock', json_args=self.get_fields_data(True, 'scorm_pkg_version', 'scorm_pkg_modified', 'ratio', 'version_scorm', 'scorm_modified', 'open_new_tab'))
+        frag.initialize_js('ScormXBlock', json_args=self.get_fields_data(True, 'scorm_pkg_version', 'scorm_pkg_modified', 'ratio', 'version_scorm', 'scorm_modified'))
         return frag
 
 
     def author_view(self, context):
 
         """View of Studio Courses page"""
+        fields_data = self.get_fields_data(True,
+            'scorm_pkg',
+            'open_new_tab', 'instruction', 'cover_image'
+        )
         frag = Fragment()
         frag.add_content(
-            self.render_template(
-                'static/html/author_view.html',
-                {'self': self,
-                'external_resources': SUPPORTED_SCROM_RESOURCES,
-                'usd_svg': self.resource_string('static/images/dollar.svg')
-                }
-            )
+            self.render_template('static/html/author_view.html', dict(fields_data,
+                external_resources=SUPPORTED_SCROM_RESOURCES,
+                usd_svg=self.resource_string('static/images/dollar.svg')
+            ))
         )
         frag.add_css(self.resource_string('static/css/scormxblock.css'))
         # Inject js Script to <head> in file: cms/static/js/views/xblock.js#L218
         frag.add_javascript(self.resource_string('static/js/src/scormxblock.js'))
-        frag.initialize_js('ScormXBlock')
+        frag.initialize_js('ScormXBlock', json_args=self.get_fields_data(True, 'scorm_pkg_version', 'scorm_pkg_modified', 'ratio', 'version_scorm', 'scorm_modified'))
 
         return frag
+
+    def studio_view(self, context):
+        fragment = super(ScormXBlock, self).studio_view(context)
+        fragment.add_javascript(self.resource_string('static/js/src/studio.js'))
+
+        return fragment
 
 
     def raise_handler_error(self, msg):
