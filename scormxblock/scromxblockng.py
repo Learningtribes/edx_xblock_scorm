@@ -502,6 +502,13 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
         return frag
 
+    def studio_view(self, context):
+        fragment = super(ScormXBlock, self).studio_view(context)
+        fragment.add_javascript(self.resource_string('static/js/src/studio.js'))
+
+        return fragment
+
+
     def raise_handler_error(self, msg):
         _ = self.ugettext
         raise JsonHandlerError(400, _(msg))
