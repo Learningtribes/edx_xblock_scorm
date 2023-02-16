@@ -25,7 +25,7 @@
             <p class="launch-content launch-before">{% trans "Click on the button below to open the module in a new tab. If the module does not open properly, please refresh the page" %}</p>
             <p class="launch-content launch-after hidden">{% trans "Your e-learning module has been opened in a new tab. Please, close the new tab after you completed the module." %}</p>
             <div class="button-container">
-                <button class="launch-button"><a href="{{ scorm_pkg_value }}" rel="opener" target="_blank">{% trans "Launch" %}</a></button>
+                <button class="launch-button"><a href="{{lms_root_url}}{{ scorm_pkg_value }}" rel="opener" target="_blank">{% trans "Launch" %}</a></button>
                 <a role="button" class="fresh-button btn" href="javascript:window.location.reload();"><i class="fal fa-redo-alt"></i>{% trans "Refresh" %}</a>
             </div>
         </div>
