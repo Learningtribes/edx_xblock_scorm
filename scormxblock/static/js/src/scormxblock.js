@@ -31,6 +31,8 @@
 
             $('.launch-button').click(function() {
                 $('.launch-button').addClass('disabled');
+                $('.launch-before').toggleClass('hidden');
+                $('.launch-after').toggleClass('hidden');
             })
 
             // Get runtime score value due to unexpected terminal action

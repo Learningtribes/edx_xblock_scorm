@@ -35,6 +35,7 @@ try:
     from contentstore.views.assets import update_course_run_asset
     from xmodule.progress import Progress
     from xmodule.contentstore.content import StaticContent
+    from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 except ImportError:
     pass
 from .scorm_default import *
@@ -405,10 +406,6 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
         return template.render(Context(context))
 
-
-
-
-
     def get_fields_data(self, only_value=False, *fields):
 
         data = {}
@@ -426,9 +423,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             pkg_url = self.fs.get_url(scorm_file_string)
         if pkg_url:
             if settings.DJFS['type'] == 's3fs':
-                parse = urlparse(pkg_url)
-                pkg_url = parse.path
-                pkg_url = urllib.unquote(pkg_url)
+                pkg_url = urllib.unquote(urlparse(pkg_url).path)
             data['scorm_pkg_value'] = pkg_url
 
         if 'cover_image' in data and self.cover_image:
@@ -485,7 +480,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     def author_view(self, context):
 
         """View of Studio Courses page"""
-        fields_data = self.get_fields_data(True,
+        fields_data = self.get_fields_data(False,
             'scorm_pkg',
             'open_new_tab', 'instruction', 'cover_image'
         )
@@ -493,6 +488,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         frag.add_content(
             self.render_template('static/html/author_view.html', dict(fields_data,
                 external_resources=SUPPORTED_SCROM_RESOURCES,
+                lms_root_url=configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL),
                 usd_svg=self.resource_string('static/images/dollar.svg')
             ))
         )
