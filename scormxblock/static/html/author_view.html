@@ -1,6 +1,7 @@
 {% load i18n %}
+{% if scorm_pkg_value %}
 <div class="themeable-xblock scormxblock_block">
-{% if open_new_tab_value and scorm_pkg_value %}
+    {% if open_new_tab_value %}
     <div class="launch-div">
         <div class="instruction">{{ instruction_value }}</div>
         <div class="preview">{% if cover_image_value %}<img src="{{ cover_image_value }}" alt="preview" />{% endif %}</div>
@@ -14,12 +15,11 @@
             </div>
         </div>
     </div>
-    <hr class="sep-line">
-{% elif scorm_pkg_value %}
+    {% else %}
     <iframe id="scorm-object-frame" class="scorm_object" src="{{ scorm_pkg_value }}"></iframe>
-    <hr class="sep-line">
-{% endif %}
+    {% endif %}
 </div>
+{% else %}
 <div class="scorm_xblock">
     <p>
         <div class="supported-tags" id="supported-tags">
@@ -57,3 +57,4 @@
         </div>
     </p>
 </div>
+{% endif %}
