@@ -246,7 +246,13 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         enforce_type=True,
         display_name=_("Cover Image"),
         help=_("Size recommandation : 965x270px"),
-        extra_description=_("Size recommandation : 965x270px")
+        extra_description=_("Size recommandation : 965x270px"),
+        optional_values=[
+            '/static/images/scorm-cover-0.jpg',
+            '/static/images/scorm-cover-1.jpg',
+            '/static/images/scorm-cover-2.jpg',
+            '/static/images/scorm-cover-3.jpg',
+        ]
     )
 
     editable_fields = (
