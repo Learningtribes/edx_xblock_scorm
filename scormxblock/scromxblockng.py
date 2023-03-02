@@ -248,10 +248,10 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         help=_("Size recommandation : 965x270px"),
         extra_description=_("Size recommandation : 965x270px"),
         optional_values=[
-            '/static/images/scorm-cover-0.jpg',
-            '/static/images/scorm-cover-1.jpg',
-            '/static/images/scorm-cover-2.jpg',
-            '/static/images/scorm-cover-3.jpg',
+            '/static/xblock/scormxblock/scorm-cover-0.jpg',
+            '/static/xblock/scormxblock/scorm-cover-1.jpg',
+            '/static/xblock/scormxblock/scorm-cover-2.jpg',
+            '/static/xblock/scormxblock/scorm-cover-3.jpg',
         ]
     )
 
