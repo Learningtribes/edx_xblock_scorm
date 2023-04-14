@@ -20,7 +20,7 @@ from django.contrib.auth.models import User
 from xblock.core import XBlock
 from xblock.exceptions import XBlockSaveError, JsonHandlerError
 from xblock.scorable import Score
-from xblock.fields import String, Scope, Dict, Boolean, Float
+from xblock.fields import String, Scope, Dict, Boolean, Float, List
 from xblock.reference.plugins import Filesystem
 
 from web_fragments.fragment import Fragment
@@ -241,7 +241,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
     cover_image = File(
         accept="image/*",
-        default="",
+        default="/static/xblock/scormxblock/scorm-cover-0.jpg",
         scope=Scope.settings,
         enforce_type=True,
         display_name=_("Cover Image"),
@@ -249,10 +249,11 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         extra_description=_("Size recommandation : 965x270px"),
         optional_values=[
             '/static/xblock/scormxblock/scorm-cover-0.jpg',
-            '/static/xblock/scormxblock/scorm-cover-1.jpg',
-            '/static/xblock/scormxblock/scorm-cover-2.jpg',
-            '/static/xblock/scormxblock/scorm-cover-3.jpg',
         ]
+    )
+
+    cover_images = List(
+        scope=Scope.settings,
     )
 
     editable_fields = (
@@ -266,9 +267,10 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     @XBlock.handler
     def studio_upload_files(self, request, suffix=''):
         pkg = request.POST.get('scorm_pkg', None)
+        cover_images = request.POST.get('cover_images', [])
         cover_image = request.POST.get('cover_image', None)
 
-        if not pkg and not cover_image:
+        if not pkg and not cover_images:
             return Response(status=400)
 
         if pkg:
@@ -282,8 +284,17 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             if scorm_launch is not None:
                 self.scorm_launch_data = str(scorm_launch)
 
+        if cover_images:
+            self.cover_images = [
+                self._upload_cover_image(cover_image)
+                for cover_image in cover_images
+            ]
+
         if cover_image:
-            self.cover_image = self._upload_cover_image(cover_image)
+            if type(cover_image) is str:
+                self.cover_image = cover_image
+            else:
+                self.cover_image = self.cover_images[cover_images.index(cover_image)]
 
         return Response(status=200)
 
@@ -324,6 +335,9 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         return pkg_id
 
     def _upload_cover_image(self, cover_image):
+        if type(cover_image) is str:
+            return cover_image
+
         content = update_course_run_asset(self.course_id, cover_image.file)
 
         return StaticContent.serialize_asset_key_with_slash(content.location)
