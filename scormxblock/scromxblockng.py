@@ -247,9 +247,6 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         display_name=_("Cover Image"),
         help=_("Size recommandation : 965x270px"),
         extra_description=_("Size recommandation : 965x270px"),
-        optional_values=[
-            '/static/xblock/scormxblock/scorm-cover-0.jpg',
-        ]
     )
 
     cover_images = List(
@@ -267,11 +264,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     @XBlock.handler
     def studio_upload_files(self, request, suffix=''):
         pkg = request.POST.get('scorm_pkg', None)
-        cover_images = request.POST.get('cover_images', [])
         cover_image = request.POST.get('cover_image', None)
-
-        if not pkg and not cover_images:
-            return Response(status=400)
+        cover_images = request._request.FILES.getlist('cover_images[]')
 
         if pkg:
             with ZipFile(pkg.file, 'r') as zip_fs:
@@ -286,15 +280,17 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
         if cover_images:
             self.cover_images = [
-                self._upload_cover_image(cover_image)
-                for cover_image in cover_images
+                self._upload_cover_image(c) for c in cover_images
             ]
 
         if cover_image:
-            if type(cover_image) is str:
-                self.cover_image = cover_image
+            cover_image_hash = cover_image.split('-')[-1]
+            for optional_cover_image in self.cover_images:
+                if cover_image_hash in optional_cover_image:
+                    self.cover_image = optional_cover_image
+                    break
             else:
-                self.cover_image = self.cover_images[cover_images.index(cover_image)]
+                self.cover_image = cover_image
 
         return Response(status=200)
 
@@ -338,7 +334,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         if type(cover_image) is str:
             return cover_image
 
-        content = update_course_run_asset(self.course_id, cover_image.file)
+        content = update_course_run_asset(self.course_id, cover_image)
 
         return StaticContent.serialize_asset_key_with_slash(content.location)
 
