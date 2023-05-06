@@ -42,7 +42,7 @@ from .scorm_default import *
 from .fields import DateTime
 from .mixins import ScorableXBlockMixin
 
-from .config import SupportedScromResources, SUPPORTED_SCROM_RESOURCES
+from .config import SupportedScormResources, SUPPORTED_SCORM_RESOURCES
 
 
 logger = logging.getLogger(__name__)
@@ -416,7 +416,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     def render_template(self, template_path, context={}):
 
         """Evaluate a template by resource path, applying the provided context"""
-        SupportedScromResources.assign_scrom_handle(self)
+        SupportedScormResources.assign_scorm_handle(self)
 
         template = Template(self.resource_string(template_path))
 
@@ -503,7 +503,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         frag = Fragment()
         frag.add_content(
             self.render_template('static/html/author_view.html', dict(fields_data,
-                external_resources=SUPPORTED_SCROM_RESOURCES,
+                external_resources=SUPPORTED_SCORM_RESOURCES,
                 lms_root_url=configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL),
                 usd_svg=self.resource_string('static/images/dollar.svg')
             ))
