@@ -1,38 +1,54 @@
-import json
-import re
+# -*- coding: utf-8 -*-
+from __future__ import division
+import os
 import pkg_resources
-import zipfile
-import shutil
+import uuid
+import logging
+import re
+from collections import namedtuple
+from lxml import etree
+from urlparse import urlparse
+import urllib
+import user_agents
 
+from crum import get_current_request
+from django.template import Context, Template
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
-
-try:
-    import xml.etree.cElementTree as ET
-except ImportError:
-    import xml.etree.ElementTree as ET
-
 from django.conf import settings
-from django.template import Context, Template
-from webob import Response
-from crum import get_current_request
+from django.contrib.auth.models import User
 from xblock.core import XBlock
-from xblock.fields import Scope, String, Float, Boolean, Dict, DateTime
-from xblock.fragment import Fragment
-import os
-import logging
-from scorm_default import *
-# TODO After upgrade to new release, add more required function from
-# API doc: https://openedx.atlassian.net/wiki/spaces/AC/pages/161400730/Open+edX+Runtime+XBlock+API
-# TODO old data migrate how to
-# TODO test all features
-# TODO try to store advanvced cmi data in dict form
+from xblock.exceptions import XBlockSaveError, JsonHandlerError
+from xblock.scorable import Score
+from xblock.fields import String, Scope, Dict, Boolean, Float, List
+from xblock.reference.plugins import Filesystem
 
-file_path = os.path.dirname(os.path.realpath(__file__))
+from web_fragments.fragment import Fragment
+from webob.response import Response
+from fs.copy import copy_dir
+from fs.zipfs import ZipFS
+from zipfile import ZipFile
+from io import BytesIO
+from xblockutils.studio_editable import StudioEditableXBlockMixin
+from xblockutils.fields import File
+try:
+    from contentstore.views.assets import update_course_run_asset
+    from xmodule.progress import Progress
+    from xmodule.contentstore.content import StaticContent
+    from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
+except ImportError:
+    pass
+from .scorm_default import *
+from .fields import DateTime
+from .mixins import ScorableXBlockMixin
+
+from .config import SupportedScormResources, SUPPORTED_SCORM_RESOURCES
+
+
 logger = logging.getLogger(__name__)
-
 # Make '_' a no-op so we can scrape strings
 _ = lambda text: text
+
 
 def dt2str(dt):
     return dt.strftime('%Y-%m-%dT%H:%M:%S.%f%z')
@@ -41,343 +57,658 @@ def str2dt(dtstr):
     return parse_datetime(dtstr)
 
 
-@XBlock.needs('fs')
-@XBlock.needs('i18n')
-@XBlock.needs('request')
-class ScormXBlock(XBlock):
+SCORM_STATUS = namedtuple('ScormStatus', [
+    'SUCCEED', 'FAILED', 'IN_PROGRESS', 'UNATTENDED'])(
+    'SUCCEED', 'FAILED', 'IN PROGRESS', 'UNATTENDED')
+
+SCORM_VERSION = namedtuple('ScormVersion', ['V12', 'V2004'])('SCORM12', 'SCORM2004')
+
+
+def is_compatible(request):
+    """Ignore IE/Safari browsers to open scorm content in new tab due to postMessage() limitation.
+    """
+    http_user_agent = request.META.get('HTTP_USER_AGENT')
+    user_agent = user_agents.parse(http_user_agent)
+    browser_family = user_agent.browser.family
+    if browser_family == 'IE' or "Safari" in browser_family:
+        return False
+    return True
+
+
+@XBlock.needs('request', 'fs', 'i18n', 'user')
+class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
+    """
+    all fields private to `scorm` are prefix with `scorm`, in case any conflict
+    with internal fields.
+    """
     display_name = String(
+        default="SCORM",
+        scope=Scope.settings,
+        enforce_type=True,
         display_name=_("Display Name"),
         help=_("Display name for this module"),
-        default="Scorm",
-        scope=Scope.settings,
     )
+
+    due = DateTime(
+        default="2000-01-01T00:00:00.00+0000",
+        scope=Scope.settings,
+        enforce_type=True,
+        display_name=_("Due Date"),
+        help=_("Due Date"),
+    )
+
+    has_score = Boolean(
+        default=False,
+        scope=Scope.settings,
+        enforce_type=True,
+        display_name=_('Score'),
+        help=_("Does this SCORM need to be scored?")
+    )
+
+    icon_class = String(
+        default='problem',
+        scope=Scope.settings,
+        values=("problem", "video", "other"),
+        enforce_type=True,
+        display_name=_("Icon"),
+        help=_("Icon used in course page")
+    )
+
+    weight = Float(
+        default=1.0,
+        scope=Scope.settings,
+        values={"min": 0, "step": 0.1},
+        enforce_type=True,
+        display_name=_('Weight'),
+        help=_('Relative weight in this course section')
+    )
+
+    ratio = String(
+        default="16:9",
+        scope=Scope.settings,
+        values=("16:9", "4:3", "1:1"),
+        enforce_type=True,
+        display_name=_('Ratio'),
+        help=_('Aspect ratio of this module')
+    )
+
+    open_new_tab = Boolean(
+        default=False,
+        scope=Scope.settings,
+        enforce_type=True,
+        display_name=_('New Tab'),
+        help=_('Open module in a new tab. This option will only apply to users with a compatible browser.')
+    )
+
+    fs = Filesystem(scope=Scope.settings)
+
+    scorm_pkg = File(
+        accept="application/zip",
+        default="",
+        scope=Scope.settings,
+        enforce_type=True,
+        display_name=_("SCORM module"),
+        help=_("SCORM module in .zip format") + '; ' + _("Size limit: ") + '300MB',
+        extra_description=_("Required")
+    )
+
     scorm_file = String(
-        display_name=_("Upload scorm file"),
+        display_name=_("compatible with old version scorm file"),
         scope=Scope.settings,
+        default="old"
     )
-    scorm_modified = DateTime(
+
+    scorm_pkg_version = String(
+        default=SCORM_VERSION.V12,
         scope=Scope.settings,
+        values=SCORM_VERSION,
+        enforce_type=True,
+        display_name=_('Version'),
+        help=_('Version of scorm, 1.2 or 2004')
     )
-    version_scorm = String(
-        default="SCORM_12",
+
+    scorm_pkg_modified = DateTime(
         scope=Scope.settings,
+        enforce_type=True,
+        display_name=_('Upload time'),
+        help=_('SCORM package upload time utc')
     )
-    # save completion_status for SCORM_2004
-    lesson_status = String(
+
+    _scorm_runtime_data = Dict(
+        default={},
         scope=Scope.user_state,
-        default='not attempted'
+        enforce_type=True
     )
+
+    scorm_runtime_modified = DateTime(
+        scope=Scope.user_state,
+        enforce_type=True,
+        display_name=_('Runtime Modified Time'),
+        help=_('SCORM runtime modified time utc')
+    )
+
+    scorm_status = String(
+        default=SCORM_STATUS.UNATTENDED,
+        scope=Scope.user_state,
+        values=SCORM_STATUS,
+        enforce_type=True
+    )
+
     success_status = String(
         scope=Scope.user_state,
         default='unknown'
     )
-    lesson_location = String(
+
+    scorm_score = Float(
+        default=0,
         scope=Scope.user_state,
-        default=''
+        enforce_type=True
     )
-    suspend_data = String(
-        scope=Scope.user_state,
-        default=''
-    )
-    data_scorm = Dict(
-        scope=Scope.user_state,
-        default={}
-    )
+
     lesson_score = Float(
         scope=Scope.user_state,
         default=0
     )
-    weight = Float(
-        display_name=_('Weight'),
-        default=1.0,
-        values={"min": 0, "step": .1},
-        help=_("Weight of this Scorm, by default keep 1"),
-        scope=Scope.settings
-    )
-    has_score = Boolean(
-        display_name=_("Scored"),
-        help=_("Select true if this component will receive a numerical score from the Scorm"),
+
+    scorm_allow_rescore = Boolean(
         default=False,
-        scope=Scope.settings
+        scope=Scope.settings,
+        enforce_type=True,
+        display_name=_("Rescore"),
+        help=_("Does this SCORM allow users to submit answer multiple times?")
     )
-    icon_class = String(
-        default="video",
+
+    version_scorm = String(
+        default="SCORM_12",
         scope=Scope.settings,
     )
 
-    cmi_modified = DateTime(
-        scope=Scope.user_state
-    )
-    cmi_data = Dict(
-        scope=Scope.user_state,
-        default={},
+    scorm_modified = DateTime(
+        scope=Scope.settings,
     )
 
+    scorm_launch_data = String(
+        default="",
+        scope=Scope.settings
+    )
+
+    instruction = String(
+        default="",
+        scope=Scope.settings,
+        enforce_type=True,
+        display_name=_("Instruction")
+    )
+
+    cover_image = File(
+        accept="image/*",
+        default="/static/xblock/scormxblock/scorm-cover-0.jpg",
+        scope=Scope.settings,
+        enforce_type=True,
+        display_name=_("Cover Image"),
+        help=_("Size recommandation : 965x270px"),
+        extra_description=_("Size recommandation : 965x270px"),
+    )
+
+    cover_images = List(
+        scope=Scope.settings,
+    )
+
+    editable_fields = (
+        'scorm_pkg', 'display_name', 'due',
+        'has_score', 'weight', 'scorm_allow_rescore',
+        'open_new_tab', 'instruction', 'cover_image'
+    )
     has_author_view = True
+
+    # region Studio handler
+    @XBlock.handler
+    def studio_upload_files(self, request, suffix=''):
+        pkg = request.POST.get('scorm_pkg', None)
+        cover_image = request.POST.get('cover_image', None)
+        cover_images = request._request.FILES.getlist('cover_images[]')
+
+        if pkg:
+            with ZipFile(pkg.file, 'r') as zip_fs:
+                mf = zip_fs.read('imsmanifest.xml')
+                self.scorm_pkg_version, scorm_index, scorm_launch = self._get_scorm_info(mf)
+
+            pkg_id = self._upload_scorm_pkg(pkg)
+            self.scorm_pkg = os.path.join(pkg_id, scorm_index)
+            self.scorm_pkg_modified = timezone.now()
+            if scorm_launch is not None:
+                self.scorm_launch_data = str(scorm_launch)
+
+        if cover_images:
+            self.cover_images = [
+                self._upload_cover_image(c) for c in cover_images
+            ]
+
+        if cover_image:
+            cover_image_hash = cover_image.split('-')[-1]
+            for optional_cover_image in self.cover_images:
+                if cover_image_hash in optional_cover_image:
+                    self.cover_image = optional_cover_image
+                    break
+            else:
+                self.cover_image = cover_image
+
+        return Response(status=200)
+
+    def _read_zip(self, pkg):
+        input_zip = ZipFile(pkg.file)
+        new_zip = {}
+
+        for filename in input_zip.namelist():
+            if isinstance(filename, unicode):
+                newname = filename.encode('utf-8')
+            elif isinstance(filename, str):
+                try:
+                    filename.decode('utf-8')
+                    newname = filename
+                except UnicodeDecodeError:
+                    uname = filename.decode('latin-1')
+                    newname = uname.encode('utf-8')
+            new_zip[newname] = input_zip.read(filename)
+
+        in_memory = BytesIO()
+        zf = ZipFile(in_memory, mode="w")
+        for x,y in new_zip.items():
+            zf.writestr(x,y)
+        zf.close()
+        in_memory.seek(0)
+
+        return ZipFS(in_memory)
+
+    def _upload_scorm_pkg(self, pkg):
+        fs = self._read_zip(pkg)
+        _ = self.runtime.service(self, 'i18n').ugettext
+
+        pkg_id = uuid.uuid4().hex
+        try:
+            copy_dir(fs, u'/', self.fs, pkg_id.decode('utf-8'))
+        except IOError:
+            raise XBlockSaveError([], ['scorm_pkg'], _('Error in uploading scorm package'))
+        return pkg_id
+
+    def _upload_cover_image(self, cover_image):
+        if type(cover_image) is str:
+            return cover_image
+
+        content = update_course_run_asset(self.course_id, cover_image)
+
+        return StaticContent.serialize_asset_key_with_slash(content.location)
+
+    @staticmethod
+    def _get_scorm_info(manifest):
+        index_page = 'index.html'
+        launch_data = None
+        datafromlms = 'organizations/organization/item/adlcp:datafromlms'
+        root = etree.fromstring(manifest)
+        id_ref = root.find('organizations/organization/item', root.nsmap).get('identifierref')
+        resources = root.find('resources', root.nsmap)
+        resource = resources.findall('resource', root.nsmap)
+        schemaversion = root.find('metadata/schemaversion', root.nsmap)
+        scorm_version = SCORM_VERSION.V12
+        if resource:
+            if len(resource) > 1:
+                for i in resource:
+                    if i.get('identifier') == id_ref:
+                        index_page = i.get('href')
+            else:
+                index_page = resource[0].get('href')
+
+        if (schemaversion is not None) and (re.match('^1.2$', schemaversion.text) is None):
+            scorm_version = SCORM_VERSION.V2004
+            datafromlms = 'organizations/organization/item/adlcp:dataFromLMS'
+        launch_data = root.find(datafromlms, root.nsmap)
+        if launch_data is not None:
+            launch_data = launch_data.text
+        return scorm_version, index_page, launch_data
+    # endregion
+
+    # region Runtime functions
+    def max_score(self):
+        return 1.0
+
+    def allows_rescore(self):
+        return self.scorm_allow_rescore
+
+    def set_score(self, score):
+        self.scorm_score = self.max_score() * score.raw_earned / score.raw_possible
+
+    def get_score(self):
+        return Score(raw_possible=self.max_score(), raw_earned=self.scorm_score)
+
+    def calculate_score(self):
+        return self.get_score()
+
+    def has_submitted_answer(self):
+        return self.scorm_status != SCORM_STATUS.UNATTENDED
+
+    def get_progress(self):
+        pg = 0
+        if self.scorm_pkg_version == SCORM_VERSION.V2004:
+            try:
+                pg = float(self.scorm_runtime_data.get('cmi.progress_measure', 0))
+            except ValueError:
+                pg = 0
+        return Progress(pg, 1)
+
+    # endregion
+
+    @property
+    def scorm_runtime_data(self):
+        return self._scorm_runtime_data
+
+    @scorm_runtime_data.setter
+    def scorm_runtime_data(self, value):
+        # TODO: add validation ss
+        self._scorm_runtime_data = value
 
     def resource_string(self, path):
         """Handy helper for getting resources from our kit."""
         data = pkg_resources.resource_string(__name__, path)
-        return data.decode("utf8")
+
+        #if isinstance(data, unicode):
+            #raise ValueError("isinstance")
+        return data if isinstance(data, unicode) else data.decode("utf8")
+
+    def render_template(self, template_path, context={}):
+
+        """Evaluate a template by resource path, applying the provided context"""
+        SupportedScormResources.assign_scorm_handle(self)
+
+        template = Template(self.resource_string(template_path))
+
+        return template.render(Context(context))
 
     def get_fields_data(self, only_value=False, *fields):
 
         data = {}
+        pkg_url = ''
         for k, v in self.fields.iteritems():
             if k in fields:
                 if not only_value:
                     data[k] = v
                 data["{}_value".format(k)] = getattr(self, k)
 
-        if 'scorm_file' in data and self.scorm_file:
-            request = get_current_request()
-            scheme = 'https' if settings.HTTPS == 'on' else 'http'
-            scorm_file_value = '{}://{}{}'.format(scheme, request.site.domain, self.scorm_file)
-            data['scorm_file_value'] = scorm_file_value
+        if 'scorm_pkg' in data and self.scorm_pkg:
+            pkg_url = self.fs.get_url(self.scorm_pkg)
+        if 'scorm_pkg' in data and self.scorm_pkg == '' and self.scorm_file != 'old':
+            scorm_file_string = self.scorm_file[:22] + 'scorm/' + self.scorm_file[22:]
+            pkg_url = self.fs.get_url(scorm_file_string)
+        if pkg_url:
+            if settings.DJFS['type'] == 's3fs':
+                pkg_url = urllib.unquote(urlparse(pkg_url).path)
+            data['scorm_pkg_value'] = pkg_url
 
-        if 'scorm_modified_value' in data and data['scorm_modified_value']:
-            data['scorm_modified_value'] = dt2str(data['scorm_modified_value'])
-        if 'cmi_modified_value' in data and data['cmi_modified_value']:
-            data['cmi_modified_value'] = dt2str(data['cmi_modified_value'])
+        if 'cover_image' in data and self.cover_image:
+            cover_image_url = self.fs.get_url(self.cover_image)
+            if cover_image_url:
+                if settings.DJFS['type'] == 's3fs':
+                    cover_image_url = urllib.unquote(urlparse(cover_image_url).path)
+                data['cover_image_value'] = cover_image_url
+
+        if 'scorm_score' in data and self.scorm_score == float(0) and self.lesson_score != float(0):
+            data['scorm_score_value'] = self.lesson_score
+
+        if 'scorm_status' in data and self.scorm_status == SCORM_STATUS.UNATTENDED and self.success_status != 'unknown':
+            data['scorm_status_value'] = self.success_status
+
+        if 'scorm_pkg_version_value' in data and self.scorm_pkg_version == SCORM_VERSION.V12 and self.version_scorm == 'SCORM_2004':
+            data['scorm_pkg_version_value'] = SCORM_VERSION.V2004
+
+        if 'scorm_pkg_modified_value' in data and not self.scorm_pkg_modified and self.scorm_modified:
+            data['scorm_pkg_modified_value'] = self.scorm_modified
+
+        for k, v in data.items():
+            if isinstance(v, timezone.datetime):
+                data[k] = dt2str(v)
+
+        #logger.info("Return: " + str(data))
 
         return data
 
-    def studio_view(self, context=None):
-        # context_html = self.get_context_studio()
-        fields_data = self.get_fields_data(False, 'display_name', 'scorm_file', 'has_score', 'weight')
-        template = self.render_template('static/html/studio.html', fields_data)
-        frag = Fragment(template)
-        frag.add_css(self.resource_string("static/css/scormxblock.css"))
-        frag.add_javascript(self.resource_string("static/js/src/studio.js"))
-        frag.initialize_js('ScormStudioXBlock')
-        return frag
-
     def get_student_data(self):
-        fields_data = self.get_fields_data(False, 'lesson_score', 'weight',
-                                           'has_score', 'success_status', 'scorm_file')
+        fields_data = self.get_fields_data(False, 'scorm_score', 'weight', 'ratio',
+                                           'has_score', 'scorm_status', 'scorm_pkg',
+                                           'scorm_file', 'lesson_score', 'success_status',
+                                           'open_new_tab', 'instruction', 'cover_image')
+        request = get_current_request()
+        if fields_data['open_new_tab_value']:
+            fields_data['open_new_tab_value'] = is_compatible(request)
+        fields_data['graded_status'] = 'ungraded'
+        if self.graded and fields_data['has_score'] and fields_data['weight'] != 0:
+            fields_data['graded_status'] = 'graded'
+        fields_data['display_name'] = self.display_name
         return fields_data
 
     def student_view(self, context=None):
+
         template = self.render_template('static/html/scormxblock.html', self.get_student_data())
         frag = Fragment(template)
         frag.add_css(self.resource_string("static/css/scormxblock.css"))
         frag.add_javascript(self.resource_string("static/js/src/scormxblock.js"))
-        frag.initialize_js('ScormXBlock', json_args=self.get_fields_data(True, 'version_scorm', 'scorm_modified'))
+        frag.initialize_js('ScormXBlock', json_args=self.get_fields_data(True, 'scorm_pkg_version', 'scorm_pkg_modified', 'ratio', 'version_scorm', 'scorm_modified'))
         return frag
 
-    @XBlock.handler
-    def studio_submit(self, request, suffix=''):
-        self.display_name = request.params['display_name']
-        self.has_score = request.params['has_score']
-        self.weight = request.params['weight']
-        self.icon_class = 'problem' if self.has_score == 'True' else 'video'
-        if hasattr(request.params['file'], 'file'):
-            file = request.params['file'].file
-            zip_file = zipfile.ZipFile(file, 'r')
-            path_to_file = os.path.join(settings.PROFILE_IMAGE_BACKEND['options']['location'], self.location.block_id)
-            if os.path.exists(path_to_file):
-                shutil.rmtree(path_to_file, ignore_errors=True)
-            zip_file.extractall(path_to_file)
-            self.set_scorm(path_to_file)
-        return Response(json.dumps({'result': 'success'}), content_type='application/json')
 
     def author_view(self, context):
-        html = self.resource_string("static/html/author_view.html")
-        frag = Fragment(html)
+
+        """View of Studio Courses page"""
+        fields_data = self.get_fields_data(False,
+            'scorm_pkg',
+            'open_new_tab', 'instruction', 'cover_image'
+        )
+        frag = Fragment()
+        frag.add_content(
+            self.render_template('static/html/author_view.html', dict(fields_data,
+                external_resources=SUPPORTED_SCORM_RESOURCES,
+                lms_root_url=configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL),
+                usd_svg=self.resource_string('static/images/dollar.svg')
+            ))
+        )
+        frag.add_css(self.resource_string('static/css/scormxblock.css'))
+        # Inject js Script to <head> in file: cms/static/js/views/xblock.js#L218
+        frag.add_javascript(self.resource_string('static/js/src/scormxblock.js'))
+        frag.initialize_js('ScormXBlock', json_args=self.get_fields_data(True, 'scorm_pkg_version', 'scorm_pkg_modified', 'ratio', 'version_scorm', 'scorm_modified'))
+
         return frag
 
-    # @XBlock.json_handler
-    # def scorm_get_value(self, data, suffix=''):
-    #     name = data.get('name')
-    #     if name in ['cmi.core.lesson_status', 'cmi.completion_status']:
-    #         return {'value': self.lesson_status}
-    #     elif name == 'cmi.success_status':
-    #         return {'value': self.success_status}
-    #     elif name == 'cmi.core.lesson_location':
-    #         return {'value': self.lesson_location}
-    #     elif name == 'cmi.suspend_data':
-    #         return {'value': self.suspend_data}
-    #     else:
-    #         return {'value': self.data_scorm.get(name, '')}
-    # @XBlock.json_handler
-    # def commit(self, data, suffix=''):
-    #     context = {'result': 'success'}
-    #     for name, value in data.iteritems():
-    #         if name in ['cmi.core.lesson_status', 'cmi.completion_status']:
-    #             self.lesson_status = value
-    #             if self.has_score and value in ['completed', 'failed', 'passed']:
-    #                 context.update({"lesson_score": self.lesson_score})
-    #
-    #         elif name == 'cmi.success_status':
-    #             self.success_status = value
-    #             if self.has_score:
-    #                 if self.success_status == 'unknown':
-    #                     self.lesson_score = 0
-    #                 context.update({"lesson_score": self.lesson_score})
-    #
-    #         elif name in ['cmi.core.score.raw', 'cmi.score.raw'] and self.has_score:
-    #             score = float(data.get(name, 0))
-    #             self.lesson_score = score / 100.0
-    #             if self.lesson_score > self.weight:
-    #                 logger.error("error score, user {}: {}".format(
-    #                     self.get_user_id(),
-    #                     self.data
-    #                 ))
-    #             context.update({"lesson_score": self.lesson_score})
-    #
-    #         elif name == 'cmi.core.lesson_location':
-    #             self.lesson_location = str(value) or ''
-    #
-    #         elif name == 'cmi.suspend_data':
-    #             self.suspend_data = value or ''
-    #         else:
-    #             self.data_scorm[name] = value or ''
-    #
-    #     self.publish_grade()
-    #     context.update({"completion_status": self.get_completion_status()})
-    #     return context
+    def studio_view(self, context):
+        fragment = super(ScormXBlock, self).studio_view(context)
+        fragment.add_javascript(self.resource_string('static/js/src/studio.js'))
 
-    def is_cmi_data_expired(self, package_date):
+        return fragment
+
+
+    def raise_handler_error(self, msg):
+        _ = self.ugettext
+        raise JsonHandlerError(400, _(msg))
+
+    @XBlock.json_handler
+    def scorm_get_value(self, data, suffix=''):
+        _ = self.ugettext
+        try:
+            name = data['name']
+            package_version = data['package_version']
+            package_date = data['package_date']
+        except KeyError:
+            self.raise_handler_error("missing parameters.")
+
+        if package_version == SCORM_VERSION.V12:
+            default = SCORM_12_RUNTIME_DEFAULT.get(name, '')
+            if name == 'cmi.core.student_id':
+                default = str(self.runtime.user_id)
+            elif name == 'cmi.core.student_name':
+                user = User.objects.get(id=self.runtime.user_id)
+                default = user.username
+            elif name == 'cmi.core.entry':
+                if self.scorm_runtime_data.get('cmi.core.exit', None):
+                    if self.scorm_runtime_data.get('cmi.core.exit') == 'suspend':
+                        default = 'resume'
+        elif package_version == SCORM_VERSION.V2004:
+            default = SCORM_2004_RUNTIME_DEFAULT.get(name, '')
+            if name == 'cmi.learner_id':
+                default = str(self.runtime.user_id)
+            elif name == 'cmi.learner_name':
+                user = User.objects.get(id=self.runtime.user_id)
+                default = user.username
+            elif name == 'cmi.entry':
+                if self.scorm_runtime_data.get('cmi.exit', None):
+                    if self.scorm_runtime_data.get('cmi.exit') == 'suspend':
+                        default = 'resume'
+        else:
+            self.raise_handler_error('error scorm package version')
+
+        if name == 'cmi.launch_data':
+            default = self.scorm_launch_data
+
+        if self.is_pkg_expired(package_date):
+            return {'error': _('scorm package expired, refresh page to get new content.')}
+        #logger.info('get_value: ' + str(self.scorm_runtime_data.get(name, default)))
+
+        return {"value": self.scorm_runtime_data.get(name, default)}
+
+    def is_pkg_expired(self, package_date):
+        return self.scorm_pkg_modified and package_date and str2dt(package_date) < self.scorm_pkg_modified
+
+    def is_runtime_data_expired(self, package_date):
         expired = False
         need_update = True
-        if self.scorm_modified:
-            if package_date and str2dt(package_date) < self.scorm_modified:
+        if self.scorm_pkg_modified:
+            if package_date and str2dt(package_date) < self.scorm_pkg_modified:
                 # when user still visit one scorm, but new package uploaded
                 # so, no update, only update when user next time visit new uploaded scorm
                 expired = True
                 need_update = False
-            elif self.cmi_modified and self.cmi_modified < self.scorm_modified:
+            elif self.scorm_runtime_modified and self.scorm_runtime_modified < self.scorm_pkg_modified:
                 # normal case
                 expired = True
                 need_update = True
         return expired, need_update
 
     @XBlock.json_handler
-    def scorm_get_value(self, data, suffix=''):
-        name = data['name']
-        package_version = data.pop('package_version', '')
-
-        if package_version == 'SCORM_12':
-            default = SCORM_12_RUNTIME_DEFAULT.get(name, '')
-        else:
-            default = SCORM_2004_RUNTIME_DEFAULT.get(name, '')
+    def scorm_commit(self, data, suffix=''):
 
         package_date = data.pop('package_date', '')
-        if self.is_cmi_data_expired(package_date)[0]:
-            value = default
-        else:
-            value = self.cmi_data.get(name, default)
+        package_version = data.pop('package_version', '')
+        expired, need_update = self.is_runtime_data_expired(package_date)
+        if expired:
+            self.scorm_runtime_data = {}
+        if need_update:
+            self.scorm_runtime_data.update(data)
 
-        return {"value": value}
+        self.scorm_runtime_modified = timezone.now()
 
+        self.update_scorm_status(data, package_version)
+        return self.get_fields_data(True, 'scorm_status', 'scorm_score')
 
     @XBlock.json_handler
-    def commit(self, data, suffix=''):
+    def scorm_enforce_commit(self, data, suffix=''):
+
         package_date = data.pop('package_date', '')
         package_version = data.pop('package_version', '')
-        expired, need_update = self.is_cmi_data_expired(package_date)
+        expired, need_update = self.is_runtime_data_expired(package_date)
         if expired:
-            self.cmi_data = {}
+            self.scorm_runtime_data = {}
         if need_update:
-            self.cmi_data.update(data)
+            self.scorm_runtime_data.update(data)
 
-        self.cmi_modified = timezone.now()
+        self.scorm_runtime_modified = timezone.now()
 
-        if self.set_lesson(data, package_version):
-            self.publish_grade()
-        return self.get_fields_data(True, 'success_status', 'lesson_score')
+        self.update_scorm_status(data, package_version)
+        return self.get_fields_data(True, 'scorm_status', 'scorm_score')
 
-    def _set_lesson_12(self, data):
-        score_updated = False
+    @XBlock.handler
+    def scorm_ios_commit(self, request, suffix=''):
+
+        post_data = request.POST.copy()
+        post_data.pop('csrfmiddlewaretoken', '')
+        package_date = post_data.pop('package_date', '')
+        package_version = post_data.pop('package_version', '')
+        expired, need_update = self.is_runtime_data_expired(package_date)
+        update_data = {}
+        for x,y in post_data.iteritems():
+            update_data[x] = y
+        if expired:
+            self.scorm_runtime_data = {}
+        if need_update:
+            self.scorm_runtime_data.update(update_data)
+
+        self.scorm_runtime_modified = timezone.now()
+
+        self.update_scorm_status(update_data, package_version)
+        response_data = self.get_fields_data(True, 'scorm_status', 'scorm_score')
+        return Response(json_body=response_data, content_type='application/json')
+
+    @XBlock.handler
+    def sync_score_value(self, request, suffix=''):
+        """
+        Fix double refresh bug cause of unexpected terminal action
+        """
+        score_value = self.get_fields_data(True, 'scorm_score')
+        return Response(json_body=score_value, content_type='application/json')
+
+    @staticmethod
+    def extract_runtime_info_12(data):
+        info = {'status': SCORM_STATUS.IN_PROGRESS}
         if 'cmi.core.score.raw' in data:
-            score = (float(data['cmi.core.score.raw']) - float(data['cmi.core.score.min'])
-                     )/(float(data['cmi.core.score.max']) - float(data['cmi.core.score.min']))
-            self.lesson_score = score
-            score_updated = True
+            info["raw"] = float(data['cmi.core.score.raw'])
+            info["maxi"] = float(data.get('cmi.core.score.max', 1.0))
+            info["mini"] = float(data.get('cmi.core.score.min', 0.0))
 
-        if 'cmi.core.lesson_status' in data:
-            self.success_status = data['cmi.core.lesson_status']
+        lesson_status = data.get('cmi.core.lesson_status', SCORM_STATUS.IN_PROGRESS)
 
-        return score_updated
+        if lesson_status == 'passed':
+            info['status'] = SCORM_STATUS.SUCCEED
+        elif lesson_status == 'failed':
+            info['status'] = SCORM_STATUS.FAILED
 
-    def _set_lesson_2004(self, data):
-        score_updated = False
-        if 'cmi.score.scaled' in data:
-            self.lesson_score = float(data['cmi.score.scaled'])
-            score_updated = True
-        if 'cmi.success_status' in data:
-            self.success_status = data['cmi.success_status']
-        return score_updated
+        return info
 
-    def set_lesson(self, data, version):
-        """
-        all the score has been resize to [0, 1]
-        """
-        if version == 'SCORM_12':
-            return self._set_lesson_12(data)
+    @staticmethod
+    def extract_runtime_info_2004(data):
+        info = {'status': SCORM_STATUS.IN_PROGRESS}
+        if 'cmi.score.raw' in data and 'cmi.score.max' in data and 'cmi.score.min' in data:
+            info["raw"] = float(data['cmi.score.raw'])
+            info["maxi"] = float(data['cmi.score.max'])
+            info["mini"] = float(data['cmi.score.min'])
+        elif 'cmi.score.scaled' in data:
+            info['raw'] = float(data['cmi.score.scaled'])
+            info['maxi'] = 1.0
+            info['mini'] = 0.0
+
+        success_status = data.get('cmi.success_status', SCORM_STATUS.IN_PROGRESS)
+        if success_status == 'passed':
+            info['status'] = SCORM_STATUS.SUCCEED
+        elif success_status == 'failed':
+            info['status'] = SCORM_STATUS.FAILED
+
+        return info
+
+    def update_scorm_status(self, data, version):
+        if version == SCORM_VERSION.V12:
+            info = self.extract_runtime_info_12(data)
+        elif version == SCORM_VERSION.V2004:
+            info = self.extract_runtime_info_2004(data)
         else:
-            return self._set_lesson_2004(data)
+            self.raise_handler_error('error scorm pkg version')
 
-    def publish_grade(self):
-        self.runtime.publish(
-            self,
-            'grade',
-            {
-                'value': self.lesson_score,
-                'max_value': 1.0,
-            })
+        score = None
+        if 'raw' in info:
+            score = Score(raw_earned=(info["raw"] - info["mini"]),
+                          raw_possible=(info["maxi"] - info["mini"]))
 
-    def get_user_id(self):
-        return getattr(self.runtime, 'user_id', None)
+        if score and (not self.has_submitted_answer() or self.allows_rescore()):
+            self.set_score(score)
+            self._publish_grade(self.get_score())
 
-    def max_score(self):
-        """
-        Return the maximum score possible.
-        """
-        return self.weight if self.has_score else None
+            self.scorm_status = info['status']
 
-
-    def render_template(self, template_path, context):
-        template_str = self.resource_string(template_path)
-        template = Template(template_str)
-        return template.render(Context(context))
-
-    def set_scorm(self, path_to_file):
-        path_index_page = 'index.html'
-        try:
-            tree = ET.parse('{}/imsmanifest.xml'.format(path_to_file))
-        except IOError:
-            pass
-        else:
-            namespace = ''
-            for node in [node for _, node in
-                         ET.iterparse('{}/imsmanifest.xml'.format(path_to_file), events=['start-ns'])]:
-                if node[0] == '':
-                    namespace = node[1]
-                    break
-            root = tree.getroot()
-
-            if namespace:
-                resource = root.find('{{{0}}}resources/{{{0}}}resource'.format(namespace))
-                schemaversion = root.find('{{{0}}}metadata/{{{0}}}schemaversion'.format(namespace))
-            else:
-                resource = root.find('resources/resource')
-                schemaversion = root.find('metadata/schemaversion')
-
-            if resource:
-                path_index_page = resource.get('href')
-
-            if (not schemaversion is None) and (re.match('^1.2$', schemaversion.text) is None):
-                self.version_scorm = 'SCORM_2004'
-            else:
-                self.version_scorm = 'SCORM_12'
-
-        self.scorm_modified = timezone.now()
-        self.scorm_file = os.path.join(settings.PROFILE_IMAGE_BACKEND['options']['base_url'],
-                                       '{}/{}'.format(self.location.block_id, path_index_page))
-
-    def get_completion_status(self):
-        return self.success_status
+    @XBlock.handler
+    def ping(self, request, suffix=''):
+        return Response(status=200)
 
     @staticmethod
     def workbench_scenarios():
