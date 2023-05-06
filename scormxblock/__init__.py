@@ -1,1 +1,1 @@
-from .scromxblockng import ScormXBlock
+from .scormxblock import ScormXBlock

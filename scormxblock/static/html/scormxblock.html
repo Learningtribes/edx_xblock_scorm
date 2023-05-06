@@ -18,11 +18,16 @@
     <hr class="sep-line">
     {% if open_new_tab_value and scorm_pkg_value %}
     <div class="launch-div">
-        <h2 class="content-title"><span class="fal fa-window title-icon" aria-hidden="true"></span>{% trans "New Tab" %}</h2>
-        <p class="launch-content launch-before">{% trans "Click on the button below to open the module in a new tab." %}</p>
-        <p class="launch-content launch-after hidden">{% trans "Your e-learning module has been opened in a new tab. Please, close the new tab after you completed the module." %}</p>
-        <div class="button-container">
-            <button class="launch-button"><a href="{{ scorm_pkg_value }}" rel="opener" target="_blank">{% trans "Launch" %}</a></button>
+        <div class="instruction">{{ instruction_value }}</div>
+        <div class="preview">{% if cover_image_value %}<img src="{{ cover_image_value }}" alt="preview" />{% endif %}</div>
+        <div class="description">
+            <h2 class="content-title">{% trans "Open in a new tab" %}</h2>
+            <p class="launch-content launch-before">{% trans "Click on the button below to open the module in a new tab. If the module does not open properly, please refresh the page" %}</p>
+            <p class="launch-content launch-after hidden">{% trans "Your e-learning module has been opened in a new tab. Please, close the new tab after you completed the module." %}</p>
+            <div class="button-container">
+                <button class="launch-button"><a href="{{ scorm_pkg_value }}" rel="opener" target="_blank">{% trans "Launch" %}</a></button>
+                <a role="button" class="fresh-button btn" href="javascript:window.location.reload();"><i class="fal fa-redo-alt"></i>{% trans "Refresh" %}</a>
+            </div>
         </div>
     </div>
     {% elif scorm_pkg_value %}
