@@ -503,7 +503,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             self.render_template('static/html/author_view.html', dict(fields_data,
                 external_resources=SupportedScormResources(self),
                 lms_root_url=configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL),
-                usd_svg=self.runtime.local_resource_url(self, 'static/images/dollar.svg')
+                usd_svg=self.runtime.local_resource_url(self, 'public/images/dollar.svg')
             ))
         )
         frag.add_css(self.resource_string('static/css/scormxblock.css'))
