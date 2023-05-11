@@ -34,7 +34,7 @@ class SupportedScormResources(object):
 
         self._add_resource(
             name='Adobe Captivate',
-            icon='static/images/adope-captivate.svg',
+            icon='public/images/adope-captivate.svg',
             tags=[TAG_ELEARNING_AUTHORING_RECORDER],
             paying=True,
             site_link=r'https://www.adobe.com/products/captivate.html',
@@ -42,7 +42,7 @@ class SupportedScormResources(object):
         )
         self._add_resource(
             name='Articulate 360',
-            icon='static/images/ispring-suite.svg',
+            icon='public/images/ispring-suite.svg',
             tags=[TAG_ELEARNING_AUTHORING_RECORDER],
             paying=True,
             site_link=r'https://articulate.com/360',
@@ -50,7 +50,7 @@ class SupportedScormResources(object):
         )
         self._add_resource(
             name='iSpring Suite',
-            icon='static/images/ispring-suite.svg',
+            icon='public/images/ispring-suite.svg',
             tags=[TAG_ELEARNING_AUTHORING_RECORDER],
             paying=True,
             site_link=r'https://www.ispringsolutions.com/ispring-suite',
@@ -58,7 +58,7 @@ class SupportedScormResources(object):
         )
         self._add_resource(
             name='Kumullus',
-            icon='static/images/kumullus.svg',
+            icon='public/images/kumullus.svg',
             tags=[TAG_VIDEO, TAG_QUIZ],
             paying=True,
             site_link=r'https://kumullus.com/',
