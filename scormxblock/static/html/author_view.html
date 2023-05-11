@@ -29,11 +29,11 @@
                     <div class="item-container" onclick=" window.open('{{ resource.site_link }}','_blank')">
                         <div class="item-title-bar">
                             <span class="item-title-prefix">
-                                {{ resource.svg_image | safe }}
+                                <img src="{{ resource.icon }}" alt="icon" />
                                 <a class="item-name">{{ resource.name }}</a>
                             </span>
                             {% if resource.paying %}
-                            <span class="item-title-tail">{{ usd_svg | safe }}</span>
+                            <span class="item-title-tail"><img src="{{ usd_svg }}" alt="dollar"></span>
                             {% endif %}
                         </div>
                         <div class="item-description">{% trans resource.description %}</div>
