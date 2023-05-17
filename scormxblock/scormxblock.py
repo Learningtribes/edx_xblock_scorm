@@ -17,6 +17,7 @@ from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.views.decorators.clickjacking import xframe_options_exempt
 from xblock.core import XBlock
 from xblock.exceptions import XBlockSaveError, JsonHandlerError
 from xblock.scorable import Score
@@ -492,7 +493,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         frag.initialize_js('ScormXBlock', json_args=self.get_fields_data(True, 'scorm_pkg_version', 'scorm_pkg_modified', 'ratio', 'version_scorm', 'scorm_modified'))
         return frag
 
-
+    @xframe_options_exempt
     def author_view(self, context):
 
         """View of Studio Courses page"""
