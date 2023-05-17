@@ -496,18 +496,18 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     def author_view(self, context):
 
         """View of Studio Courses page"""
+        lms_base = configuration_helpers.get_value('LMS_BASE', settings.LMS_BASE)
         fields_data = self.get_fields_data(False,
             'scorm_pkg',
             'open_new_tab', 'instruction', 'cover_image'
         )
-        frag = Fragment()
-        frag.add_content(
-            self.render_template('static/html/author_view.html', dict(fields_data,
+        params = dict(fields_data,
                 external_resources=SUPPORTED_SCORM_RESOURCES,
-                lms_root_url=configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL),
+                lms_root_url='https://' + lms_base,
                 usd_svg=self.resource_string('static/images/dollar.svg')
-            ))
-        )
+            )
+        template = self.render_template('static/html/author_view.html', params)
+        frag = Fragment(template)
         frag.add_css(self.resource_string('static/css/scormxblock.css'))
         # Inject js Script to <head> in file: cms/static/js/views/xblock.js#L218
         frag.add_javascript(self.resource_string('static/js/src/scormxblock.js'))
