@@ -500,6 +500,10 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             'scorm_pkg',
             'open_new_tab', 'instruction', 'cover_image'
         )
+        scorm_path = fields_data.get('scorm_pkg_value')
+        if scorm_path:
+            scorm_path = scorm_path.replace('/xblock/','/xblock_resource/')
+            fields_data['scorm_pkg_value'] = scorm_path
         frag = Fragment()
         frag.add_content(
             self.render_template('static/html/author_view.html', dict(fields_data,
