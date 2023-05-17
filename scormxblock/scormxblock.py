@@ -500,14 +500,15 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             'scorm_pkg',
             'open_new_tab', 'instruction', 'cover_image'
         )
-        frag = Fragment()
-        frag.add_content(
-            self.render_template('static/html/author_view.html', dict(fields_data,
+        scheme = 'https' if settings.HTTPS == 'on' else 'http'
+        lms_base = configuration_helpers.get_value('LMS_BASE', settings.LMS_BASE)
+        lms_root_url = '{}://{}'.format(scheme, lms_base)
+        template = self.render_template('static/html/author_view.html', dict(fields_data,
                 external_resources=SUPPORTED_SCORM_RESOURCES,
-                lms_root_url=configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL),
+                lms_root_url=lms_root_url,
                 usd_svg=self.resource_string('static/images/dollar.svg')
             ))
-        )
+        frag = Fragment(template)
         frag.add_css(self.resource_string('static/css/scormxblock.css'))
         # Inject js Script to <head> in file: cms/static/js/views/xblock.js#L218
         frag.add_javascript(self.resource_string('static/js/src/scormxblock.js'))
