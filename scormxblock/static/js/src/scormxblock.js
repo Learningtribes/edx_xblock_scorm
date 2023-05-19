@@ -26,7 +26,7 @@
               $(window).resize(function () {
                 resetIframeSize();
               })
-              resetIframeSize();
+              $scormFrame.on('load', resetIframeSize)
             }
 
             $('.launch-button').click(function() {
