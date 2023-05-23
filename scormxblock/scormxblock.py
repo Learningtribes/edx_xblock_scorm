@@ -368,6 +368,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
     # region Runtime functions
     def max_score(self):
+        logger.info("max_score: " + "Start max score+++++++++++++")
         return 1.0
 
     def allows_rescore(self):
@@ -375,8 +376,15 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
     def set_score(self, score):
         self.scorm_score = self.max_score() * score.raw_earned / score.raw_possible
+        logger.info("set_score scorm_score: " + str(self.scorm_score))
+        logger.info("set_score score.raw_earned : " + str(score.raw_earned ))
+        logger.info("set_score score.raw_possible : " + str(score.raw_possible ))
+        
 
     def get_score(self):
+        logger.info("get_score scorm_score: " + str(self.scorm_score))
+        logger.info("get_score max_score: " + str(self.max_score()))
+        
         return Score(raw_possible=self.max_score(), raw_earned=self.scorm_score)
 
     def calculate_score(self):
@@ -450,7 +458,10 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 data['cover_image_value'] = cover_image_url
 
         if 'scorm_score' in data and self.scorm_score == float(0) and self.lesson_score != float(0):
+            logger.info("if 'scorm_score': " + str(self.scorm_score))
             data['scorm_score_value'] = self.lesson_score
+            logger.info("if 'scorm_score': " + str(data['scorm_score_value']))
+
 
         if 'scorm_status' in data and self.scorm_status == SCORM_STATUS.UNATTENDED and self.success_status != 'unknown':
             data['scorm_status_value'] = self.success_status
@@ -465,7 +476,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             if isinstance(v, timezone.datetime):
                 data[k] = dt2str(v)
 
-        #logger.info("Return: " + str(data))
+        logger.info("Return: " + str(data))
+        
 
         return data
 
@@ -481,6 +493,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         if self.graded and fields_data['has_score'] and fields_data['weight'] != 0:
             fields_data['graded_status'] = 'graded'
         fields_data['display_name'] = self.display_name
+        logger.info("Return: " + str(fields_data))
         return fields_data
 
     def student_view(self, context=None):
