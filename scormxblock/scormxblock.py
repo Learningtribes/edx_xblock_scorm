@@ -385,7 +385,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         logger.info("get_score scorm_score: " + str(self.scorm_score))
         logger.info("get_score max_score: " + str(self.max_score()))
         
-        return Score(raw_possible=self.max_score(), raw_earned=self.scorm_score)
+        return Score(raw_possible=self.max_score(), raw_earned=self.scorm_score/100)
 
     def calculate_score(self):
         return self.get_score()
@@ -459,7 +459,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
         if 'scorm_score' in data and self.scorm_score == float(0) and self.lesson_score != float(0):
             logger.info("if 'scorm_score': " + str(self.scorm_score))
-            data['scorm_score_value'] = self.lesson_score/100
+            data['scorm_score_value'] = self.lesson_score
             logger.info("if 'scorm_score': " + str(data['scorm_score_value']))
 
 
