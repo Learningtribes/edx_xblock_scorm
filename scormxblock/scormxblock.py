@@ -466,7 +466,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 data[k] = dt2str(v)
 
         #logger.info("Return: " + str(data))
-
+        if 'scorm_score_value' in data:
+            data['scorm_score_value'] = round(float(data['scorm_score_value']) / 100, 2)
         return data
 
     def get_student_data(self):
