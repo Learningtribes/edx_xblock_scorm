@@ -423,34 +423,58 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         return template.render(Context(context))
 
     def get_fields_data(self, only_value=False, *fields):
+        logger.info("data: get_fields_data ++++++")
 
         data = {}
+        logger.info("data: " + str(data))
         pkg_url = ''
         for k, v in self.fields.iteritems():
+            logger.info("self.fields.iteritems(): " +str(self.fields.iteritems()))
             if k in fields:
+                logger.info("fields: " +str(fields))
                 if not only_value:
+                    logger.info("only_value: " +str(only_value))
                     data[k] = v
+                    logger.info("only_value: " +str(data[k]))
                 data["{}_value".format(k)] = getattr(self, k)
 
         if 'scorm_pkg' in data and self.scorm_pkg:
+            logger.info("scorm_pkg: " )
             pkg_url = self.fs.get_url(self.scorm_pkg)
+            logger.info("scorm_pkg: " +str(pkg_url))
         if 'scorm_pkg' in data and self.scorm_pkg == '' and self.scorm_file != 'old':
+            logger.info("scorm_pkg: " )
             scorm_file_string = self.scorm_file[:22] + 'scorm/' + self.scorm_file[22:]
+            logger.info("scorm_pkg: " +str(scorm_file_string))
             pkg_url = self.fs.get_url(scorm_file_string)
+            logger.info("scorm_pkg: " +str(pkg_url))
         if pkg_url:
+            logger.info("pkg_url: " +str(pkg_url))
             if settings.DJFS['type'] == 's3fs':
                 pkg_url = urllib.unquote(urlparse(pkg_url).path)
+                logger.info("pkg_url: " +str(pkg_url))
             data['scorm_pkg_value'] = pkg_url
+            logger.info("pkg_url: " +str(data['scorm_pkg_value']))
 
         if 'cover_image' in data and self.cover_image:
+            logger.info("cover_image: " )
             cover_image_url = self.fs.get_url(self.cover_image)
+            logger.info("cover_image: " + str(cover_image_url))
+            
             if cover_image_url:
+                logger.info("cover_image_url: ")
                 if settings.DJFS['type'] == 's3fs':
                     cover_image_url = urllib.unquote(urlparse(cover_image_url).path)
+                    logger.info("cover_image: " + str(cover_image_url))
                 data['cover_image_value'] = cover_image_url
-
+                logger.info("cover_image: " + str(data))
+        logger.info("lesson_score" + str(self.lesson_score))
         if 'scorm_score' in data and self.scorm_score == float(0) and self.lesson_score != float(0):
+            logger.info("scorm_score: " )
+            logger.info("scorm_score: " + str(self.lesson_score))
             data['scorm_score_value'] = self.lesson_score
+            logger.info("scorm_score: " + str(data['scorm_score_value']))
+            logger.info("scorm_score: " + str(data))
 
         if 'scorm_status' in data and self.scorm_status == SCORM_STATUS.UNATTENDED and self.success_status != 'unknown':
             data['scorm_status_value'] = self.success_status
@@ -459,11 +483,15 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             data['scorm_pkg_version_value'] = SCORM_VERSION.V2004
 
         if 'scorm_pkg_modified_value' in data and not self.scorm_pkg_modified and self.scorm_modified:
+            logger.info("scorm_pkg_modified_value: " )
+            logger.info("scorm_pkg_modified_value: " + str(self.scorm_modified))
             data['scorm_pkg_modified_value'] = self.scorm_modified
-
+            logger.info("scorm_pkg_modified_value: " + str(data))
+        logger.info("scorm_score: " + str(data.items()))
         for k, v in data.items():
             if isinstance(v, timezone.datetime):
                 data[k] = dt2str(v)
+                logger.info("scorm_score: " + str(data[k]))
 
         #logger.info("Return: " + str(data))
         if 'scorm_score_value' in data:
