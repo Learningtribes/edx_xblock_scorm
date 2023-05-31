@@ -229,7 +229,7 @@
                     async: false,
                     success: function (response) {
                         if (typeof response['scorm_score_value'] !== "undefined") {
-                            console.log(response['scorm_status_value'])
+                            console.log("Enforce_Commit: "+response['scorm_status_value'])
                             $(".lesson_score", element).html(response['scorm_score_value']);
                         }
                         $(".success_status", element).html(response['scorm_status_value']);
