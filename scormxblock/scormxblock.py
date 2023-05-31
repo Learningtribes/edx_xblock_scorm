@@ -520,11 +520,13 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     def student_view(self, context=None):
         logger.info("student_view: " )
         template = self.render_template('static/html/scormxblock.html', self.get_student_data())
-        logger.info("scorm_score: " + str(template))
+        logger.info("student_view : " + str(template))
         frag = Fragment(template)
+        logger.info("student_view: " + str(frag))
         frag.add_css(self.resource_string("static/css/scormxblock.css"))
         frag.add_javascript(self.resource_string("static/js/src/scormxblock.js"))
         frag.initialize_js('ScormXBlock', json_args=self.get_fields_data(True, 'scorm_pkg_version', 'scorm_pkg_modified', 'ratio', 'version_scorm', 'scorm_modified'))
+        logger.info("student_view: " + str(frag))
         return frag
 
 
@@ -629,7 +631,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
     @XBlock.json_handler
     def scorm_commit(self, data, suffix=''):
-
+        logger.info("scorm_commit: ")
         package_date = data.pop('package_date', '')
         package_version = data.pop('package_version', '')
         expired, need_update = self.is_runtime_data_expired(package_date)
@@ -641,11 +643,12 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         self.scorm_runtime_modified = timezone.now()
 
         self.update_scorm_status(data, package_version)
+        logger.info("scorm_commit: " +str(self.get_fields_data(True, 'scorm_status', 'scorm_score')))
         return self.get_fields_data(True, 'scorm_status', 'scorm_score')
 
     @XBlock.json_handler
     def scorm_enforce_commit(self, data, suffix=''):
-
+        logger.info("scorm_enforce_commit: ")
         package_date = data.pop('package_date', '')
         package_version = data.pop('package_version', '')
         expired, need_update = self.is_runtime_data_expired(package_date)
@@ -657,11 +660,12 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         self.scorm_runtime_modified = timezone.now()
 
         self.update_scorm_status(data, package_version)
+        logger.info("scorm_enforce_commit: " +str(self.get_fields_data(True, 'scorm_status', 'scorm_score')))
         return self.get_fields_data(True, 'scorm_status', 'scorm_score')
 
     @XBlock.handler
     def scorm_ios_commit(self, request, suffix=''):
-
+        logger.info("scorm_ios_commit: ")
         post_data = request.POST.copy()
         post_data.pop('csrfmiddlewaretoken', '')
         package_date = post_data.pop('package_date', '')
@@ -679,14 +683,17 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
         self.update_scorm_status(update_data, package_version)
         response_data = self.get_fields_data(True, 'scorm_status', 'scorm_score')
+        logger.info("scorm_ios_commit: " +str(response_data))
         return Response(json_body=response_data, content_type='application/json')
 
     @XBlock.handler
     def sync_score_value(self, request, suffix=''):
+        logger.info("sync_score_value: ")
         """
         Fix double refresh bug cause of unexpected terminal action
         """
         score_value = self.get_fields_data(True, 'scorm_score')
+        logger.info("sync_score_value: " +str(score_value))
         return Response(json_body=score_value, content_type='application/json')
 
     @staticmethod
