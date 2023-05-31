@@ -503,8 +503,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 logger.info("scorm_score: " + str(data[k]))
 
         #logger.info("Return: " + str(data))
-        if 'scorm_score_value' in data:
-            data['scorm_score_value'] = data['scorm_score_value'] / 100
+        # if 'scorm_score_value' in data:
+        #     data['scorm_score_value'] = data['scorm_score_value'] / 100
         logger.info("Return v1: " + str(data))
         return data
 

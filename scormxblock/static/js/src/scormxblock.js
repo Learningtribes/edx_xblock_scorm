@@ -71,9 +71,16 @@
         }
 
         function SetValue(name, value) {
+            if(name=="cmi.core.score.raw"){
+                pendingValues[name] = value/100;
+
+            }else{
+                pendingValues[name] = value;
+
+            }
             console.log("SetValue name : "+name)
             console.log("SetValue name : "+ value)
-            pendingValues[name] = value;
+            
             return 'true';
         }
 
