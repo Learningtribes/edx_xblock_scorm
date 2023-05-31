@@ -430,6 +430,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         pkg_url = ''
         for k, v in self.fields.iteritems():
             logger.info("self.fields.iteritems(): " +str(self.fields.iteritems()))
+            logger.info("self.fields.iteritems(): v  " +str(v))
+            logger.info("self.fields.iteritems(): k  " +str(k))
             if k in fields:
                 logger.info("fields: " +str(fields))
                 if not only_value:
@@ -514,8 +516,9 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         return fields_data
 
     def student_view(self, context=None):
-
+        logger.info("student_view: " )
         template = self.render_template('static/html/scormxblock.html', self.get_student_data())
+        logger.info("scorm_score: " + str(template))
         frag = Fragment(template)
         frag.add_css(self.resource_string("static/css/scormxblock.css"))
         frag.add_javascript(self.resource_string("static/js/src/scormxblock.js"))
