@@ -184,7 +184,7 @@
                   })
                   .then(function(data) {
                     if (typeof data['scorm_score_value'] !== "undefined") {
-                        console.log(data['scorm_status_value'])
+                        console.log("Extra_Commit + CheckChrome: " + data['scorm_score_value'])
                       $(".lesson_score", element).html(data['scorm_score_value']);
                     }
                     $(".success_status", element).html(data['scorm_status_value']);
@@ -208,7 +208,7 @@
                     data: JSON.stringify(pendingValues),
                     async: false,
                     success: function (response) {
-                        console.log(response['scorm_status_value'])
+                        console.log("Extra_Commit + CheckSafariMobile: "+ response['scorm_score_value'])
                         if (typeof response['scorm_score_value'] !== "undefined") {
                             $(".lesson_score", element).html(response['scorm_score_value']);
                         }
@@ -229,7 +229,7 @@
                     async: false,
                     success: function (response) {
                         if (typeof response['scorm_score_value'] !== "undefined") {
-                            console.log("Enforce_Commit: "+response['scorm_status_value'])
+                            console.log("Enforce_Commit: "+response['scorm_score_value'])
                             $(".lesson_score", element).html(response['scorm_score_value']);
                         }
                         $(".success_status", element).html(response['scorm_status_value']);
@@ -248,7 +248,7 @@
                 async: false,
                 success: function (response) {
                     if (typeof response['scorm_score_value'] !== "undefined") {
-                        console.log(response['scorm_score_value'])
+                        console.log("Commit: "+response['scorm_score_value'])
                         $(".lesson_score", element).html(response['scorm_score_value']);
                     }
 
@@ -377,7 +377,7 @@
                 url: syncScoreUrl,
                 async: true,
                 success: function(response) {
-                    console.log(response['scorm_score_value'])
+                    console.log("syncScoreValue: " + response['scorm_score_value'])
                     $(".lesson_score", element).html(response['scorm_score_value']);
                 }
             });
