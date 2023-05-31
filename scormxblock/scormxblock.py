@@ -440,6 +440,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                     logger.info("only_value: " +str(data[k]))
                     logger.info("data data[k]: " +str(data))
                 data["{}_value".format(k)] = getattr(self, k)
+                logger.info("self : " +str(self))
+                logger.info("self k : " +str(k))
                 logger.info("value.format(k) : " +str(["{}_value".format(k)]))
                 logger.info("value.format(k) : " +str(data["{}_value".format(k)]))
                 logger.info(" getattr(self, k) : " +str( getattr(self, k)))
@@ -518,6 +520,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         if self.graded and fields_data['has_score'] and fields_data['weight'] != 0:
             fields_data['graded_status'] = 'graded'
         fields_data['display_name'] = self.display_name
+        logger.info("get_student_data: " + str(fields_data))
         return fields_data
 
     def student_view(self, context=None):
