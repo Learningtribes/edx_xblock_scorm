@@ -65,10 +65,14 @@
             if(content.error) {
                 alert(content.error)
             }
+            console.log("GetValue name : "+name)
+            console.log("GetValue content.value : "+content.value)
             return content.value;
         }
 
         function SetValue(name, value) {
+            console.log("SetValue name : "+name)
+            console.log("SetValue name : "+ value)
             pendingValues[name] = value;
             return 'true';
         }
