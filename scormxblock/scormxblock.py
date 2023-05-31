@@ -438,7 +438,9 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                     logger.info("only_value: " +str(only_value))
                     data[k] = v
                     logger.info("only_value: " +str(data[k]))
+                    logger.info("data data[k]: " +str(data))
                 data["{}_value".format(k)] = getattr(self, k)
+                logger.info("format(k) : " +str(data))
 
         if 'scorm_pkg' in data and self.scorm_pkg:
             logger.info("scorm_pkg: " )
