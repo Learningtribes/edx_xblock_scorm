@@ -71,18 +71,14 @@
         }
 
         function SetValue(name, value) {
-            if(name=="cmi.core.score.raw"){
-                pendingValues[name] = value/100;
-
-            }else{
-                pendingValues[name] = value;
-
+            if (name === 'cmi.core.score.raw') {
+                value = value.toString();
+                console.log("SetValue  pendingValues name : "+pendingValues[name])
+              }
+              console.log("SetValue  pendingValues name : "+pendingValues[name])
+              pendingValues[name] = value;
+              return 'true';
             }
-            console.log("SetValue name : "+name)
-            console.log("SetValue name : "+ value)
-            
-            return 'true';
-        }
 
         function CheckChrome() {
             var isChromium = window.chrome;
@@ -399,6 +395,7 @@
             initPendingValues();
             window.API = new SCORM_12_API();
             window.API_1484_11 = new SCORM_2004_API();
+            window.API.SetValue('cmi.core.score.raw', valeur / 100);
             // if (!open_new_tab) {
             //     $('#scorm-object-frame')[0].contentWindow.onbeforeunload = function () {
             //         Commit('value');
