@@ -71,13 +71,11 @@
         }
 
         function SetValue(name, value) {
-            if (name === 'cmi.core.score.raw') {
-                value = value.toString();
+            if (name!== 'cmi.core.score.raw') {
+                pendingValues[name] = value;
                 console.log("SetValue  pendingValues name : "+pendingValues[name])
+                return 'true';
               }
-              console.log("SetValue  pendingValues name : "+pendingValues[name])
-              pendingValues[name] = value;
-              return 'true';
             }
 
         function CheckChrome() {
