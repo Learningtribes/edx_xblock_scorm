@@ -74,7 +74,7 @@
             } else {
               pendingValues[name] = value;
             }
-            return true;
+            return 'true';
           }
 
         function CheckChrome() {
