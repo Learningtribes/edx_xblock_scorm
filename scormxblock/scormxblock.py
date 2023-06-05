@@ -423,67 +423,34 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         return template.render(Context(context))
 
     def get_fields_data(self, only_value=False, *fields):
-        logger.info("data: get_fields_data ++++++")
 
         data = {}
-        logger.info("data: " + str(data))
         pkg_url = ''
         for k, v in self.fields.iteritems():
-            logger.info("self.fields.iteritems(): " +str(self.fields.iteritems()))
-            logger.info("self.fields.iteritems(): v  " +str(v))
-            logger.info("self.fields.iteritems(): k  " +str(k))
             if k in fields:
-                logger.info("fields: " +str(fields))
                 if not only_value:
-                    logger.info("only_value: " +str(only_value))
                     data[k] = v
-                    logger.info("only_value: " +str(data[k]))
-                    logger.info("data data[k]: " +str(data))
                 data["{}_value".format(k)] = getattr(self, k)
-                logger.info("self : " +str(self))
-                logger.info("self k : " +str(k))
-                logger.info("value.format(k) : " +str(["{}_value".format(k)]))
-                logger.info("value.format(k) : " +str(data["{}_value".format(k)]))
-                logger.info(" getattr(self, k) : " +str( getattr(self, k)))
-                logger.info("format(k) : " +str(data))
 
         if 'scorm_pkg' in data and self.scorm_pkg:
-            logger.info("scorm_pkg: " )
             pkg_url = self.fs.get_url(self.scorm_pkg)
-            logger.info("scorm_pkg: " +str(pkg_url))
         if 'scorm_pkg' in data and self.scorm_pkg == '' and self.scorm_file != 'old':
-            logger.info("scorm_pkg: " )
             scorm_file_string = self.scorm_file[:22] + 'scorm/' + self.scorm_file[22:]
-            logger.info("scorm_pkg: " +str(scorm_file_string))
             pkg_url = self.fs.get_url(scorm_file_string)
-            logger.info("scorm_pkg: " +str(pkg_url))
         if pkg_url:
-            logger.info("pkg_url: " +str(pkg_url))
             if settings.DJFS['type'] == 's3fs':
                 pkg_url = urllib.unquote(urlparse(pkg_url).path)
-                logger.info("pkg_url: " +str(pkg_url))
             data['scorm_pkg_value'] = pkg_url
-            logger.info("pkg_url: " +str(data['scorm_pkg_value']))
 
         if 'cover_image' in data and self.cover_image:
-            logger.info("cover_image: " )
             cover_image_url = self.fs.get_url(self.cover_image)
-            logger.info("cover_image: " + str(cover_image_url))
-            
             if cover_image_url:
-                logger.info("cover_image_url: ")
                 if settings.DJFS['type'] == 's3fs':
                     cover_image_url = urllib.unquote(urlparse(cover_image_url).path)
-                    logger.info("cover_image: " + str(cover_image_url))
                 data['cover_image_value'] = cover_image_url
-                logger.info("cover_image: " + str(data))
-        logger.info("lesson_score" + str(self.lesson_score))
+
         if 'scorm_score' in data and self.scorm_score == float(0) and self.lesson_score != float(0):
-            logger.info("scorm_score: " )
-            logger.info("scorm_score: " + str(self.lesson_score))
             data['scorm_score_value'] = self.lesson_score
-            logger.info("scorm_score: " + str(data['scorm_score_value']))
-            logger.info("scorm_score: " + str(data))
 
         if 'scorm_status' in data and self.scorm_status == SCORM_STATUS.UNATTENDED and self.success_status != 'unknown':
             data['scorm_status_value'] = self.success_status
@@ -492,20 +459,14 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             data['scorm_pkg_version_value'] = SCORM_VERSION.V2004
 
         if 'scorm_pkg_modified_value' in data and not self.scorm_pkg_modified and self.scorm_modified:
-            logger.info("scorm_pkg_modified_value: " )
-            logger.info("scorm_pkg_modified_value: " + str(self.scorm_modified))
             data['scorm_pkg_modified_value'] = self.scorm_modified
-            logger.info("scorm_pkg_modified_value: " + str(data))
-        logger.info("scorm_score: " + str(data.items()))
+
         for k, v in data.items():
             if isinstance(v, timezone.datetime):
                 data[k] = dt2str(v)
-                logger.info("scorm_score: " + str(data[k]))
 
         #logger.info("Return: " + str(data))
-        # if 'scorm_score_value' in data:
-        #     data['scorm_score_value'] = data['scorm_score_value'] / 100
-        logger.info("Return v1: " + str(data))
+
         return data
 
     def get_student_data(self):
@@ -520,19 +481,15 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         if self.graded and fields_data['has_score'] and fields_data['weight'] != 0:
             fields_data['graded_status'] = 'graded'
         fields_data['display_name'] = self.display_name
-        logger.info("get_student_data: " + str(fields_data))
         return fields_data
 
     def student_view(self, context=None):
-        logger.info("student_view: " )
+
         template = self.render_template('static/html/scormxblock.html', self.get_student_data())
-        logger.info("student_view : " + str(template))
         frag = Fragment(template)
-        logger.info("student_view: " + str(frag))
         frag.add_css(self.resource_string("static/css/scormxblock.css"))
         frag.add_javascript(self.resource_string("static/js/src/scormxblock.js"))
         frag.initialize_js('ScormXBlock', json_args=self.get_fields_data(True, 'scorm_pkg_version', 'scorm_pkg_modified', 'ratio', 'version_scorm', 'scorm_modified'))
-        logger.info("student_view: " + str(frag))
         return frag
 
 
@@ -637,7 +594,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
     @XBlock.json_handler
     def scorm_commit(self, data, suffix=''):
-        logger.info("scorm_commit: ")
+
         package_date = data.pop('package_date', '')
         package_version = data.pop('package_version', '')
         expired, need_update = self.is_runtime_data_expired(package_date)
@@ -649,12 +606,11 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         self.scorm_runtime_modified = timezone.now()
 
         self.update_scorm_status(data, package_version)
-        logger.info("scorm_commit: " +str(self.get_fields_data(True, 'scorm_status', 'scorm_score')))
         return self.get_fields_data(True, 'scorm_status', 'scorm_score')
 
     @XBlock.json_handler
     def scorm_enforce_commit(self, data, suffix=''):
-        logger.info("scorm_enforce_commit: ")
+
         package_date = data.pop('package_date', '')
         package_version = data.pop('package_version', '')
         expired, need_update = self.is_runtime_data_expired(package_date)
@@ -666,12 +622,11 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         self.scorm_runtime_modified = timezone.now()
 
         self.update_scorm_status(data, package_version)
-        logger.info("scorm_enforce_commit: " +str(self.get_fields_data(True, 'scorm_status', 'scorm_score')))
         return self.get_fields_data(True, 'scorm_status', 'scorm_score')
 
     @XBlock.handler
     def scorm_ios_commit(self, request, suffix=''):
-        logger.info("scorm_ios_commit: ")
+
         post_data = request.POST.copy()
         post_data.pop('csrfmiddlewaretoken', '')
         package_date = post_data.pop('package_date', '')
@@ -689,17 +644,14 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
         self.update_scorm_status(update_data, package_version)
         response_data = self.get_fields_data(True, 'scorm_status', 'scorm_score')
-        logger.info("scorm_ios_commit: " +str(response_data))
         return Response(json_body=response_data, content_type='application/json')
 
     @XBlock.handler
     def sync_score_value(self, request, suffix=''):
-        logger.info("sync_score_value: ")
         """
         Fix double refresh bug cause of unexpected terminal action
         """
         score_value = self.get_fields_data(True, 'scorm_score')
-        logger.info("sync_score_value: " +str(score_value))
         return Response(json_body=score_value, content_type='application/json')
 
     @staticmethod

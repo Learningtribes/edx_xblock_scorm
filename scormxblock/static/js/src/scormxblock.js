@@ -65,14 +65,12 @@
             if(content.error) {
                 alert(content.error)
             }
-            console.log("GetValue name : "+name)
-            console.log("GetValue content.value : "+content.value)
             return content.value;
         }
 
         function SetValue(name, value) {
                 pendingValues[name] = value;
-                console.log("SetValue  pendingValues name : "+pendingValues[name])
+                
                 return 'true';
              
             }
@@ -188,7 +186,6 @@
                   })
                   .then(function(data) {
                     if (typeof data['scorm_score_value'] !== "undefined") {
-                        console.log("Extra_Commit + CheckChrome: " + data['scorm_score_value'])
                       $(".lesson_score", element).html(data['scorm_score_value']);
                     }
                     $(".success_status", element).html(data['scorm_status_value']);
@@ -212,7 +209,6 @@
                     data: JSON.stringify(pendingValues),
                     async: false,
                     success: function (response) {
-                        console.log("Extra_Commit + CheckSafariMobile: "+ response['scorm_score_value'])
                         if (typeof response['scorm_score_value'] !== "undefined") {
                             $(".lesson_score", element).html(response['scorm_score_value']);
                         }
@@ -233,7 +229,6 @@
                     async: false,
                     success: function (response) {
                         if (typeof response['scorm_score_value'] !== "undefined") {
-                            console.log("Enforce_Commit: "+response['scorm_score_value'])
                             $(".lesson_score", element).html(response['scorm_score_value']);
                         }
                         $(".success_status", element).html(response['scorm_status_value']);
@@ -252,7 +247,6 @@
                 async: false,
                 success: function (response) {
                     if (typeof response['scorm_score_value'] !== "undefined") {
-                        console.log("Commit: "+response['scorm_score_value'])
                         $(".lesson_score", element).html(response['scorm_score_value']);
                     }
 
@@ -381,7 +375,6 @@
                 url: syncScoreUrl,
                 async: true,
                 success: function(response) {
-                    console.log("syncScoreValue: " + response['scorm_score_value'])
                     $(".lesson_score", element).html(response['scorm_score_value']);
                 }
             });
@@ -392,7 +385,6 @@
             initPendingValues();
             window.API = new SCORM_12_API();
             window.API_1484_11 = new SCORM_2004_API();
-            window.API.SetValue('cmi.core.score.raw', valeur.toString() / 100);
             // if (!open_new_tab) {
             //     $('#scorm-object-frame')[0].contentWindow.onbeforeunload = function () {
             //         Commit('value');
