@@ -69,11 +69,13 @@
         }
 
         function SetValue(name, value) {
-                pendingValues[name] = value;
-                
-                return 'true';
-             
+            if (name === "cmi.core.score.raw") {
+              pendingValues[name] = value / 100;
+            } else {
+              pendingValues[name] = value;
             }
+            return true;
+          }
 
         function CheckChrome() {
             var isChromium = window.chrome;
