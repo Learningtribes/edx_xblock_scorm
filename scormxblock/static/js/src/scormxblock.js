@@ -71,11 +71,9 @@
         }
 
         function SetValue(name, value) {
-            if (name!== 'cmi.core.score.raw') {
-                pendingValues[name] = value;
-                console.log("SetValue  pendingValues name : "+pendingValues[name])
-                return 'true';
-              }
+            pendingValues[name] = value;
+            console.log("SetValue  pendingValues name : "+pendingValues[name])
+            return 'true';
             }
 
         function CheckChrome() {
@@ -345,6 +343,7 @@
             this.LMSGetLastError = GetLastError;
             this.LMSGetErrorString = GetErrorString;
             this.LMSGetDiagnostic = GetDiagnostic;
+            this.SetValue('cmi.core.score.raw', value/100);
         }
 
         function SCORM_2004_API() {
@@ -356,7 +355,8 @@
             this.GetLastError = GetLastError;
             this.GetErrorString = GetErrorString;
             this.GetDiagnostic = GetDiagnostic;
-        }
+            this.SetValue('cmi.core.score.raw', value/100);      
+        }       
 
         function getPackageData() {
             return {
@@ -393,7 +393,7 @@
             initPendingValues();
             window.API = new SCORM_12_API();
             window.API_1484_11 = new SCORM_2004_API();
-            window.API.SetValue('cmi.core.score.raw', valeur / 100);
+           
             // if (!open_new_tab) {
             //     $('#scorm-object-frame')[0].contentWindow.onbeforeunload = function () {
             //         Commit('value');
