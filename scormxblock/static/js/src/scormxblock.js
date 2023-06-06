@@ -75,7 +75,7 @@
               pendingValues[name] = value;
             }
             return 'true';
-          }
+        }
 
         function CheckChrome() {
             var isChromium = window.chrome;
@@ -251,7 +251,6 @@
                     if (typeof response['scorm_score_value'] !== "undefined") {
                         $(".lesson_score", element).html(response['scorm_score_value']);
                     }
-
                     $(".success_status", element).html(response['scorm_status_value']);
                 }
             });
