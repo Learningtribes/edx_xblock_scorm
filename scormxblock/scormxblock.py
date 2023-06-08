@@ -701,17 +701,10 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
         score = None
         if 'raw' in info:
-            logger.info("update_scorm_status score mini : " +str(info["mini"]))
-            logger.info("update_scorm_status score maxi: " +str(info["maxi"]))
-            logger.info("update_scorm_status score raw: " +str(info["raw"]))
-            logger.info("update_scorm_status score raw_earned : " +str(info["raw"] - info["mini"]))
-            logger.info("update_scorm_status score raw_possible : " +str(info["maxi"] - info["mini"]))
             raw_earned = (info["raw"] - info["mini"]) / 100 if info["raw"] > info["maxi"] else info["raw"] - info["mini"]
             logger.info("update_scorm_status score  raw_earned v1: " +str(raw_earned))
-            raw_possible = info["maxi"] - info["mini"]
-            logger.info("update_scorm_status score  raw_possible v1: " +str(raw_earned))
+            raw_possible = info["maxi"] - info["mini"]           
             score = Score(raw_earned=raw_earned, raw_possible=raw_possible)
-            logger.info("update_scorm_status score : " +str(score))
 
         if score and (not self.has_submitted_answer() or self.allows_rescore()):
             self.set_score(score)
