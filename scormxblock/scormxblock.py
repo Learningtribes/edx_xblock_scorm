@@ -702,7 +702,6 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         score = None
         if 'raw' in info:
             raw_earned = (info["raw"] - info["mini"]) / 100 if info["raw"] > info["maxi"] else info["raw"] - info["mini"]
-            logger.info("update_scorm_status score  raw_earned v1: " +str(raw_earned))
             raw_possible = info["maxi"] - info["mini"]           
             score = Score(raw_earned=raw_earned, raw_possible=raw_possible)
 
