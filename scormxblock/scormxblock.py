@@ -701,8 +701,11 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
         score = None
         if 'raw' in info:
-            logger.info("update_scorm_status score raw : " +str(info["raw"] - info["mini"]))
-            logger.info("update_scorm_status score max : " +str(info["maxi"] - info["mini"]))
+            logger.info("update_scorm_status score mini : " +str(info["mini"]))
+            logger.info("update_scorm_status score maxi: " +str(info["maxi"]))
+            logger.info("update_scorm_status score raw: " +str(info["raw"]))
+            logger.info("update_scorm_status score raw_earned : " +str(info["raw"] - info["mini"]))
+            logger.info("update_scorm_status score raw_possible : " +str(info["maxi"] - info["mini"]))
             score = Score(raw_earned=(info["raw"] - info["mini"]),
                           raw_possible=(info["maxi"] - info["mini"]))
             logger.info("update_scorm_status score : " +str(score))
