@@ -69,11 +69,12 @@
         }
 
         function SetValue(name, value) {
-            if (name === "cmi.core.score.raw") {
-              pendingValues[name] = value > 1? value / 100 : value;
-            } else {
-              pendingValues[name] = value;
-            }
+            pendingValues[name] = value;
+            // if (name === "cmi.core.score.raw") {
+            //   pendingValues[name] = value > 1? value / 100 : value;
+            // } else {
+            //   pendingValues[name] = value;
+            // }
             return 'true';
         }
 
