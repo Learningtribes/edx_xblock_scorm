@@ -379,7 +379,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
     def get_score(self):
         
-        return Score(raw_possible=self.max_score(), raw_earned=self.scorm_score/100)
+        return Score(raw_possible=self.max_score(), raw_earned=self.scorm_score)
 
     def calculate_score(self):
         return self.get_score()
@@ -716,12 +716,14 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         if 'raw' in info:
             score = Score(raw_earned=(info["raw"] - info["mini"]),
                           raw_possible=(info["maxi"] - info["mini"]))
+            logger.info("update_scorm_status Score: " + str(score))
 
         if score and (not self.has_submitted_answer() or self.allows_rescore()):
             self.set_score(score)
             self._publish_grade(self.get_score())
 
             self.scorm_status = info['status']
+            logger.info("update_scorm_status status: " + str(self.scorm_status))
 
     @XBlock.handler
     def ping(self, request, suffix=''):
