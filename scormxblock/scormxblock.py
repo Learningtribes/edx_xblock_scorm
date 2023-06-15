@@ -670,6 +670,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 logger.info("extract_runtime_info_12 info maxi in data: " + str(info["maxi"]))
             else:
                 info['maxi'] = 100.0 if info['raw'] > 1 else 1.0
+                logger.info("extract_runtime_info_12 info maxi in data else: " + str(info["maxi"]))
 
         lesson_status = data.get('cmi.core.lesson_status', SCORM_STATUS.IN_PROGRESS)
 
