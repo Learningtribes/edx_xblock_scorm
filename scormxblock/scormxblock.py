@@ -661,12 +661,12 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     def extract_runtime_info_12(data):
         info = {'status': SCORM_STATUS.IN_PROGRESS}
         if 'cmi.core.score.raw' in data:
-            info["raw"] = float(data['cmi.core.score.raw'])
-            logger.info("extract_runtime_info_12 info raw: " + str(info["raw"]))
-            info["maxi"] = float(data.get('cmi.core.score.max', 1.0))
-            logger.info("extract_runtime_info_12 info maxi: " + str(info["maxi"]))
-            info["mini"] = float(data.get('cmi.core.score.min', 0.0))
-            logger.info("extract_runtime_info_12 mini: " + str(info["mini"]))
+            info['raw'] = float(data['cmi.core.score.raw'])
+            info['mini'] = float(data.get('cmi.core.score.min', 0.0))
+            if 'cmi.core.score.max' in data:
+                info['maxi'] = float(data.get('cmi.core.score.max'))
+            else:
+                info['maxi'] = 100.0 if info['raw'] > 1 else 1.0
 
         lesson_status = data.get('cmi.core.lesson_status', SCORM_STATUS.IN_PROGRESS)
 
@@ -681,13 +681,9 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     def extract_runtime_info_2004(data):
         info = {'status': SCORM_STATUS.IN_PROGRESS}
         if 'cmi.score.raw' in data and 'cmi.score.max' in data and 'cmi.score.min' in data:
-            info["raw"] = float(data['cmi.score.raw'])
-            logger.info("extract_runtime_info_2004 info raw: " + str(info["raw"]))
-            
-            info["maxi"] = float(data['cmi.score.max'])
-            logger.info("extract_runtime_info_2004 info maxi: " + str(info["maxi"]))
-            info["mini"] = float(data['cmi.score.min'])
-            logger.info("extract_runtime_info_2004 info mini: " + str(info["mini"]))
+            info['raw'] = float(data['cmi.score.raw'])
+            info['maxi'] = float(data['cmi.score.max'])
+            info['mini'] = float(data['cmi.score.min'])
         elif 'cmi.score.scaled' in data:
             info['raw'] = float(data['cmi.score.scaled'])
             logger.info("extract_runtime_info_2004 info raw scaled: " + str(info['raw']))
@@ -714,9 +710,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
         score = None
         if 'raw' in info:
-            score = Score(raw_earned=(info["raw"] - info["mini"]),
-                          raw_possible=(info["maxi"] - info["mini"]))
-            logger.info("update_scorm_status score: " + str(score ))
+            score = Score(raw_earned=(info['raw'] - info['mini']),
+                          raw_possible=(info['maxi'] - info['mini']))
 
         if score and (not self.has_submitted_answer() or self.allows_rescore()):
             self.set_score(score)
