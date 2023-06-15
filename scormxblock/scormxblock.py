@@ -663,8 +663,11 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         if 'cmi.core.score.raw' in data:
             info['raw'] = float(data['cmi.core.score.raw'])
             info['mini'] = float(data.get('cmi.core.score.min', 0.0))
+            logger.info("extract_runtime_info_12 info mini: " + str(info['mini']))
+            logger.info("extract_runtime_info_12 info raw: " + str(info["raw"]))
             if 'cmi.core.score.max' in data:
                 info['maxi'] = float(data.get('cmi.core.score.max'))
+                logger.info("extract_runtime_info_12 info maxi in data: " + str(info["maxi"]))
             else:
                 info['maxi'] = 100.0 if info['raw'] > 1 else 1.0
 
@@ -683,7 +686,10 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         if 'cmi.score.raw' in data and 'cmi.score.max' in data and 'cmi.score.min' in data:
             info['raw'] = float(data['cmi.score.raw'])
             info['maxi'] = float(data['cmi.score.max'])
+            logger.info("extract_runtime_info_2004 info raw: " + str(info["raw"]))
+            logger.info("extract_runtime_info_2004 info max: " + str(info['max']))
             info['mini'] = float(data['cmi.score.min'])
+            logger.info("extract_runtime_info_2004 info mini: " + str(info['mini']))
         elif 'cmi.score.scaled' in data:
             info['raw'] = float(data['cmi.score.scaled'])
             logger.info("extract_runtime_info_2004 info raw scaled: " + str(info['raw']))
@@ -695,7 +701,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             info['status'] = SCORM_STATUS.SUCCEED
         elif success_status == 'failed':
             info['status'] = SCORM_STATUS.FAILED
-
+            
         return info
 
     def update_scorm_status(self, data, version):
@@ -712,6 +718,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         if 'raw' in info:
             score = Score(raw_earned=(info['raw'] - info['mini']),
                           raw_possible=(info['maxi'] - info['mini']))
+            logger.info("update_scorm_status score: " + str(score))
 
         if score and (not self.has_submitted_answer() or self.allows_rescore()):
             self.set_score(score)
