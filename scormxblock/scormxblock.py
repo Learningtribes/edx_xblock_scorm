@@ -665,17 +665,12 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         logger.info("extract_runtime_info_12 info data: " + str(data))
         info = {'status': SCORM_STATUS.IN_PROGRESS}
         if 'cmi.core.score.raw' in data:
-            info['raw'] = float(data['cmi.core.score.raw'])
-            info['mini'] = float(data.get('cmi.core.score.min', 0.0))
-            logger.info("extract_runtime_info_12 info mini: " + str(info['mini']))
+            info["raw"] = float(data['cmi.core.score.raw'])
+            info["maxi"] = float(data.get('cmi.core.score.max', 1.0))
+            info["mini"] = float(data.get('cmi.core.score.min', 0.0))
+            logger.info("extract_runtime_info_12 info mini: " + str(info["mini"]))
+            logger.info("extract_runtime_info_12 info maxi: " + str(info["maxi"]))
             logger.info("extract_runtime_info_12 info raw: " + str(info["raw"]))
-            if 'cmi.core.score.max' in data:
-                info['maxi'] = float(data.get('cmi.core.score.max'))
-                logger.info("extract_runtime_info_12 info maxi in data: " + str(info["maxi"]))
-            else:
-                info['maxi'] = 100.0 if info['raw'] > 1 else 1.0
-                logger.info("extract_runtime_info_12 info maxi in data else: " + str(info["maxi"]))
-
         lesson_status = data.get('cmi.core.lesson_status', SCORM_STATUS.IN_PROGRESS)
 
         if lesson_status == 'passed':
