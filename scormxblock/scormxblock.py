@@ -545,11 +545,14 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
         if package_version == SCORM_VERSION.V12:
             default = SCORM_12_RUNTIME_DEFAULT.get(name, '')
+            logger.info("scorm_get_value name: " + str(default))
             if name == 'cmi.core.student_id':
                 default = str(self.runtime.user_id)
+                logger.info("scorm_get_value name id: " + str(default))
             elif name == 'cmi.core.student_name':
                 user = User.objects.get(id=self.runtime.user_id)
                 default = user.username
+                logger.info("scorm_get_value username: " + str(default))
             elif name == 'cmi.core.entry':
                 if self.scorm_runtime_data.get('cmi.core.exit', None):
                     if self.scorm_runtime_data.get('cmi.core.exit') == 'suspend':
@@ -659,6 +662,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
     @staticmethod
     def extract_runtime_info_12(data):
+        logger.info("extract_runtime_info_12 info data: " + str(data))
         info = {'status': SCORM_STATUS.IN_PROGRESS}
         if 'cmi.core.score.raw' in data:
             info['raw'] = float(data['cmi.core.score.raw'])
