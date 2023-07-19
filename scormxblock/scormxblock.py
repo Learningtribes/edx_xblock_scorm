@@ -383,8 +383,11 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         return self.get_score()
 
     def publish_grade(self, score=None, only_if_higher=None):
-        """
-        Publishes the student's current grade to the system as an event
+        """Publishes the student's current grade to the system as an event
+
+            Used by method `def override_score_module_state()` : ( https://github.com/Learningtribes/platform/blob/bf7b77550a4ed83fe29f1ac60447f85d327d6e95/lms/djangoapps/instructor_task/tasks_helper/module_state.py#L263 )
+            while user clicking on Button "Override Score".
+
         """
         if not score:
             score = self.calculate_score()
