@@ -387,19 +387,14 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         Publishes the student's current grade to the system as an event
         """
         if not score:
-            score = self.get_score()
+            score = self.calculate_score()
 
-        self.runtime.publish(
-            self,
-            'grade',
-            {
-                'value': score.raw_earned,
-                'max_value': score.raw_possible,
-                'only_if_higher': only_if_higher,
-            }
-        )
+        self._publish_grade(new_score, only_if_higher)
 
-        return {'grade': score.raw_earned, 'max_grade': score.raw_possible}
+        return {
+            'grade': score.raw_earned,
+            'max_grade': score.raw_possible
+        }
 
     def has_submitted_answer(self):
         return self.scorm_status != SCORM_STATUS.UNATTENDED
