@@ -388,6 +388,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         """
         if not score:
             score = self.get_score()
+
         self.runtime.publish(
             self,
             'grade',
@@ -398,7 +399,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             }
         )
 
-        return {'grade': self.score.raw_earned, 'max_grade': self.score.raw_possible}
+        return {'grade': score.raw_earned, 'max_grade': score.raw_possible}
 
     def has_submitted_answer(self):
         return self.scorm_status != SCORM_STATUS.UNATTENDED
