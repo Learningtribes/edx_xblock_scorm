@@ -389,7 +389,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         if not score:
             score = self.calculate_score()
 
-        self._publish_grade(new_score, only_if_higher)
+        self._publish_grade(score, only_if_higher)
 
         return {
             'grade': score.raw_earned,
