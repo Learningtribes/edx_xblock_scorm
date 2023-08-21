@@ -275,6 +275,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             pkg_id = self._upload_scorm_pkg(pkg)
             self.scorm_pkg = os.path.join(pkg_id, scorm_index)
             self.scorm_pkg_modified = timezone.now()
+            self.source_file = pkg.filename
             if scorm_launch is not None:
                 self.scorm_launch_data = str(scorm_launch)
 
