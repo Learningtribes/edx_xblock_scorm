@@ -714,6 +714,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         return info
 
     def update_scorm_status(self, data, version):
+
         if version == SCORM_VERSION.V12:
             info = self.extract_runtime_info_12(data)
         elif version == SCORM_VERSION.V2004:
@@ -727,6 +728,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                           raw_possible=(info['maxi'] - info['mini']))
 
         logger.info('update_scorm_status %s', score)
+        logger.info('update_scorm_status info[status] %s', info['status'])
 
         if score:
             if not self.has_submitted_answer() or self.allows_rescore():
@@ -736,6 +738,17 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 self.scorm_status = info['status']
         else:
             if info['status'] == SCORM_STATUS.SUCCEED:
+                from completion import models
+                from opaque_keys.edx.keys import CourseKey, UsageKey
+
+                user_id = self.runtime.service(self, 'user').get_current_user().opt_attrs.get('edx-platform.user_id', None)
+                user_obj = User.objects.get(id=user_id)
+                course_key = CourseKey.from_string('{}'.format(self.course_id))
+                block_key = self.scope_ids.usage_id.to_deprecated_string()
+                blocks_to_complete = [(UsageKey.from_string(block_key), 1.0)]
+
+                models.BlockCompletion.objects.submit_batch_completion(user_obj, course_key, blocks_to_complete)
+
                 self.scorm_status = info['status']
 
     @XBlock.handler
