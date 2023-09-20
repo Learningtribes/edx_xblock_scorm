@@ -741,7 +741,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 from completion import models
                 from opaque_keys.edx.keys import CourseKey, UsageKey
 
-                user_id = self.runtime.service(self, 'user').get_current_user().opt_attrs.get('edx-platform.user_id', None)
+                user_id = self.scope_ids.user_id
                 user_obj = User.objects.get(id=user_id)
                 course_key = CourseKey.from_string('{}'.format(self.course_id))
                 block_key = self.scope_ids.usage_id.to_deprecated_string()
