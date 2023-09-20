@@ -684,8 +684,6 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
         lesson_status = data.get('cmi.core.lesson_status', SCORM_STATUS.IN_PROGRESS)
 
-        logger.info('extract_runtime_info_12 %s', lesson_status)
-
         if lesson_status in ['passed', 'completed']:
             info['status'] = SCORM_STATUS.SUCCEED
         elif lesson_status == 'failed':
@@ -726,9 +724,6 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         if 'raw' in info:
             score = Score(raw_earned=(info['raw'] - info['mini']),
                           raw_possible=(info['maxi'] - info['mini']))
-
-        logger.info('update_scorm_status %s', score)
-        logger.info('update_scorm_status info[status] %s', info['status'])
 
         if score:
             if not self.has_submitted_answer() or self.allows_rescore():
