@@ -684,7 +684,9 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
         lesson_status = data.get('cmi.core.lesson_status', SCORM_STATUS.IN_PROGRESS)
 
-        if lesson_status == 'passed':
+        logger.info('extract_runtime_info_12 %s', lesson_status)
+
+        if lesson_status in ['passed', 'completed']:
             info['status'] = SCORM_STATUS.SUCCEED
         elif lesson_status == 'failed':
             info['status'] = SCORM_STATUS.FAILED
@@ -724,11 +726,17 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             score = Score(raw_earned=(info['raw'] - info['mini']),
                           raw_possible=(info['maxi'] - info['mini']))
 
-        if score and (not self.has_submitted_answer() or self.allows_rescore()):
-            self.set_score(score)
-            self._publish_grade(self.get_score())
+        logger.info('update_scorm_status %s', score)
 
-            self.scorm_status = info['status']
+        if score:
+            if not self.has_submitted_answer() or self.allows_rescore():
+                self.set_score(score)
+                self._publish_grade(self.get_score())
+
+                self.scorm_status = info['status']
+        else:
+            if info['status'] == SCORM_STATUS.SUCCEED:
+                self.scorm_status = info['status']
 
     @XBlock.handler
     def ping(self, request, suffix=''):
