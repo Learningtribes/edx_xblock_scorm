@@ -31,6 +31,8 @@ from zipfile import ZipFile
 from io import BytesIO
 from xblockutils.studio_editable import StudioEditableXBlockMixin
 from xblockutils.fields import File
+from completion import models
+from opaque_keys.edx.keys import CourseKey, UsageKey
 try:
     from contentstore.views.assets import update_course_run_asset
     from xmodule.progress import Progress
@@ -733,9 +735,6 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 self.scorm_status = info['status']
         else:
             if info['status'] == SCORM_STATUS.SUCCEED:
-                from completion import models
-                from opaque_keys.edx.keys import CourseKey, UsageKey
-
                 user_id = self.scope_ids.user_id
                 user_obj = User.objects.get(id=user_id)
                 course_key = CourseKey.from_string('{}'.format(self.course_id))
