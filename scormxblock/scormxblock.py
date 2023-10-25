@@ -31,6 +31,8 @@ from zipfile import ZipFile
 from io import BytesIO
 from xblockutils.studio_editable import StudioEditableXBlockMixin
 from xblockutils.fields import File
+from completion import models
+from opaque_keys.edx.keys import CourseKey, UsageKey
 try:
     from contentstore.views.assets import update_course_run_asset
     from xmodule.progress import Progress
@@ -685,7 +687,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
         lesson_status = data.get('cmi.core.lesson_status', SCORM_STATUS.IN_PROGRESS)
 
-        if lesson_status == 'passed':
+        if lesson_status in ['passed', 'completed']:
             info['status'] = SCORM_STATUS.SUCCEED
         elif lesson_status == 'failed':
             info['status'] = SCORM_STATUS.FAILED
@@ -713,6 +715,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         return info
 
     def update_scorm_status(self, data, version):
+
         if version == SCORM_VERSION.V12:
             info = self.extract_runtime_info_12(data)
         elif version == SCORM_VERSION.V2004:
@@ -725,11 +728,23 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             score = Score(raw_earned=(info['raw'] - info['mini']),
                           raw_possible=(info['maxi'] - info['mini']))
 
-        if score and (not self.has_submitted_answer() or self.allows_rescore()):
-            self.set_score(score)
-            self._publish_grade(self.get_score())
+        if score:
+            if not self.has_submitted_answer() or self.allows_rescore():
+                self.set_score(score)
+                self._publish_grade(self.get_score())
 
-            self.scorm_status = info['status']
+                self.scorm_status = info['status']
+        else:
+            if info['status'] == SCORM_STATUS.SUCCEED:
+                user_id = self.scope_ids.user_id
+                user_obj = User.objects.get(id=user_id)
+                course_key = CourseKey.from_string('{}'.format(self.course_id))
+                block_key = self.scope_ids.usage_id.to_deprecated_string()
+                blocks_to_complete = [(UsageKey.from_string(block_key), 1.0)]
+
+                models.BlockCompletion.objects.submit_batch_completion(user_obj, course_key, blocks_to_complete)
+
+                self.scorm_status = info['status']
 
     @XBlock.handler
     def ping(self, request, suffix=''):
