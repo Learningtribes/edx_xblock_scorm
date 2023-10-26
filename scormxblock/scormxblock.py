@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
+
+import io
 import os
 import pkg_resources
 import uuid
@@ -25,14 +27,16 @@ from xblock.reference.plugins import Filesystem
 
 from web_fragments.fragment import Fragment
 from webob.response import Response
-from fs.copy import copy_dir
+from fs.copy import copy_dir, copy_file
 from fs.zipfs import ZipFS
+from fs.memoryfs import MemoryFS
 from zipfile import ZipFile
 from io import BytesIO
 from xblockutils.studio_editable import StudioEditableXBlockMixin
 from xblockutils.fields import File
 from completion import models
 from opaque_keys.edx.keys import CourseKey, UsageKey
+
 try:
     from contentstore.views.assets import update_course_run_asset
     from xmodule.progress import Progress
@@ -46,7 +50,6 @@ from .mixins import ScorableXBlockMixin
 
 from .config import SupportedScormResources, SUPPORTED_SCORM_RESOURCES
 
-
 logger = logging.getLogger(__name__)
 # Make '_' a no-op so we can scrape strings
 _ = lambda text: text
@@ -54,6 +57,7 @@ _ = lambda text: text
 
 def dt2str(dt):
     return dt.strftime('%Y-%m-%dT%H:%M:%S.%f%z')
+
 
 def str2dt(dtstr):
     return parse_datetime(dtstr)
@@ -274,7 +278,10 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 mf = zip_fs.read('imsmanifest.xml')
                 self.scorm_pkg_version, scorm_index, scorm_launch = self._get_scorm_info(mf)
 
-            pkg_id = self._upload_scorm_pkg(pkg)
+            pkg_id = uuid.uuid4().hex
+            self._upload_scorm_zip(pkg.file, pkg_id)
+
+            pkg_id = self._upload_scorm_pkg(pkg, pkg_id)
             self.scorm_pkg = os.path.join(pkg_id, scorm_index)
             self.scorm_pkg_modified = timezone.now()
             self.source_file = pkg.filename
@@ -315,18 +322,38 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
         in_memory = BytesIO()
         zf = ZipFile(in_memory, mode="w")
-        for x,y in new_zip.items():
-            zf.writestr(x,y)
+        for x, y in new_zip.items():
+            zf.writestr(x, y)
         zf.close()
         in_memory.seek(0)
 
         return ZipFS(in_memory)
 
-    def _upload_scorm_pkg(self, pkg):
+    def _upload_scorm_zip(self, zip_file, pkg_id):
+        """
+        Upload SCORM zip to s3 storage
+        :param zip_file:
+        :param pkg_id:
+        :return:
+        """
+        try:
+            # TODO: need test and improve, for a larger file this may not work
+            binary_data = zip_file.read()
+            bytes_io = BytesIO(binary_data)
+            bytes_io.seek(0)
+            memory_fs = MemoryFS()
+            file_path = pkg_id.decode('utf-8') + '.zip'
+            with memory_fs.open(file_path, 'wb') as fp:
+                fp.write(bytes_io.read())
+            copy_file(memory_fs, file_path, self.fs, file_path)
+        except IOError:
+            raise XBlockSaveError([], ['scorm_pkg'], _('Error in uploading scorm package'))
+            pass
+
+    def _upload_scorm_pkg(self, pkg, pkg_id):
         fs = self._read_zip(pkg)
         _ = self.runtime.service(self, 'i18n').ugettext
 
-        pkg_id = uuid.uuid4().hex
         try:
             copy_dir(fs, u'/', self.fs, pkg_id.decode('utf-8'))
         except IOError:
@@ -367,6 +394,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         if launch_data is not None:
             launch_data = launch_data.text
         return scorm_version, index_page, launch_data
+
     # endregion
 
     # region Runtime functions
@@ -429,8 +457,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         """Handy helper for getting resources from our kit."""
         data = pkg_resources.resource_string(__name__, path)
 
-        #if isinstance(data, unicode):
-            #raise ValueError("isinstance")
+        # if isinstance(data, unicode):
+        # raise ValueError("isinstance")
         return data if isinstance(data, unicode) else data.decode("utf8")
 
     def render_template(self, template_path, context={}):
@@ -485,7 +513,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             if isinstance(v, timezone.datetime):
                 data[k] = dt2str(v)
 
-        #logger.info("Return: " + str(data))
+        # logger.info("Return: " + str(data))
 
         return data
 
@@ -509,33 +537,38 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         frag = Fragment(template)
         frag.add_css(self.resource_string("static/css/scormxblock.css"))
         frag.add_javascript(self.resource_string("static/js/src/scormxblock.js"))
-        frag.initialize_js('ScormXBlock', json_args=self.get_fields_data(True, 'scorm_pkg_version', 'scorm_pkg_modified', 'ratio', 'version_scorm', 'scorm_modified'))
+        frag.initialize_js('ScormXBlock',
+                           json_args=self.get_fields_data(True, 'scorm_pkg_version', 'scorm_pkg_modified', 'ratio',
+                                                          'version_scorm', 'scorm_modified'))
         return frag
-
 
     def author_view(self, context):
 
         """View of Studio Courses page"""
         fields_data = self.get_fields_data(False,
-            'scorm_pkg',
-            'open_new_tab', 'instruction', 'cover_image'
-        )
+                                           'scorm_pkg',
+                                           'open_new_tab', 'instruction', 'cover_image'
+                                           )
         scorm_path = fields_data.get('scorm_pkg_value')
         if scorm_path:
-            cms_path = scorm_path.replace('/xblock/','/xblock_resource/')
+            cms_path = scorm_path.replace('/xblock/', '/xblock_resource/')
             fields_data['cms_path'] = cms_path
         frag = Fragment()
         frag.add_content(
             self.render_template('static/html/author_view.html', dict(fields_data,
-                external_resources=SUPPORTED_SCORM_RESOURCES,
-                lms_root_url=configuration_helpers.get_value('LMS_ROOT_URL', settings.LMS_ROOT_URL),
-                usd_svg=self.resource_string('static/images/dollar.svg')
-            ))
+                                                                      external_resources=SUPPORTED_SCORM_RESOURCES,
+                                                                      lms_root_url=configuration_helpers.get_value(
+                                                                          'LMS_ROOT_URL', settings.LMS_ROOT_URL),
+                                                                      usd_svg=self.resource_string(
+                                                                          'static/images/dollar.svg')
+                                                                      ))
         )
         frag.add_css(self.resource_string('static/css/scormxblock.css'))
         # Inject js Script to <head> in file: cms/static/js/views/xblock.js#L218
         frag.add_javascript(self.resource_string('static/js/src/scormxblock.js'))
-        frag.initialize_js('ScormXBlock', json_args=self.get_fields_data(True, 'scorm_pkg_version', 'scorm_pkg_modified', 'ratio', 'version_scorm', 'scorm_modified'))
+        frag.initialize_js('ScormXBlock',
+                           json_args=self.get_fields_data(True, 'scorm_pkg_version', 'scorm_pkg_modified', 'ratio',
+                                                          'version_scorm', 'scorm_modified'))
 
         return frag
 
@@ -544,7 +577,6 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         fragment.add_javascript(self.resource_string('static/js/src/studio.js'))
 
         return fragment
-
 
     def raise_handler_error(self, msg):
         _ = self.ugettext
@@ -590,7 +622,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
         if self.is_pkg_expired(package_date):
             return {'error': _('scorm package expired, refresh page to get new content.')}
-        #logger.info('get_value: ' + str(self.scorm_runtime_data.get(name, default)))
+        # logger.info('get_value: ' + str(self.scorm_runtime_data.get(name, default)))
 
         return {"value": self.scorm_runtime_data.get(name, default)}
 
@@ -653,7 +685,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         package_version = post_data.pop('package_version', '')
         expired, need_update = self.is_runtime_data_expired(package_date)
         update_data = {}
-        for x,y in post_data.iteritems():
+        for x, y in post_data.iteritems():
             update_data[x] = y
         if expired:
             self.scorm_runtime_data = {}
