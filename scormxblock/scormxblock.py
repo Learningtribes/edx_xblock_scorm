@@ -337,7 +337,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         :return:
         """
         try:
-            # TODO: need test and improve, for a larger file this may not work
+            # TODO: need test and improve, for a larger file this may not work correctly
             binary_data = zip_file.read()
             bytes_io = BytesIO(binary_data)
             bytes_io.seek(0)
