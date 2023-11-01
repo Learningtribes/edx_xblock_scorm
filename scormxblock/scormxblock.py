@@ -337,17 +337,25 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         :return:
         """
         try:
-            # TODO: need test and improve, for a larger file this may not work correctly
-            binary_data = zip_file.read()
-            bytes_io = BytesIO(binary_data)
+            from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
+
+            zip_file.seek(0)
+            if isinstance(zip_file, InMemoryUploadedFile):
+                # small file
+                binary_data = zip_file.read()
+                bytes_io = BytesIO(binary_data)
+                # logger.info('=== %s %s %s %s' % (type(zip_file), len(zip_file), len(binary_data), len(bytes_io.getvalue())))
+            elif isinstance(zip_file, TemporaryUploadedFile):
+                # large file
+                bytes_io = BytesIO(b''.join(zip_file.chunks()))
+                # logger.info('=== %s %s %s' % (type(zip_file), len(zip_file), len(bytes_io.getvalue())))
+            else:
+                bytes_io = BytesIO()
+
             bytes_io.seek(0)
             file_path = pkg_id.decode('utf-8') + '.zip'
-            memory_fs = MemoryFS()
-            with memory_fs.open(file_path, 'wb') as fp:
-                fp.write(bytes_io.read())
-            copy_file(memory_fs, file_path, self.fs, file_path)
-            # with self.fs.open(file_path, 'wb', acl='public-read') as s3_file:
-            #     s3_file.write(bytes_io.read())
+            with self.fs.open(file_path, 'wb', acl='public-read') as s3_file:
+                s3_file.write(bytes_io.getvalue())
         except IOError:
             raise XBlockSaveError([], ['scorm_pkg'], _('Error in uploading scorm package'))
             pass
