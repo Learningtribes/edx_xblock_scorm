@@ -342,8 +342,12 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             bytes_io = BytesIO(binary_data)
             bytes_io.seek(0)
             file_path = pkg_id.decode('utf-8') + '.zip'
-            with self.fs.open(file_path, 'wb', acl='public-read') as s3_file:
-                s3_file.write(bytes_io.read())
+            memory_fs = MemoryFS()
+            with memory_fs.open(file_path, 'wb') as fp:
+                fp.write(bytes_io.read())
+            copy_file(memory_fs, file_path, self.fs, file_path)
+            # with self.fs.open(file_path, 'wb', acl='public-read') as s3_file:
+            #     s3_file.write(bytes_io.read())
         except IOError:
             raise XBlockSaveError([], ['scorm_pkg'], _('Error in uploading scorm package'))
             pass
