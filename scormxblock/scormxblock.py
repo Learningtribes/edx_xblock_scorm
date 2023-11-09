@@ -279,7 +279,6 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 self.scorm_pkg_version, scorm_index, scorm_launch = self._get_scorm_info(mf)
 
             pkg_id = uuid.uuid4().hex
-            self._upload_scorm_zip(pkg.file, pkg_id)
 
             pkg_id = self._upload_scorm_pkg(pkg, pkg_id)
             self.scorm_pkg = os.path.join(pkg_id, scorm_index)
@@ -287,6 +286,9 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             self.source_file = pkg.filename
             if scorm_launch is not None:
                 self.scorm_launch_data = str(scorm_launch)
+
+            # store SCORM zip file
+            self._upload_scorm_zip(pkg.file, pkg_id)
 
         if cover_images:
             self.cover_images = [
