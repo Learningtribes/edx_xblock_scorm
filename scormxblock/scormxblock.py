@@ -260,7 +260,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     )
 
     editable_fields = (
-        'scorm_pkg', 'display_name', 'due',
+        'scorm_pkg', 'source_file', 'display_name', 'due',
         'has_score', 'weight', 'scorm_allow_rescore',
         'open_new_tab', 'instruction', 'cover_image'
     )
@@ -549,7 +549,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         return fields_data
 
     def student_view(self, context=None):
-
+        self.readonly_fields = ('source_file',)
         template = self.render_template('static/html/scormxblock.html', self.get_student_data())
         frag = Fragment(template)
         frag.add_css(self.resource_string("static/css/scormxblock.css"))
