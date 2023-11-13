@@ -339,8 +339,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         :return:
         """
         try:
+            from fs.osfs import OSFS
             from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
-
             zip_file.seek(0)
             if isinstance(zip_file, InMemoryUploadedFile):
                 # small file
@@ -356,8 +356,13 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
             bytes_io.seek(0)
             file_path = pkg_id.decode('utf-8') + '.zip'
-            with self.fs.open(file_path, 'wb', acl='public-read') as s3_file:
-                s3_file.write(bytes_io.getvalue())
+            if type(self.fs) == OSFS:
+                print('=========== ', self.fs)
+                with self.fs.open(file_path, 'wb') as os_file:
+                    os_file.write(bytes_io.getvalue())
+            else:
+                with self.fs.open(file_path, 'wb', acl='public-read') as s3_file:
+                    s3_file.write(bytes_io.getvalue())
         except IOError:
             raise XBlockSaveError([], ['scorm_pkg'], _('Error in uploading scorm package'))
             pass
