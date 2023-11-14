@@ -158,6 +158,12 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         extra_description=_("Required")
     )
 
+    scorm_pkg_filename = String(
+        display_name=_("SCORM filename"),
+        scope=Scope.settings,
+        default=""
+    )
+
     scorm_file = String(
         display_name=_("compatible with old version scorm file"),
         scope=Scope.settings,
@@ -260,7 +266,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     )
 
     editable_fields = (
-        'scorm_pkg', 'source_file', 'display_name', 'due',
+        'scorm_pkg', 'scorm_pkg_filename', 'display_name', 'due',
         'has_score', 'weight', 'scorm_allow_rescore',
         'open_new_tab', 'instruction', 'cover_image'
     )
@@ -283,12 +289,12 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             pkg_id = self._upload_scorm_pkg(pkg, pkg_id)
             self.scorm_pkg = os.path.join(pkg_id, scorm_index)
             self.scorm_pkg_modified = timezone.now()
-            self.source_file = pkg.filename
             if scorm_launch is not None:
                 self.scorm_launch_data = str(scorm_launch)
 
             # store SCORM zip file
             self._upload_scorm_zip(pkg.file, pkg_id)
+            self.scorm_pkg_filename = pkg.filename
 
         if cover_images:
             self.cover_images = [
