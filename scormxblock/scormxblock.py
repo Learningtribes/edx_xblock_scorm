@@ -162,7 +162,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         display_name=_("SCORM filename"),
         scope=Scope.settings,
         default="",
-        allow_reset=False,
+        resettable_editor=False,
         readonly=True
     )
 
