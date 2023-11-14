@@ -162,7 +162,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         display_name=_("SCORM filename"),
         scope=Scope.settings,
         default="",
-        runtime_options={'readonly': True}
+        readonly=True
     )
 
     scorm_file = String(
