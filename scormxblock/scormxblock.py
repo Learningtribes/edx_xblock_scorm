@@ -27,9 +27,8 @@ from xblock.reference.plugins import Filesystem
 
 from web_fragments.fragment import Fragment
 from webob.response import Response
-from fs.copy import copy_dir, copy_file
+from fs.copy import copy_dir
 from fs.zipfs import ZipFS
-from fs.memoryfs import MemoryFS
 from zipfile import ZipFile
 from io import BytesIO
 from xblockutils.studio_editable import StudioEditableXBlockMixin
@@ -49,6 +48,8 @@ from .fields import DateTime
 from .mixins import ScorableXBlockMixin
 
 from .config import SupportedScormResources, SUPPORTED_SCORM_RESOURCES
+from fs.osfs import OSFS
+from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
 
 logger = logging.getLogger(__name__)
 # Make '_' a no-op so we can scrape strings
@@ -347,8 +348,6 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         :return:
         """
         try:
-            from fs.osfs import OSFS
-            from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
             zip_file.seek(0)
             if isinstance(zip_file, InMemoryUploadedFile):
                 # small file
@@ -364,8 +363,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
             bytes_io.seek(0)
             file_path = pkg_id.decode('utf-8') + '.zip'
-            if type(self.fs) == OSFS:
-                print('=========== ', self.fs)
+            if isinstance(self.fs, OSFS):
                 with self.fs.open(file_path, 'wb') as os_file:
                     os_file.write(bytes_io.getvalue())
             else:
