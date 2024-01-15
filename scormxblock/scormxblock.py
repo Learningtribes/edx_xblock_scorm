@@ -3,10 +3,13 @@ from __future__ import division
 
 import io
 import os
+from os.path import exists as path_exists
+from os import remove as remove_file
 import pkg_resources
 import uuid
 import logging
 import re
+from shutil import rmtree as remove_folder
 from collections import namedtuple
 from lxml import etree
 from urlparse import urlparse
@@ -275,6 +278,28 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     )
     has_author_view = True
 
+    def discard_scorm_package(self):
+        """Remove old scorm package"""
+        try:
+            if isinstance(self.fs, OSFS):
+                _pkg_uuid = self.scorm_pkg.split('/')[0]
+                if _pkg_uuid:
+                    _pkg_folder_path = self.fs.getsyspath(_pkg_uuid)
+                    if path_exists(_pkg_folder_path):
+                        remove_folder(_pkg_folder_path)
+                        logger.info('[INFO] Old SCORM Package Folder {} removed.'.format(_pkg_folder_path))
+                        _zip_scorm_package = _pkg_folder_path + '.zip'
+                        if path_exists(_zip_scorm_package):
+                            remove_file(_zip_scorm_package)
+                            logger.info('[INFO] Old SCORM zip package {} removed.'.format(_zip_scorm_package))
+                    else:
+                        logger.warn('[WARN] Old SCORM Package Folder {} not found.'.format(_pkg_folder_path))
+            else:
+                pass
+        except Exception as e:
+            logger.error('[ERROR] Got exception while removing folder {} ---> {}'.format(_pkg_folder_path, str(e)))
+            raise
+
     # region Studio handler
     @XBlock.handler
     def studio_upload_files(self, request, suffix=''):
@@ -283,6 +308,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         cover_images = request._request.FILES.getlist('cover_images[]')
 
         if pkg:
+            self.discard_scorm_package()
+
             with ZipFile(pkg.file, 'r') as zip_fs:
                 mf = zip_fs.read('imsmanifest.xml')
                 self.scorm_pkg_version, scorm_index, scorm_launch = self._get_scorm_info(mf)
