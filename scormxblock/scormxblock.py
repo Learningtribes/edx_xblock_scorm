@@ -278,22 +278,39 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     )
     has_author_view = True
 
-    def discard_scorm_package(self):
-        """Remove old scorm package"""
+    def discard_scorm_package(self, remove_dfs_scorm_folder=False):
+        """Remove old scorm package
+
+            1) When admin uploading a new scorm package, we specify this argument `remove_dfs_scorm_folder` with value `False`.
+            Then the folder `.../block--v1-_edX-.SLV__0001-.2023--10--10-.type_64_scormxblock-.block_64_c8c2f1fe2c9c4fed926b80942aab5a65/fs/NONE.NONE/` will be cleared.
+
+            2) When admin remove scorm from `Unit`, we specify this argument `remove_dfs_scorm_folder` with value `True`.
+            Then the folder `.../block--v1-_edX-.SLV__0001-.2023--10--10-.type_64_scormxblock-.block_64_c8c2f1fe2c9c4fed926b80942aab5a65` will be removed.
+
+        """
         try:
             if isinstance(self.fs, OSFS):
                 _pkg_uuid = self.scorm_pkg.split('/')[0]
                 if _pkg_uuid:
+                    # Remove : .../block--v1-_edX-.SLV__0001-.2023--10--10-.type_64_scormxblock-.block_64_c8c2f1fe2c9c4fed926b80942aab5a65/fs/NONE.NONE/2b1fe852ed9c4f59b1be5b7636be9f32
                     _pkg_folder_path = self.fs.getsyspath(_pkg_uuid)
+                    if remove_dfs_scorm_folder:
+                        _pkg_folder_path = _pkg_folder_path[:_pkg_folder_path.find('/fs/')]
+
                     if path_exists(_pkg_folder_path):
                         remove_folder(_pkg_folder_path)
                         logger.info('[INFO] Old SCORM Package Folder {} removed.'.format(_pkg_folder_path))
+
+                        # Remove : .../block--v1-_edX-.SLV__0001-.2023--10--10-.type_64_scormxblock-.block_64_c8c2f1fe2c9c4fed926b80942aab5a65/fs/NONE.NONE/2b1fe852ed9c4f59b1be5b7636be9f32.zip
                         _zip_scorm_package = _pkg_folder_path + '.zip'
                         if path_exists(_zip_scorm_package):
                             remove_file(_zip_scorm_package)
                             logger.info('[INFO] Old SCORM zip package {} removed.'.format(_zip_scorm_package))
+
                     else:
                         logger.warn('[WARN] Old SCORM Package Folder {} not found.'.format(_pkg_folder_path))
+                else:
+                    logger.info('[WARN] uuid not found in path {}.'.format(self.scorm_pkg))
             else:
                 pass
         except Exception as e:
