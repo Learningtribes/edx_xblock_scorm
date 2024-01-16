@@ -281,15 +281,15 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     def release_all_external_resources(self):
         """Called when course/chapter/subsection/unit got removed.
         """
-        self.discard_scorm_package(remove_dfs_scorm_folder=True)
+        self.discard_scorm_package(remove_scorm_pkg_root=True)
 
-    def discard_scorm_package(self, remove_dfs_scorm_folder=False):
+    def discard_scorm_package(self, remove_scorm_pkg_root=False):
         """Remove old scorm package
 
-            1) When admin uploading a new scorm package, we specify this argument `remove_dfs_scorm_folder` with value `False`.
-            Then the folder `.../block--v1-_edX-.SLV__0001-.2023--10--10-.type_64_scormxblock-.block_64_c8c2f1fe2c9c4fed926b80942aab5a65/fs/NONE.NONE/` will be cleared.
+            1) When admin uploading a new scorm package, we specify this argument `remove_scorm_pkg_root` with value `False`.
+            Then the folder `.../block--v1-_edX-.SLV__0001-.2023--10--10-.type_64_scormxblock-.block_64_c8c2f1fe2c9c4fed926b80942aab5a65/fs/NONE.NONE/xxxx_uuid_xxxxx` will be cleared.
 
-            2) When admin remove scorm from `Unit`, we specify this argument `remove_dfs_scorm_folder` with value `True`.
+            2) When admin remove scorm from `Unit`, we specify this argument `remove_scorm_pkg_root` with value `True`.
             Then the folder `.../block--v1-_edX-.SLV__0001-.2023--10--10-.type_64_scormxblock-.block_64_c8c2f1fe2c9c4fed926b80942aab5a65` will be removed.
 
         """
@@ -299,7 +299,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 if _pkg_uuid:
                     # Remove : .../block--v1-_edX-.SLV__0001-.2023--10--10-.type_64_scormxblock-.block_64_c8c2f1fe2c9c4fed926b80942aab5a65/fs/NONE.NONE/2b1fe852ed9c4f59b1be5b7636be9f32
                     _pkg_folder_path = self.fs.getsyspath(_pkg_uuid)
-                    if remove_dfs_scorm_folder:
+                    if remove_scorm_pkg_root:
                         _pkg_folder_path = _pkg_folder_path[:_pkg_folder_path.find('/fs/')]
 
                     if path_exists(_pkg_folder_path):
@@ -320,6 +320,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             else:
                 S3_BUCKET_NAME = settings.DJFS.get('bucket')
                 _s3_prefix = self.fs.dir_path[1:]      # Sample: /xblock/block--v1-_beta-.Content__demo-.2020Q1-.type_64_scormxblock-.block_64_ae63e8b39db84405a8763c9a5441f93c/fs/NONE.NONE
+                _pkg_uuid = self.scorm_pkg.split('/')[0]
+                _s3_prefix = _s3_prefix if remove_scorm_pkg_root else _s3_prefix + '/' + _pkg_uuid
                 logger.info('[INFO] Removing AWS S3 Old SCORM Packages by BucketName={}, PREFIX={}...'.format(S3_BUCKET_NAME, _s3_prefix))
 
                 _delete_keys = {'Objects': []}
