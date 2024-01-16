@@ -328,7 +328,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                     {'Key': k} for k in [obj['Key'] for obj in objects_to_delete.get('Contents', [])]
                 ]
 
-                s3_resp = self.fs.client.delete_objects(Bucket="MyBucket", Delete=_delete_keys)
+                s3_resp = self.fs.client.delete_objects(Bucket=S3_BUCKET_NAME, Delete=_delete_keys)
                 _errors = s3_resp.get('Errors', None)
                 if _errors:
                     raise Exception(_errors)
