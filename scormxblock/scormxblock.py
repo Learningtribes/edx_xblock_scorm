@@ -278,6 +278,11 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     )
     has_author_view = True
 
+    def release_all_external_resources(self):
+        """Called when course/chapter/subsection/unit got removed.
+        """
+        self.discard_scorm_package(remove_dfs_scorm_folder=True)
+
     def discard_scorm_package(self, remove_dfs_scorm_folder=False):
         """Remove old scorm package
 
