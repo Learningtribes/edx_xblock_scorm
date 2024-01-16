@@ -321,7 +321,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 S3_BUCKET_NAME = settings.DJFS.get('bucket')
                 _s3_prefix = self.fs.dir_path[1:]      # Sample: /xblock/block--v1-_beta-.Content__demo-.2020Q1-.type_64_scormxblock-.block_64_ae63e8b39db84405a8763c9a5441f93c/fs/NONE.NONE
                 _pkg_uuid = self.scorm_pkg.split('/')[0]
-                _s3_prefix = _s3_prefix if remove_scorm_pkg_root else _s3_prefix + '/' + _pkg_uuid
+                _s3_prefix = _s3_prefix if remove_scorm_pkg_root else (_s3_prefix + '/' + _pkg_uuid)
                 logger.info('[INFO] Removing AWS S3 Old SCORM Packages by BucketName={}, PREFIX={}...'.format(S3_BUCKET_NAME, _s3_prefix))
 
                 _delete_keys = {'Objects': []}
