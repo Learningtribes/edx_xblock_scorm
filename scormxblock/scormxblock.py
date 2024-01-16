@@ -316,11 +316,26 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                         logger.warn('[WARN] Old SCORM Package Folder {} not found.'.format(_pkg_folder_path))
                 else:
                     logger.info('[WARN] uuid not found in path {}.'.format(self.scorm_pkg))
+
             else:
-                pass
+                S3_BUCKET_NAME = settings.DJFS.get('bucket')
+                _s3_prefix = self.fs.dir_path[1:]      # Sample: /xblock/block--v1-_beta-.Content__demo-.2020Q1-.type_64_scormxblock-.block_64_ae63e8b39db84405a8763c9a5441f93c/fs/NONE.NONE
+                _pkg_uuid = self.scorm_pkg.split('/')[0]
+                _delete_keys = {'Objects': []}
+                objects_to_delete = self.fs.client.list_objects_v2(Bucket=S3_BUCKET_NAME, Prefix=_s3_prefix)
+                _delete_keys['Objects'] = [
+                    {'Key': k} for k in [obj['Key'] for obj in objects_to_delete.get('Contents', [])]
+                ]
+
+                s3_resp = self.fs.client.delete_objects(Bucket="MyBucket", Delete=_delete_keys)
+                _errors = s3_resp.get('Errors', None)
+                if _errors:
+                    raise Exception(_errors)
+
+                logger.info('[INFO] {} Old SCORM Packages removed from AWS S3.'.format(len(objects_to_delete.get('Contents', []))))
+
         except Exception as e:
-            logger.error('[ERROR] Got exception while removing folder {} ---> {}'.format(_pkg_folder_path, str(e)))
-            raise
+            logger.error('[ERROR] Got exception while removing package: {}'.format(str(e)))
 
     # region Studio handler
     @XBlock.handler
