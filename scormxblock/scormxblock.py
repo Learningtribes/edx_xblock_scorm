@@ -358,8 +358,6 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         cover_images = request._request.FILES.getlist('cover_images[]')
 
         if pkg:
-            self.discard_scorm_package()
-
             with ZipFile(pkg.file, 'r') as zip_fs:
                 mf = zip_fs.read('imsmanifest.xml')
                 self.scorm_pkg_version, scorm_index, scorm_launch = self._get_scorm_info(mf)
@@ -375,6 +373,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             # store SCORM zip file
             self._upload_scorm_zip(pkg.file, pkg_id)
             self.scorm_pkg_filename = pkg.filename
+
+            self.discard_scorm_package()
 
         if cover_images:
             self.cover_images = [
