@@ -283,7 +283,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         """
         self.discard_scorm_package(remove_scorm_pkg_root=True)
 
-    def discard_scorm_package(self, remove_scorm_pkg_root=False):
+    def discard_scorm_package(self, remove_scorm_pkg_root=False, expired_pkg_uuid=None):
         """Remove old scorm package
 
             1) When admin uploading a new scorm package, we specify this argument `remove_scorm_pkg_root` with value `False`.
@@ -294,34 +294,34 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
         """
         try:
+            _pkg_uuid = expired_pkg_uuid if expired_pkg_uuid else self.scorm_pkg.split('/')[0]
+            if not _pkg_uuid:
+                logger.info('[WARN] uuid {} not found in path.'.format(_pkg_uuid))
+                return
+
             if isinstance(self.fs, OSFS):
-                _pkg_uuid = self.scorm_pkg.split('/')[0]
-                if _pkg_uuid:
-                    # Remove : .../block--v1-_edX-.SLV__0001-.2023--10--10-.type_64_scormxblock-.block_64_c8c2f1fe2c9c4fed926b80942aab5a65/fs/NONE.NONE/2b1fe852ed9c4f59b1be5b7636be9f32
-                    _pkg_folder_path = self.fs.getsyspath(_pkg_uuid)
-                    if remove_scorm_pkg_root:
-                        _pkg_folder_path = _pkg_folder_path[:_pkg_folder_path.find('/fs/')]
+                # Remove : .../block--v1-_edX-.SLV__0001-.2023--10--10-.type_64_scormxblock-.block_64_c8c2f1fe2c9c4fed926b80942aab5a65/fs/NONE.NONE/2b1fe852ed9c4f59b1be5b7636be9f32
+                _pkg_folder_path = self.fs.getsyspath(_pkg_uuid)
+                if remove_scorm_pkg_root:
+                    _pkg_folder_path = _pkg_folder_path[:_pkg_folder_path.find('/fs/')]
 
-                    if path_exists(_pkg_folder_path):
-                        remove_folder(_pkg_folder_path)
-                        logger.info('[INFO] Old SCORM Package Folder {} removed.'.format(_pkg_folder_path))
+                if path_exists(_pkg_folder_path):
+                    remove_folder(_pkg_folder_path)
+                    logger.info('[INFO] Old SCORM Package Folder {} removed.'.format(_pkg_folder_path))
 
-                        # Remove : .../block--v1-_edX-.SLV__0001-.2023--10--10-.type_64_scormxblock-.block_64_c8c2f1fe2c9c4fed926b80942aab5a65/fs/NONE.NONE/2b1fe852ed9c4f59b1be5b7636be9f32.zip
-                        _zip_scorm_package = _pkg_folder_path + '.zip'
-                        if path_exists(_zip_scorm_package):
-                            remove_file(_zip_scorm_package)
-                            logger.info('[INFO] Old SCORM zip package {} removed.'.format(_zip_scorm_package))
+                    # Remove : .../block--v1-_edX-.SLV__0001-.2023--10--10-.type_64_scormxblock-.block_64_c8c2f1fe2c9c4fed926b80942aab5a65/fs/NONE.NONE/2b1fe852ed9c4f59b1be5b7636be9f32.zip
+                    _zip_scorm_package = _pkg_folder_path + '.zip'
+                    if path_exists(_zip_scorm_package):
+                        remove_file(_zip_scorm_package)
+                        logger.info('[INFO] Old SCORM zip package {} removed.'.format(_zip_scorm_package))
 
-                    else:
-                        logger.warn('[WARN] Old SCORM Package Folder {} not found.'.format(_pkg_folder_path))
                 else:
-                    logger.info('[WARN] uuid not found in path {}.'.format(self.scorm_pkg))
+                    logger.warn('[WARN] Old SCORM Package Folder {} not found.'.format(_pkg_folder_path))
 
             else:
                 deleted_count = 0
                 S3_BUCKET_NAME = settings.DJFS.get('bucket')
                 _s3_prefix = self.fs.dir_path[1:]      # Sample: /xblock/block--v1-_beta-.Content__demo-.2020Q1-.type_64_scormxblock-.block_64_ae63e8b39db84405a8763c9a5441f93c/fs/NONE.NONE
-                _pkg_uuid = self.scorm_pkg.split('/')[0]
                 _s3_prefix = _s3_prefix if remove_scorm_pkg_root else (_s3_prefix + '/' + _pkg_uuid)
                 _kwargs = {'Bucket': S3_BUCKET_NAME, 'Prefix': _s3_prefix}
                 logger.info('[INFO] Removing AWS S3 Old SCORM Packages by BucketName={}, PREFIX={}...'.format(S3_BUCKET_NAME, _s3_prefix))
@@ -363,6 +363,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 self.scorm_pkg_version, scorm_index, scorm_launch = self._get_scorm_info(mf)
 
             pkg_id = uuid.uuid4().hex
+            expired_pkg_uuid = self.scorm_pkg.split('/')[0]
 
             pkg_id = self._upload_scorm_pkg(pkg, pkg_id)
             self.scorm_pkg = os.path.join(pkg_id, scorm_index)
@@ -374,7 +375,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             self._upload_scorm_zip(pkg.file, pkg_id)
             self.scorm_pkg_filename = pkg.filename
 
-            self.discard_scorm_package()
+            # Remove expired package
+            self.discard_scorm_package(expired_pkg_uuid=expired_pkg_uuid)
 
         if cover_images:
             self.cover_images = [
