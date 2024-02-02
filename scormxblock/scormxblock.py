@@ -46,6 +46,10 @@ try:
     from openedx.core.djangoapps.site_configuration import helpers as configuration_helpers
 except ImportError:
     pass
+
+from xmodule.modulestore import ModuleStoreEnum
+from xmodule.modulestore.django import modulestore
+from xmodule.modulestore.exceptions import ItemNotFoundError
 from .scorm_default import *
 from .fields import DateTime
 from .mixins import ScorableXBlockMixin
@@ -279,29 +283,39 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     has_author_view = True
 
     def release_all_external_resources(self):
-        """Called when course/chapter/subsection/unit got removed.
+        """Called when course got removed.
         """
-        self.discard_scorm_package(remove_scorm_pkg_root=True)
+        # Delete Draft
+        self.discard_scorm_package(self, remove_scorm_pkg_root=True)
+        # Delete The Published
+        try:
+            self.discard_scorm_package(
+                modulestore().get_item(self.location, revision=ModuleStoreEnum.RevisionOption.published_only),
+                remove_scorm_pkg_root=True
+            )
+        except ItemNotFoundError:
+            logger.info('[INFO] published scorm instance does not exist : location_key : {}'.format(self.location))
 
-    def discard_scorm_package(self, remove_scorm_pkg_root=False, expired_pkg_uuid=None):
-        """Remove old scorm package
+    @staticmethod
+    def discard_scorm_package(xblock, remove_scorm_pkg_root=False, expired_pkg_uuid=None):
+        """Remove scorm packages from draft or published mongodb.
 
-            1) When admin uploading a new scorm package, we specify this argument `remove_scorm_pkg_root` with value `False`.
+            1) When admin uploading a new scorm package, we specify the Flag(`remove_scorm_pkg_root`) with `False`.
             Then the folder `.../block--v1-_edX-.SLV__0001-.2023--10--10-.type_64_scormxblock-.block_64_c8c2f1fe2c9c4fed926b80942aab5a65/fs/NONE.NONE/xxxx_uuid_xxxxx` will be cleared.
 
-            2) When admin remove scorm from `Unit`, we specify this argument `remove_scorm_pkg_root` with value `True`.
-            Then the folder `.../block--v1-_edX-.SLV__0001-.2023--10--10-.type_64_scormxblock-.block_64_c8c2f1fe2c9c4fed926b80942aab5a65` will be removed.
+            2) When admin Remove scorm from `Unit` + Publish this unit, we specify the Flag(`remove_scorm_pkg_root`) with `True`.
+            Then the parent folder `.../block--v1-_edX-.SLV__0001-.2023--10--10-.type_64_scormxblock-.block_64_c8c2f1fe2c9c4fed926b80942aab5a65` will be removed ( `Published` scorm package included inside ).
 
         """
         try:
-            _pkg_uuid = expired_pkg_uuid if expired_pkg_uuid else self.scorm_pkg.split('/')[0]
+            _pkg_uuid = expired_pkg_uuid if expired_pkg_uuid else xblock.scorm_pkg.split('/')[0]
             if not _pkg_uuid:
                 logger.info('[WARN] uuid {} not found in path.'.format(_pkg_uuid))
                 return
 
-            if isinstance(self.fs, OSFS):
+            if isinstance(xblock.fs, OSFS):
                 # Remove : .../block--v1-_edX-.SLV__0001-.2023--10--10-.type_64_scormxblock-.block_64_c8c2f1fe2c9c4fed926b80942aab5a65/fs/NONE.NONE/2b1fe852ed9c4f59b1be5b7636be9f32
-                _pkg_folder_path = self.fs.getsyspath(_pkg_uuid)
+                _pkg_folder_path = xblock.fs.getsyspath(_pkg_uuid)
                 if remove_scorm_pkg_root:
                     _pkg_folder_path = _pkg_folder_path[:_pkg_folder_path.find('/fs/')]
 
@@ -321,19 +335,19 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             else:
                 deleted_count = 0
                 S3_BUCKET_NAME = settings.DJFS.get('bucket')
-                _s3_prefix = self.fs.dir_path[1:]      # Sample: /xblock/block--v1-_beta-.Content__demo-.2020Q1-.type_64_scormxblock-.block_64_ae63e8b39db84405a8763c9a5441f93c/fs/NONE.NONE
+                _s3_prefix = xblock.fs.dir_path[1:]      # Sample: /xblock/block--v1-_beta-.Content__demo-.2020Q1-.type_64_scormxblock-.block_64_ae63e8b39db84405a8763c9a5441f93c/fs/NONE.NONE
                 _s3_prefix = _s3_prefix if remove_scorm_pkg_root else (_s3_prefix + '/' + _pkg_uuid)
                 _kwargs = {'Bucket': S3_BUCKET_NAME, 'Prefix': _s3_prefix}
                 logger.info('[INFO] Removing AWS S3 Old SCORM Packages by BucketName={}, PREFIX={}...'.format(S3_BUCKET_NAME, _s3_prefix))
 
                 while True:
-                    resp = self.fs.client.list_objects_v2(**_kwargs)
+                    resp = xblock.fs.client.list_objects_v2(**_kwargs)
                     _delete_keys = {
                         'Objects': [
                             {'Key': k if isinstance(k, unicode) else k.decode('utf-8')} for k in [obj['Key'] for obj in resp.get('Contents', [])]
                         ]
                     }
-                    s3_resp = self.fs.client.delete_objects(Bucket=S3_BUCKET_NAME, Delete=_delete_keys)
+                    s3_resp = xblock.fs.client.delete_objects(Bucket=S3_BUCKET_NAME, Delete=_delete_keys)
                     _errors = s3_resp.get('Errors', None)
                     if _errors:
                         raise Exception(_errors)
@@ -362,8 +376,24 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 mf = zip_fs.read('imsmanifest.xml')
                 self.scorm_pkg_version, scorm_index, scorm_launch = self._get_scorm_info(mf)
 
+            only_used_in_draft = False
             pkg_id = uuid.uuid4().hex
             expired_pkg_uuid = self.scorm_pkg.split('/')[0]
+
+            try:
+                published_scorm = modulestore().get_item(
+                    self.location, revision=ModuleStoreEnum.RevisionOption.published_only
+                )
+                published_pkg_uuid = published_scorm.scorm_pkg.split('/')[0]
+
+                if published_pkg_uuid != expired_pkg_uuid:
+                    only_used_in_draft = True
+                    logger.info('[INFO] Expired scorm package (uuid={}) only used by draft. So we can remove it.'.format(expired_pkg_uuid))
+                else:
+                    logger.info('[INFO] Scorm package (uuid={}) is being used by the published. So keep it.'.format(expired_pkg_uuid))
+
+            except ItemNotFoundError as e:
+                logger.info('[INFO] Scorm(Published) instance not found : detail : {}'.format(str(e)))
 
             pkg_id = self._upload_scorm_pkg(pkg, pkg_id)
             self.scorm_pkg = os.path.join(pkg_id, scorm_index)
@@ -376,7 +406,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             self.scorm_pkg_filename = pkg.filename
 
             # Remove expired package
-            self.discard_scorm_package(expired_pkg_uuid=expired_pkg_uuid)
+            if only_used_in_draft:
+                self.discard_scorm_package(self, expired_pkg_uuid=expired_pkg_uuid)
 
         if cover_images:
             self.cover_images = [
