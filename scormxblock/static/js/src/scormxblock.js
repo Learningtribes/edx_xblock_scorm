@@ -411,7 +411,7 @@
             let usageId = element.getAttribute('data-usage-id');
 
             if (usageId in this.APIs) {
-                return this.APIs[usageId].LMSGetValue(value);
+                return this.APIs[usageId].LMSGetValue(name);
             } else {
                 return undefined;
             }
@@ -492,7 +492,7 @@
             let usageId = element.getAttribute('data-usage-id');
 
             if (usageId in this.APIs) {
-                return this.APIs[usageId].GetValue(value);
+                return this.APIs[usageId].GetValue(name);
             } else {
                 return undefined;
             }
@@ -547,7 +547,6 @@
                 return undefined;
             }
           }
-
 
         }
 
