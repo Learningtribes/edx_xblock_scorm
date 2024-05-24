@@ -377,11 +377,202 @@
             });
         }
 
+        class APIAdapter {
+          constructor() {
+            this.APIs = {};
+          }
+
+          addNewAPI(usageId, apiInstance) {
+            this.APIs[usageId] = apiInstance;
+          }
+
+          ////////////// SCORM_12_API
+          LMSInitialize(value) {
+            let usageId = element.getAttribute('data-usage-id');
+
+            if (usageId in this.APIs) {
+                return this.APIs[usageId].Initialize(value);
+             } else {
+                return undefined;
+             }
+          }
+
+          LMSFinish(value) {
+            let usageId = element.getAttribute('data-usage-id');
+
+            if (usageId in this.APIs) {
+                return this.APIs[usageId].Terminate(value);
+            } else {
+                return undefined;
+            }
+          }
+
+          LMSGetValue(name) {
+            let usageId = element.getAttribute('data-usage-id');
+
+            if (usageId in this.APIs) {
+                return this.APIs[usageId].GetValue(value);
+            } else {
+                return undefined;
+            }
+          }
+
+          LMSSetValue(name, value) {
+            let usageId = element.getAttribute('data-usage-id');
+
+            if (usageId in this.APIs) {
+                return this.APIs[usageId].SetValue(name, value);
+            } else {
+                return undefined;
+            }
+          }
+
+          LMSCommit(value) {
+            let usageId = element.getAttribute('data-usage-id');
+
+            if (usageId in this.APIs) {
+                return this.APIs[usageId].Commit(value);
+            } else {
+                return undefined;
+            }
+          }
+
+          LMSGetLastError() {
+            let usageId = element.getAttribute('data-usage-id');
+
+            if (usageId in this.APIs) {
+                return this.APIs[usageId].GetLastError();
+            } else {
+                return undefined;
+            }
+          }
+
+          LMSGetErrorString(errCode) {
+            let usageId = element.getAttribute('data-usage-id');
+
+            if (usageId in this.APIs) {
+                return this.APIs[usageId].GetErrorString(errCode);
+            } else {
+                return undefined;
+            }
+          }
+
+          LMSGetDiagnostic(errCode) {
+            let usageId = element.getAttribute('data-usage-id');
+
+            if (usageId in this.APIs) {
+                return this.APIs[usageId].GetDiagnostic(errCode);
+            } else {
+                return undefined;
+            }
+          }
+
+          //////////// SCORM_2004_API
+          Initialize(value) {
+            let usageId = element.getAttribute('data-usage-id');
+
+            if (usageId in this.APIs) {
+                return this.APIs[usageId].Initialize(value);
+             } else {
+                return undefined;
+             }
+          }
+
+          Terminate(value) {
+            let usageId = element.getAttribute('data-usage-id');
+
+            if (usageId in this.APIs) {
+                return this.APIs[usageId].Terminate(value);
+            } else {
+                return undefined;
+            }
+          }
+
+          GetValue(name) {
+            let usageId = element.getAttribute('data-usage-id');
+
+            if (usageId in this.APIs) {
+                return this.APIs[usageId].GetValue(value);
+            } else {
+                return undefined;
+            }
+          }
+
+          SetValue(name, value) {
+            let usageId = element.getAttribute('data-usage-id');
+
+            if (usageId in this.APIs) {
+                return this.APIs[usageId].SetValue(name, value);
+            } else {
+                return undefined;
+            }
+          }
+
+          Commit(value) {
+            let usageId = element.getAttribute('data-usage-id');
+
+            if (usageId in this.APIs) {
+                return this.APIs[usageId].Commit(value);
+            } else {
+                return undefined;
+            }
+          }
+
+          GetLastError() {
+            let usageId = element.getAttribute('data-usage-id');
+
+            if (usageId in this.APIs) {
+                return this.APIs[usageId].GetLastError();
+            } else {
+                return undefined;
+            }
+          }
+
+          GetErrorString(errCode) {
+            let usageId = element.getAttribute('data-usage-id');
+
+            if (usageId in this.APIs) {
+                return this.APIs[usageId].GetErrorString(errCode);
+            } else {
+                return undefined;
+            }
+          }
+
+          GetDiagnostic(errCode) {
+            let usageId = element.getAttribute('data-usage-id');
+
+            if (usageId in this.APIs) {
+                return this.APIs[usageId].GetDiagnostic(errCode);
+            } else {
+                return undefined;
+            }
+          }
+
+
+        }
+
         $(function ($) {
             scormInit();
             initPendingValues();
-            window.API = new SCORM_12_API();
-            window.API_1484_11 = new SCORM_2004_API();
+
+            let usageId = element.getAttribute('data-usage-id');
+
+            if (window.hasOwnProperty('API')) {
+                window.API.addNewAPI(usageId, new SCORM_12_API())
+            } else {
+                window.API = new APIAdapter();
+                window.API.addNewAPI(usageId, new SCORM_12_API())
+            }
+
+            if (window.hasOwnProperty('API_1484_11')) {
+                window.API_1484_11.addNewAPI(usageId, new SCORM_2004_API())
+            } else {
+                window.API_1484_11 = new APIAdapter();
+                window.API_1484_11.addNewAPI(usageId, new SCORM_2004_API())
+            }
+
+            // window.API = new SCORM_12_API();
+            // window.API_1484_11 = new SCORM_2004_API();
             // if (!open_new_tab) {
             //     $('#scorm-object-frame')[0].contentWindow.onbeforeunload = function () {
             //         Commit('value');
