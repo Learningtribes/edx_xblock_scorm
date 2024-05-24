@@ -391,7 +391,7 @@
             let usageId = element.getAttribute('data-usage-id');
 
             if (usageId in this.APIs) {
-                return this.APIs[usageId].Initialize(value);
+                return this.APIs[usageId].LMSInitialize(value);
              } else {
                 return undefined;
              }
@@ -401,7 +401,7 @@
             let usageId = element.getAttribute('data-usage-id');
 
             if (usageId in this.APIs) {
-                return this.APIs[usageId].Terminate(value);
+                return this.APIs[usageId].LMSFinish(value);
             } else {
                 return undefined;
             }
@@ -411,7 +411,7 @@
             let usageId = element.getAttribute('data-usage-id');
 
             if (usageId in this.APIs) {
-                return this.APIs[usageId].GetValue(value);
+                return this.APIs[usageId].LMSGetValue(value);
             } else {
                 return undefined;
             }
@@ -421,7 +421,7 @@
             let usageId = element.getAttribute('data-usage-id');
 
             if (usageId in this.APIs) {
-                return this.APIs[usageId].SetValue(name, value);
+                return this.APIs[usageId].LMSSetValue(name, value);
             } else {
                 return undefined;
             }
@@ -431,7 +431,7 @@
             let usageId = element.getAttribute('data-usage-id');
 
             if (usageId in this.APIs) {
-                return this.APIs[usageId].Commit(value);
+                return this.APIs[usageId].LMSCommit(value);
             } else {
                 return undefined;
             }
@@ -441,7 +441,7 @@
             let usageId = element.getAttribute('data-usage-id');
 
             if (usageId in this.APIs) {
-                return this.APIs[usageId].GetLastError();
+                return this.APIs[usageId].LMSGetLastError();
             } else {
                 return undefined;
             }
@@ -451,7 +451,7 @@
             let usageId = element.getAttribute('data-usage-id');
 
             if (usageId in this.APIs) {
-                return this.APIs[usageId].GetErrorString(errCode);
+                return this.APIs[usageId].LMSGetErrorString(errCode);
             } else {
                 return undefined;
             }
@@ -461,7 +461,7 @@
             let usageId = element.getAttribute('data-usage-id');
 
             if (usageId in this.APIs) {
-                return this.APIs[usageId].GetDiagnostic(errCode);
+                return this.APIs[usageId].LMSGetDiagnostic(errCode);
             } else {
                 return undefined;
             }
