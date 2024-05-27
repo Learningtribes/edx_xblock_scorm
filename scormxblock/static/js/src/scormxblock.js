@@ -238,6 +238,7 @@
         }
 
         function Commit(value) {
+            console.log(commitUrl);
             $.ajax({
                 type: "POST",
                 url: commitUrl,
