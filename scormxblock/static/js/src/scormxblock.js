@@ -382,6 +382,15 @@
             initPendingValues();
             window.API = new SCORM_12_API();
             window.API_1484_11 = new SCORM_2004_API();
+
+            $('.launch-button', element).on('click', function() {
+                window.API = new SCORM_12_API();
+                window.API_1484_11 = new SCORM_2004_API();
+            })
+            $('.scorm_object', element).on('click', function() {
+                window.API = new SCORM_12_API();
+                window.API_1484_11 = new SCORM_2004_API();
+            })
             // if (!open_new_tab) {
             //     $('#scorm-object-frame')[0].contentWindow.onbeforeunload = function () {
             //         Commit('value');
