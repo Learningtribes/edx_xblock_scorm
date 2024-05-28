@@ -388,7 +388,7 @@
                 window.API = new SCORM_12_API();
                 window.API_1484_11 = new SCORM_2004_API();
             })
-            $('.scorm_object', element).on('click', function() {
+            $('.scorm_object', element).on('mouseover', function() {
                 window.API = new SCORM_12_API();
                 window.API_1484_11 = new SCORM_2004_API();
             })
