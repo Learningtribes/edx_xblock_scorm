@@ -392,6 +392,16 @@
                 window.API = new SCORM_12_API();
                 window.API_1484_11 = new SCORM_2004_API();
             })
+            $('.scorm_object', element).on('load', function() {
+                window.API = new SCORM_12_API();
+                window.API_1484_11 = new SCORM_2004_API();
+            })
+            $('.scorm_object', element).ready(function() {
+                if (element.getAttribute('data-usage-id') !== 'block-v1:griky+1212+12+type@scormxblock+block@5c1f5d08ff304aa5a9d41096652395c3') {
+                window.API = new SCORM_12_API();
+                window.API_1484_11 = new SCORM_2004_API();
+                }
+            })
             // if (!open_new_tab) {
             //     $('#scorm-object-frame')[0].contentWindow.onbeforeunload = function () {
             //         Commit('value');
