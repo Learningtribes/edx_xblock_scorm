@@ -408,7 +408,7 @@
                     window.API_1484_11 = new SCORM_2004_API();
                     var $iFrame = xblock.querySelector('.scorm_object');
                     $iFrame.href = 'about:blank';
-                    $iFrame.href = $iFrame.dataset.src;
+                    $iFrame.href = $iFrame.src;
                     $iFrame.onload = function() {
                         window.loadedScormModules.push(element.dataset.usageId)
                     }
