@@ -238,7 +238,6 @@
         }
 
         function Commit(value) {
-            console.log(commitUrl);
             $.ajax({
                 type: "POST",
                 url: commitUrl,
@@ -389,7 +388,7 @@
                 window.API_1484_11 = new SCORM_2004_API();
             })
 
-            if (!window.scormModules) {
+            if (!window.loadedScormModules) {
                 window.loadedScormModules = [];
             }
             Array.from(document.querySelectorAll('.xblock-student_view-scormxblock')).filter(function(xblock) {
