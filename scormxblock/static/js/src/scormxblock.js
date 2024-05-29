@@ -401,12 +401,13 @@
 
                 setInterval(() => {
                     if (window.loadedScormModules.length === i) loadScormIFrame();
-                }, 3000);
+                }, i * 2000);
 
                 function loadScormIFrame() {
                     window.API = new SCORM_12_API();
                     window.API_1484_11 = new SCORM_2004_API();
                     var $iFrame = xblock.querySelector('.scorm_object');
+                    $iFrame.href = 'about:blank';
                     $iFrame.href = $iFrame.dataset.src;
                     $iFrame.onload = function() {
                         window.loadedScormModules.push(element.dataset.usageId)
