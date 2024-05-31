@@ -746,6 +746,14 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         elif lesson_status == 'failed':
             info['status'] = SCORM_STATUS.FAILED
 
+        # The `cmi.completion_status` is supported by scormV2004 standard only. But here we just add an additional support for scormV12
+        # cmi.completion_status (“completed”, “incomplete”, “not attempted”, “unknown”, RW) Indicates whether the learner has completed the SCO
+        lesson_status = data.get('cmi.completion_status', SCORM_STATUS.IN_PROGRESS)
+        if lesson_status == 'completed':
+            info['status'] = SCORM_STATUS.SUCCEED
+        elif lesson_status == 'incomplete':
+            info['status'] = SCORM_STATUS.FAILED
+
         return info
 
     @staticmethod
@@ -764,6 +772,14 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         if success_status == 'passed':
             info['status'] = SCORM_STATUS.SUCCEED
         elif success_status == 'failed':
+            info['status'] = SCORM_STATUS.FAILED
+
+        # Doc: https://scorm.com/scorm-explained/technical-scorm/run-time/run-time-reference/?utm_source=google&utm_medium=natural_search#section-2
+        # cmi.completion_status (“completed”, “incomplete”, “not attempted”, “unknown”, RW) Indicates whether the learner has completed the SCO
+        success_status = data.get('cmi.completion_status', SCORM_STATUS.IN_PROGRESS)
+        if success_status == 'completed':
+            info['status'] = SCORM_STATUS.SUCCEED
+        elif success_status == 'incomplete':
             info['status'] = SCORM_STATUS.FAILED
 
         return info
