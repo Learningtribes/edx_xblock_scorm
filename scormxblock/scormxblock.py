@@ -751,6 +751,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         lesson_status = data.get('cmi.completion_status')
         if lesson_status == 'completed':
             info['status'] = SCORM_STATUS.SUCCEED
+        elif lesson_status == 'incomplete':
+            info['status'] = SCORM_STATUS.IN_PROGRESS
 
         return info
 
@@ -777,6 +779,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         success_status = data.get('cmi.completion_status')
         if success_status == 'completed':
             info['status'] = SCORM_STATUS.SUCCEED
+        elif success_status == 'incomplete':
+            info['status'] = SCORM_STATUS.IN_PROGRESS
 
         return info
 
