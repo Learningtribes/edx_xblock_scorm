@@ -382,6 +382,36 @@
             initPendingValues();
             window.API = new SCORM_12_API();
             window.API_1484_11 = new SCORM_2004_API();
+
+            $('.launch-button', element).on('click', function() {
+                window.API = new SCORM_12_API();
+                window.API_1484_11 = new SCORM_2004_API();
+            })
+
+            if (!window.loadedScormModules) {
+                window.loadedScormModules = [];
+            }
+            Array.from(document.querySelectorAll('.xblock-student_view-scormxblock')).filter(function(xblock) {
+                return xblock.querySelector('.scorm_object')
+            }).forEach(function(xblock, i) {
+                if (xblock.dataset.usageId !== element.dataset.usageId) {
+                    return;
+                }
+
+                setInterval(() => {
+                    if (window.loadedScormModules.length === i) loadScormIFrame();
+                }, i * 2000);
+
+                function loadScormIFrame() {
+                    window.API = new SCORM_12_API();
+                    window.API_1484_11 = new SCORM_2004_API();
+                    var $iFrame = xblock.querySelector('.scorm_object');
+                    $iFrame.src = $iFrame.dataset.src;
+                    $iFrame.onload = function() {
+                        window.loadedScormModules.push(element.dataset.usageId)
+                    }
+                }
+            })
             // if (!open_new_tab) {
             //     $('#scorm-object-frame')[0].contentWindow.onbeforeunload = function () {
             //         Commit('value');
