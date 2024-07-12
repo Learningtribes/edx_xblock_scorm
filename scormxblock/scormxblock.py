@@ -285,7 +285,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         cover_image = request.POST.get('cover_image', None)
         cover_images = request._request.FILES.getlist('cover_images[]')
         max_file_size = 300 * 1024 * 1024  # 300 MB
-        user = User.objects.get(id=self.runtime.user_id)
+
+        user = self.runtime.service(self, 'user').get_current_user()
 
         def check_file_size(file):
             return file.size > max_file_size
