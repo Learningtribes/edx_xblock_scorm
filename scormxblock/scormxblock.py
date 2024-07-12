@@ -51,6 +51,9 @@ from .config import SupportedScormResources, SUPPORTED_SCORM_RESOURCES
 from fs.osfs import OSFS
 from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
 
+from student.roles import get_platform_role, DEVELOPER_LEVEL, PLATFORM_SUPER_ADMIN_LEVEL
+
+
 logger = logging.getLogger(__name__)
 # Make '_' a no-op so we can scrape strings
 _ = lambda text: text
@@ -281,6 +284,17 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         pkg = request.POST.get('scorm_pkg', None)
         cover_image = request.POST.get('cover_image', None)
         cover_images = request._request.FILES.getlist('cover_images[]')
+        max_file_size = 300 * 1024 * 1024  # 300 MB
+
+        def check_file_size(file):
+            return file.size > max_file_size
+
+        def has_permission(user):
+            requestor_access_level = get_platform_role(user)
+            return requestor_access_level in (DEVELOPER_LEVEL, PLATFORM_SUPER_ADMIN_LEVEL)
+
+        if pkg and check_file_size(pkg.file) and not has_permission(request.user):
+            return Response(status=403, body='The SCORM package is too large.')
 
         if pkg:
             with ZipFile(pkg.file, 'r') as zip_fs:
