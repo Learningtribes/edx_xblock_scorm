@@ -52,7 +52,7 @@ from fs.osfs import OSFS
 from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
 
 from student.roles import get_platform_role, DEVELOPER_LEVEL, PLATFORM_SUPER_ADMIN_LEVEL
-from django.http import JsonResponse
+from django.http.response import JsonResponse
 
 
 logger = logging.getLogger(__name__)
