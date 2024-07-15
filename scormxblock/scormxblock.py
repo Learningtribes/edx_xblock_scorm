@@ -287,7 +287,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         limited_file_size = 300 * 1024 * 1024  # 300 MB
         max_file_size = 1024 * 1024 * 1024  # 1 GB
 
-        user = self.runtime.service(self, 'user').get_current_user()
+        xblock_user = self.runtime.service(self, 'user').get_current_user()
+        user = User.objects.get(id=xblock_user.id)
 
         def check_file_size(file):
             return limited_file_size < file.size <= max_file_size
