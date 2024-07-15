@@ -52,6 +52,7 @@ from fs.osfs import OSFS
 from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
 
 from student.roles import get_platform_role, DEVELOPER_LEVEL, PLATFORM_SUPER_ADMIN_LEVEL
+from django.http import JsonResponse
 
 
 logger = logging.getLogger(__name__)
@@ -297,7 +298,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             return requestor_access_level in (DEVELOPER_LEVEL, PLATFORM_SUPER_ADMIN_LEVEL)
 
         if pkg and check_file_size(pkg.file) and not has_permission(user):
-            return Response(status=403, body=_('The SCORM package is too large.'))
+            return JsonResponse({'error': _('The SCORM package is too large.')}, status=403)
 
         if pkg:
             with ZipFile(pkg.file, 'r') as zip_fs:
