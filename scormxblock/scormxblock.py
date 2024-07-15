@@ -287,8 +287,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         limited_file_size = 300 * 1024 * 1024  # 300 MB
         max_file_size = 1024 * 1024 * 1024  # 1 GB
 
-        xblock_user = self.runtime.service(self, 'user').get_current_user()
-        user = User.objects.get(id=xblock_user.id)
+        user = request._request.user
 
         def check_file_size(file):
             return limited_file_size < file.size <= max_file_size
@@ -298,8 +297,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             return requestor_access_level in (DEVELOPER_LEVEL, PLATFORM_SUPER_ADMIN_LEVEL)
 
         if pkg and check_file_size(pkg.file) and not has_permission(user):
-            # return Response(status=403, body='The SCORM package is too large.')
-            raise XBlockSaveError([], ['scorm_pkg'], _('The SCORM package is too large.'))
+            return Response(status=403, body=_('The SCORM package is too large.'))
 
         if pkg:
             with ZipFile(pkg.file, 'r') as zip_fs:
