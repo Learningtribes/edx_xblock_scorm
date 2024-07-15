@@ -297,7 +297,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             return requestor_access_level in (DEVELOPER_LEVEL, PLATFORM_SUPER_ADMIN_LEVEL)
 
         if pkg and check_file_size(pkg.file) and not has_permission(user):
-            return Response(status=403, body='The SCORM package is too large.')
+            # return Response(status=403, body='The SCORM package is too large.')
+            raise XBlockSaveError([], ['scorm_pkg'], _('The SCORM package is too large.'))
 
         if pkg:
             with ZipFile(pkg.file, 'r') as zip_fs:
