@@ -52,7 +52,6 @@ from fs.osfs import OSFS
 from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
 
 from student.roles import get_platform_role, DEVELOPER_LEVEL, PLATFORM_SUPER_ADMIN_LEVEL
-from django.http import JsonResponse
 
 
 logger = logging.getLogger(__name__)
@@ -282,6 +281,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     # region Studio handler
     @XBlock.handler
     def studio_upload_files(self, request, suffix=''):
+        from django.utils.translation import ugettext as _
+
         pkg = request.POST.get('scorm_pkg', None)
         cover_image = request.POST.get('cover_image', None)
         cover_images = request._request.FILES.getlist('cover_images[]')
@@ -298,7 +299,6 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             return requestor_access_level in (DEVELOPER_LEVEL, PLATFORM_SUPER_ADMIN_LEVEL)
 
         if pkg and check_file_size(pkg.file) and not has_permission(user):
-            # return Response(status=403, body=_('The SCORM package is too large.'))
             return Response(status=403, json_body={'error': _('The SCORM package is too large.')}, content_type='application/json')
 
         if pkg:
