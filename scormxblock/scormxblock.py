@@ -287,19 +287,18 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         cover_image = request.POST.get('cover_image', None)
         cover_images = request._request.FILES.getlist('cover_images[]')
         limited_file_size = 300 * 1024 * 1024  # 300 MB
-        max_file_size = 1024 * 1024 * 1024  # 1 GB
 
         user = request._request.user
 
         def check_file_size(file):
-            return limited_file_size < file.size <= max_file_size
+            return limited_file_size < file.size
 
         def has_permission(user):
             requestor_access_level = get_platform_role(user)
             return requestor_access_level in (DEVELOPER_LEVEL, PLATFORM_SUPER_ADMIN_LEVEL)
 
         if pkg and check_file_size(pkg.file) and not has_permission(user):
-            return Response(status=403, json_body={'error': _('The SCORM package is too large.')}, content_type='application/json')
+            return Response(status=403, json_body={'error': _('Your file is too large.')}, content_type='application/json')
 
         if pkg:
             with ZipFile(pkg.file, 'r') as zip_fs:
