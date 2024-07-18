@@ -159,7 +159,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         enforce_type=True,
         display_name=_("SCORM module"),
         help=_("SCORM module in .zip format") + '; ' + _("Size limit: ") + '300MB',
-        extra_description=_("Required")
+        extra_description=_("Required") + _("Size limit: ") + '300MB'
     )
 
     scorm_pkg_filename = String(
