@@ -52,11 +52,11 @@ from fs.osfs import OSFS
 from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
 
 from student.roles import get_platform_role, DEVELOPER_LEVEL, PLATFORM_SUPER_ADMIN_LEVEL
-from django.utils.translation import ugettext as _
+
 
 logger = logging.getLogger(__name__)
 # Make '_' a no-op so we can scrape strings
-# _ = lambda text: text
+_ = lambda text: text
 
 
 def dt2str(dt):
@@ -159,7 +159,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         enforce_type=True,
         display_name=_("SCORM module"),
         help=_("SCORM module in .zip format") + '; ' + _("Size limit: ") + '300MB',
-        extra_description=_("Required") + ' (' + _("Size limit: ") + '300MB)'
+        extra_description=_("Required (Size limit: 300MB)")
     )
 
     scorm_pkg_filename = String(
@@ -281,6 +281,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     # region Studio handler
     @XBlock.handler
     def studio_upload_files(self, request, suffix=''):
+        from django.utils.translation import ugettext as _
+
         pkg = request.POST.get('scorm_pkg', None)
         cover_image = request.POST.get('cover_image', None)
         cover_images = request._request.FILES.getlist('cover_images[]')
