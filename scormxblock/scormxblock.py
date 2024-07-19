@@ -51,6 +51,9 @@ from .config import SupportedScormResources, SUPPORTED_SCORM_RESOURCES
 from fs.osfs import OSFS
 from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
 
+from student.roles import get_platform_role, DEVELOPER_LEVEL, PLATFORM_SUPER_ADMIN_LEVEL
+
+
 logger = logging.getLogger(__name__)
 # Make '_' a no-op so we can scrape strings
 _ = lambda text: text
@@ -156,7 +159,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         enforce_type=True,
         display_name=_("SCORM module"),
         help=_("SCORM module in .zip format") + '; ' + _("Size limit: ") + '300MB',
-        extra_description=_("Required")
+        extra_description=_("Required (Size limit: 300MB)")
     )
 
     scorm_pkg_filename = String(
@@ -278,9 +281,24 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     # region Studio handler
     @XBlock.handler
     def studio_upload_files(self, request, suffix=''):
+        from django.utils.translation import ugettext as _
+
         pkg = request.POST.get('scorm_pkg', None)
         cover_image = request.POST.get('cover_image', None)
         cover_images = request._request.FILES.getlist('cover_images[]')
+        limited_file_size = 300 * 1024 * 1024  # 300 MB
+
+        user = request._request.user
+
+        def check_file_size(file):
+            return limited_file_size < file.size
+
+        def has_permission(user):
+            requestor_access_level = get_platform_role(user)
+            return requestor_access_level in (DEVELOPER_LEVEL, PLATFORM_SUPER_ADMIN_LEVEL)
+
+        if pkg and check_file_size(pkg.file) and not has_permission(user):
+            return Response(status=403, json_body={'error': _('Your file is too large.')}, content_type='application/json')
 
         if pkg:
             with ZipFile(pkg.file, 'r') as zip_fs:
