@@ -402,7 +402,7 @@
 
                 var tomb = setInterval(() => {
                     if (window.loadedScormModules.length === i) loadScormIFrame();
-                }, i * 2000);
+                }, i * 2000 + 1000);
 
                 function loadScormIFrame() {
                     if (window.loadingScormModuleMap[element.dataset.usageId] !== undefined) return
