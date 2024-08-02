@@ -388,17 +388,19 @@
                 window.API_1484_11 = new SCORM_2004_API();
             })
 
+            if (!window.loadingScormModuleMap) {
+                window.loadingScormModuleMap = {}
+            }
             if (!window.loadedScormModules) {
                 window.loadedScormModules = [];
             }
             Array.from(document.querySelectorAll('.xblock-student_view-scormxblock')).filter(function(xblock) {
                 return xblock.querySelector('.scorm_object')
             }).forEach(function(xblock, i) {
-                if (xblock.dataset.usageId !== element.dataset.usageId) {
-                    return;
-                }
+                if (xblock.dataset.usageId !== element.dataset.usageId) return
+                if (window.loadingScormModuleMap[element.dataset.usageId] !== undefined) return
 
-                setInterval(() => {
+                window.loadingScormModuleMap[element.dataset.usageId] = setInterval(() => {
                     if (window.loadedScormModules.length === i) loadScormIFrame();
                 }, i * 2000);
 
@@ -409,6 +411,7 @@
                     $iFrame.src = $iFrame.dataset.src;
                     $iFrame.onload = function() {
                         window.loadedScormModules.push(element.dataset.usageId)
+                        clearInterval(window.loadingScormModuleMap[element.dataset.usageId])
                     }
                 }
             })
