@@ -400,11 +400,14 @@
                 if (xblock.dataset.usageId !== element.dataset.usageId) return
                 if (window.loadingScormModuleMap[element.dataset.usageId] !== undefined) return
 
-                window.loadingScormModuleMap[element.dataset.usageId] = setInterval(() => {
+                var tomb = setInterval(() => {
                     if (window.loadedScormModules.length === i) loadScormIFrame();
                 }, i * 2000);
 
                 function loadScormIFrame() {
+                    if (window.loadingScormModuleMap[element.dataset.usageId] !== undefined) return
+                    window.loadingScormModuleMap[element.dataset.usageId] = tomb
+
                     window.API = new SCORM_12_API();
                     window.API_1484_11 = new SCORM_2004_API();
                     var $iFrame = xblock.querySelector('.scorm_object');
