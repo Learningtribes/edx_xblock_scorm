@@ -447,9 +447,14 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
     def set_score(self, score):
         self.scorm_score = self.max_score() * score.raw_earned / score.raw_possible
+        logger.info("Set SCORM score: %f (raw_earned=%f, raw_possible=%f)", 
+                    self.scorm_score, score.raw_earned, score.raw_possible)
 
     def get_score(self):
-        return Score(raw_possible=self.max_score(), raw_earned=self.scorm_score)
+        score = Score(raw_possible=self.max_score(), raw_earned=self.scorm_score)
+        logger.info("Get SCORM score: raw_earned=%f, raw_possible=%f", 
+                    score.raw_earned, score.raw_possible)
+        return score
 
     def calculate_score(self):
         return self.get_score()
@@ -748,6 +753,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
     @staticmethod
     def extract_runtime_info_12(data):
+        logger.info("Extracting SCORM 1.2 runtime info from data: %s", data)
         info = {'status': SCORM_STATUS.IN_PROGRESS}
         if 'cmi.core.score.raw' in data:
             info['raw'] = float(data['cmi.core.score.raw'])
@@ -756,70 +762,89 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 info['maxi'] = float(data.get('cmi.core.score.max'))
             else:
                 info['maxi'] = 100.0 if info['raw'] > 1 else 1.0
+            logger.info("SCORM 1.2 score info: raw=%f, min=%f, max=%f", 
+                        info['raw'], info['mini'], info['maxi'])
 
         lesson_status = data.get('cmi.core.lesson_status', SCORM_STATUS.IN_PROGRESS)
+        logger.info("SCORM 1.2 lesson status: %s", lesson_status)
 
         if lesson_status in ['passed', 'completed']:
             info['status'] = SCORM_STATUS.SUCCEED
         elif lesson_status == 'failed':
             info['status'] = SCORM_STATUS.FAILED
 
-        # The `cmi.completion_status` is supported by scormV2004 standard only. But here we just add an additional support for scormV12
-        # cmi.completion_status (“completed”, “incomplete”, “not attempted”, “unknown”, RW) Indicates whether the learner has completed the SCO
-        lesson_status = data.get('cmi.completion_status')
-        if lesson_status == 'completed':
+        completion_status = data.get('cmi.completion_status')
+        if completion_status == 'completed':
             info['status'] = SCORM_STATUS.SUCCEED
+            logger.info("SCORM 1.2 completion status overrode lesson status: %s", completion_status)
 
+        logger.info("Final SCORM 1.2 info: %s", info)
         return info
 
     @staticmethod
     def extract_runtime_info_2004(data):
+        logger.info("Extracting SCORM 2004 runtime info from data: %s", data)
         info = {'status': SCORM_STATUS.IN_PROGRESS}
         if 'cmi.score.raw' in data and 'cmi.score.max' in data and 'cmi.score.min' in data:
             info['raw'] = float(data['cmi.score.raw'])
             info['maxi'] = float(data['cmi.score.max'])
             info['mini'] = float(data['cmi.score.min'])
+            logger.info("SCORM 2004 score info: raw=%f, min=%f, max=%f", 
+                        info['raw'], info['mini'], info['maxi'])
         elif 'cmi.score.scaled' in data:
             info['raw'] = float(data['cmi.score.scaled'])
             info['maxi'] = 1.0
             info['mini'] = 0.0
+            logger.info("SCORM 2004 scaled score: %f", info['raw'])
 
         success_status = data.get('cmi.success_status', SCORM_STATUS.IN_PROGRESS)
+        logger.info("SCORM 2004 success status: %s", success_status)
         if success_status == 'passed':
             info['status'] = SCORM_STATUS.SUCCEED
         elif success_status == 'failed':
             info['status'] = SCORM_STATUS.FAILED
 
-        # Doc: https://scorm.com/scorm-explained/technical-scorm/run-time/run-time-reference/?utm_source=google&utm_medium=natural_search#section-2
-        # cmi.completion_status (“completed”, “incomplete”, “not attempted”, “unknown”, RW) Indicates whether the learner has completed the SCO
-        success_status = data.get('cmi.completion_status')
-        if success_status == 'completed':
+        completion_status = data.get('cmi.completion_status')
+        if completion_status == 'completed':
             info['status'] = SCORM_STATUS.SUCCEED
+            logger.info("SCORM 2004 completion status overrode success status: %s", completion_status)
 
+        logger.info("Final SCORM 2004 info: %s", info)
         return info
 
     def update_scorm_status(self, data, version):
+        logger.info("Updating SCORM status. Version: %s, Data: %s", version, data)
 
         if version == SCORM_VERSION.V12:
             info = self.extract_runtime_info_12(data)
         elif version == SCORM_VERSION.V2004:
             info = self.extract_runtime_info_2004(data)
         else:
+            logger.error("Invalid SCORM package version: %s", version)
             self.raise_handler_error('error scorm pkg version')
+
+        logger.info("Extracted runtime info: %s", info)
 
         score = None
         if 'raw' in info:
             score = Score(raw_earned=(info['raw'] - info['mini']),
                           raw_possible=(info['maxi'] - info['mini']))
+            logger.info("Calculated score: raw_earned=%f, raw_possible=%f", 
+                        score.raw_earned, score.raw_possible)
 
         if score:
             if not self.has_submitted_answer() or self.allows_rescore():
                 self.set_score(score)
-                self._publish_grade(self.get_score())
+                published_score = self.get_score()
+                logger.info("Published score: raw_earned=%f, raw_possible=%f", 
+                            published_score.raw_earned, published_score.raw_possible)
+                self._publish_grade(published_score)
 
                 self.scorm_status = info['status']
+                logger.info("Updated SCORM status: %s", self.scorm_status)
         else:
             if info['status'] == SCORM_STATUS.SUCCEED:
+                logger.info("SCORM status is SUCCEED, but no score. Marking as complete.")
                 user_id = self.scope_ids.user_id
                 user_obj = User.objects.get(id=user_id)
                 course_key = CourseKey.from_string('{}'.format(self.course_id))
@@ -829,6 +854,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 models.BlockCompletion.objects.submit_batch_completion(user_obj, course_key, blocks_to_complete)
 
                 self.scorm_status = info['status']
+                logger.info("Updated SCORM status: %s", self.scorm_status)
 
     @XBlock.handler
     def ping(self, request, suffix=''):
