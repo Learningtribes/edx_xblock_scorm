@@ -272,7 +272,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     )
 
     editable_fields = (
-        'scorm_pkg', 'scorm_pkg_filename', 'display_name', 'due',
+        'scorm_pkg', 'scorm_pkg_filename', 'display_name',
         'has_score', 'weight', 'scorm_allow_rescore',
         'open_new_tab', 'instruction', 'cover_image'
     )
