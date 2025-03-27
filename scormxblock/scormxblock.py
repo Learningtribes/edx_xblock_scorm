@@ -462,7 +462,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                         )
                         return True, file_path
                     except Exception as e:
-                        logging.error(f"Error uploading {file_path}: {str(e)}")
+                        logging.error("Error uploading {0}: {1}".format(file_path, str(e)))
                         return False, file_path
                 
                 # Create thread pool with max 10 workers for parallel upload
@@ -485,11 +485,11 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                         if not success:
                             failed_files.append(file_path)
                             
-                        logging.info(f"Upload progress: {completed}/{file_count} - {file_path}")
+                        logging.info("Upload progress: {0}/{1} - {2}".format(completed, file_count, file_path))
                 
                 # Check if any files failed to upload
                 if failed_files:
-                    logging.error(f"Failed to upload {len(failed_files)} files: {failed_files}")
+                    logging.error("Failed to upload {0} files: {1}".format(len(failed_files), failed_files))
                     raise XBlockSaveError([], ['scorm_pkg'], _('Error in uploading some files to S3'))
                 
         except IOError:
