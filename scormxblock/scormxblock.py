@@ -12,6 +12,7 @@ from lxml import etree
 from urlparse import urlparse
 import urllib
 import user_agents
+import boto3
 
 from crum import get_current_request
 from django.template import Context, Template
@@ -53,6 +54,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUpload
 
 from student.roles import get_platform_role, DEVELOPER_LEVEL, PLATFORM_SUPER_ADMIN_LEVEL
 
+logging.getLogger('botocore').setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
 # Make '_' a no-op so we can scrape strings
@@ -278,6 +280,18 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     )
     has_author_view = True
 
+    def get_s3_client(self):
+        """
+        Get S3 client with credentials from settings
+        Returns:
+            boto3.client: Configured S3 client
+        """
+        aws_access_key_id = settings.DJFS.get('aws_access_key_id')
+        aws_secret_access_key = settings.DJFS.get('aws_secret_access_key')
+        return boto3.client('s3', 
+            aws_access_key_id=aws_access_key_id, 
+            aws_secret_access_key=aws_secret_access_key)
+
     # region Studio handler
     @XBlock.handler
     def studio_upload_files(self, request, suffix=''):
@@ -335,7 +349,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
     def _read_zip(self, pkg):
         input_zip = ZipFile(pkg.file)
-        new_zip = {}
+        zip_contents = {}
 
         for filename in input_zip.namelist():
             if isinstance(filename, unicode):
@@ -347,16 +361,16 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 except UnicodeDecodeError:
                     uname = filename.decode('latin-1')
                     newname = uname.encode('utf-8')
-            new_zip[newname] = input_zip.read(filename)
+            zip_contents[newname] = input_zip.read(filename)
 
         in_memory = BytesIO()
         zf = ZipFile(in_memory, mode="w")
-        for x, y in new_zip.items():
+        for x, y in zip_contents.items():
             zf.writestr(x, y)
         zf.close()
         in_memory.seek(0)
 
-        return ZipFS(in_memory)
+        return ZipFS(in_memory), zip_contents
 
     def _upload_scorm_zip(self, zip_file, pkg_id):
         """
@@ -392,11 +406,60 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             pass
 
     def _upload_scorm_pkg(self, pkg, pkg_id):
-        fs = self._read_zip(pkg)
+        fs, zip_contents = self._read_zip(pkg)
         _ = self.runtime.service(self, 'i18n').ugettext
 
         try:
-            copy_dir(fs, u'/', self.fs, pkg_id.decode('utf-8'))
+            if isinstance(self.fs, OSFS):
+                copy_dir(fs, u'/', self.fs, pkg_id.decode('utf-8'))
+            else:
+                s3_client = self.get_s3_client()
+                # Get S3 target prefix from XBlock filesystem
+                target_prefix = None
+                if hasattr(self.fs, 'dir_path'):
+                    target_prefix = self.fs.dir_path.lstrip('/')
+                
+                if target_prefix:
+                    s3_base_path = os.path.join(target_prefix, pkg_id)
+                else:
+                    s3_base_path = pkg_id
+                
+                file_count = len(zip_contents)
+                logging.info("Uploading {0} files from SCORM package to S3...".format(file_count))
+                file_index = 0
+
+                for file_path, file_content in zip_contents.items():
+                    file_index += 1
+                    # Create S3 key path
+                    s3_key = os.path.join(s3_base_path, file_path)
+
+                    # Determine content type
+                    content_type = 'application/octet-stream'
+                    if file_path.endswith('.html') or file_path.endswith('.htm'):
+                        content_type = 'text/html'
+                    elif file_path.endswith('.css'):
+                        content_type = 'text/css'
+                    elif file_path.endswith('.js'):
+                        content_type = 'application/javascript'
+                    elif file_path.endswith('.jpg') or file_path.endswith('.jpeg'):
+                        content_type = 'image/jpeg'
+                    elif file_path.endswith('.png'):
+                        content_type = 'image/png'
+                    elif file_path.endswith('.gif'):
+                        content_type = 'image/gif'
+                    elif file_path.endswith('.xml'):
+                        content_type = 'application/xml'
+                    
+                    logging.info("Uploading file {0} to S3... {1}/{2}".format(s3_key, file_index, file_count))
+                    
+                    # Upload file to S3
+                    s3_client.put_object(
+                        Bucket=settings.DJFS.get('bucket'),
+                        Key=s3_key,
+                        Body=file_content,
+                        ContentType=content_type,
+                        ACL='public-read'
+                    )
         except IOError:
             raise XBlockSaveError([], ['scorm_pkg'], _('Error in uploading scorm package'))
         return pkg_id
