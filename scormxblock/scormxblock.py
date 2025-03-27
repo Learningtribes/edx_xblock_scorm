@@ -426,40 +426,72 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 
                 file_count = len(zip_contents)
                 logging.info("Uploading {0} files from SCORM package to S3...".format(file_count))
-                file_index = 0
-
-                for file_path, file_content in zip_contents.items():
-                    file_index += 1
-                    # Create S3 key path
-                    s3_key = os.path.join(s3_base_path, file_path)
-
-                    # Determine content type
-                    content_type = 'application/octet-stream'
-                    if file_path.endswith('.html') or file_path.endswith('.htm'):
-                        content_type = 'text/html'
-                    elif file_path.endswith('.css'):
-                        content_type = 'text/css'
-                    elif file_path.endswith('.js'):
-                        content_type = 'application/javascript'
-                    elif file_path.endswith('.jpg') or file_path.endswith('.jpeg'):
-                        content_type = 'image/jpeg'
-                    elif file_path.endswith('.png'):
-                        content_type = 'image/png'
-                    elif file_path.endswith('.gif'):
-                        content_type = 'image/gif'
-                    elif file_path.endswith('.xml'):
-                        content_type = 'application/xml'
+                
+                from concurrent.futures import ThreadPoolExecutor, as_completed
+                from functools import partial
+                
+                def upload_file_to_s3(file_path, file_content):
+                    """Upload a single file to S3"""
+                    try:
+                        s3_key = os.path.join(s3_base_path, file_path)
+                        
+                        # Determine content type based on file extension
+                        content_type = 'application/octet-stream'
+                        if file_path.endswith('.html') or file_path.endswith('.htm'):
+                            content_type = 'text/html'
+                        elif file_path.endswith('.css'):
+                            content_type = 'text/css'
+                        elif file_path.endswith('.js'):
+                            content_type = 'application/javascript'
+                        elif file_path.endswith('.jpg') or file_path.endswith('.jpeg'):
+                            content_type = 'image/jpeg'
+                        elif file_path.endswith('.png'):
+                            content_type = 'image/png'
+                        elif file_path.endswith('.gif'):
+                            content_type = 'image/gif'
+                        elif file_path.endswith('.xml'):
+                            content_type = 'application/xml'
+                        
+                        # Upload file to S3 with public read access
+                        s3_client.put_object(
+                            Bucket=settings.DJFS.get('bucket'),
+                            Key=s3_key,
+                            Body=file_content,
+                            ContentType=content_type,
+                            ACL='public-read'
+                        )
+                        return True, file_path
+                    except Exception as e:
+                        logging.error(f"Error uploading {file_path}: {str(e)}")
+                        return False, file_path
+                
+                # Create thread pool with max 10 workers for parallel upload
+                with ThreadPoolExecutor(max_workers=10) as executor:
+                    # Submit all upload tasks to thread pool
+                    future_to_file = {
+                        executor.submit(upload_file_to_s3, file_path, file_content): file_path 
+                        for file_path, file_content in zip_contents.items()
+                    }
                     
-                    logging.info("Uploading file {0} to S3... {1}/{2}".format(s3_key, file_index, file_count))
+                    # Track upload progress
+                    completed = 0
+                    failed_files = []
                     
-                    # Upload file to S3
-                    s3_client.put_object(
-                        Bucket=settings.DJFS.get('bucket'),
-                        Key=s3_key,
-                        Body=file_content,
-                        ContentType=content_type,
-                        ACL='public-read'
-                    )
+                    # Process completed tasks
+                    for future in as_completed(future_to_file):
+                        completed += 1
+                        success, file_path = future.result()
+                        
+                        if not success:
+                            failed_files.append(file_path)
+                            
+                        logging.info(f"Upload progress: {completed}/{file_count} - {file_path}")
+                
+                # Check if any files failed to upload
+                if failed_files:
+                    logging.error(f"Failed to upload {len(failed_files)} files: {failed_files}")
+                    raise XBlockSaveError([], ['scorm_pkg'], _('Error in uploading some files to S3'))
+                
         except IOError:
             raise XBlockSaveError([], ['scorm_pkg'], _('Error in uploading scorm package'))
         return pkg_id
@@ -828,7 +860,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             info['status'] = SCORM_STATUS.FAILED
 
         # The `cmi.completion_status` is supported by scormV2004 standard only. But here we just add an additional support for scormV12
-        # cmi.completion_status (“completed”, “incomplete”, “not attempted”, “unknown”, RW) Indicates whether the learner has completed the SCO
+        # cmi.completion_status ("completed", "incomplete", "not attempted", "unknown", RW) Indicates whether the learner has completed the SCO
         lesson_status = data.get('cmi.completion_status')
         if lesson_status == 'completed':
             info['status'] = SCORM_STATUS.SUCCEED
@@ -854,7 +886,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             info['status'] = SCORM_STATUS.FAILED
 
         # Doc: https://scorm.com/scorm-explained/technical-scorm/run-time/run-time-reference/?utm_source=google&utm_medium=natural_search#section-2
-        # cmi.completion_status (“completed”, “incomplete”, “not attempted”, “unknown”, RW) Indicates whether the learner has completed the SCO
+        # cmi.completion_status ("completed", "incomplete", "not attempted", "unknown", RW) Indicates whether the learner has completed the SCO
         success_status = data.get('cmi.completion_status')
         if success_status == 'completed':
             info['status'] = SCORM_STATUS.SUCCEED
