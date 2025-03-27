@@ -297,55 +297,71 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     def studio_upload_files(self, request, suffix=''):
         from django.utils.translation import ugettext as _
 
-        pkg = request.POST.get('scorm_pkg', None)
-        cover_image = request.POST.get('cover_image', None)
-        cover_images = request._request.FILES.getlist('cover_images[]')
-        limited_file_size = 300 * 1024 * 1024  # 300 MB
+        try:
+            pkg = request.POST.get('scorm_pkg', None)
+            cover_image = request.POST.get('cover_image', None)
+            cover_images = request._request.FILES.getlist('cover_images[]')
+            limited_file_size = 300 * 1024 * 1024  # 300 MB
 
-        user = request._request.user
+            user = request._request.user
 
-        def check_file_size(file):
-            return limited_file_size < file.size
+            def check_file_size(file):
+                return limited_file_size < file.size
 
-        def has_permission(user):
-            requestor_access_level = get_platform_role(user)
-            return requestor_access_level in (DEVELOPER_LEVEL, PLATFORM_SUPER_ADMIN_LEVEL)
+            def has_permission(user):
+                requestor_access_level = get_platform_role(user)
+                return requestor_access_level in (DEVELOPER_LEVEL, PLATFORM_SUPER_ADMIN_LEVEL)
 
-        if pkg and check_file_size(pkg.file) and not has_permission(user):
-            return Response(status=403, json_body={'error': _('Your file is too large.')}, content_type='application/json')
+            if pkg and check_file_size(pkg.file) and not has_permission(user):
+                return Response(
+                    status=403,
+                    json_body={'error': _('Your file is too large.')},
+                    content_type='application/json'
+                )
 
-        if pkg:
-            with ZipFile(pkg.file, 'r') as zip_fs:
-                mf = zip_fs.read('imsmanifest.xml')
-                self.scorm_pkg_version, scorm_index, scorm_launch = self._get_scorm_info(mf)
+            if pkg:
+                with ZipFile(pkg.file, 'r') as zip_fs:
+                    mf = zip_fs.read('imsmanifest.xml')
+                    self.scorm_pkg_version, scorm_index, scorm_launch = self._get_scorm_info(mf)
 
-            pkg_id = uuid.uuid4().hex
+                pkg_id = uuid.uuid4().hex
+                pkg_id = self._upload_scorm_pkg(pkg, pkg_id)
+                self.scorm_pkg = os.path.join(pkg_id, scorm_index)
+                self.scorm_pkg_modified = timezone.now()
+                if scorm_launch is not None:
+                    self.scorm_launch_data = str(scorm_launch)
 
-            pkg_id = self._upload_scorm_pkg(pkg, pkg_id)
-            self.scorm_pkg = os.path.join(pkg_id, scorm_index)
-            self.scorm_pkg_modified = timezone.now()
-            if scorm_launch is not None:
-                self.scorm_launch_data = str(scorm_launch)
+                # store SCORM zip file
+                self._upload_scorm_zip(pkg.file, pkg_id)
+                self.scorm_pkg_filename = pkg.filename
 
-            # store SCORM zip file
-            self._upload_scorm_zip(pkg.file, pkg_id)
-            self.scorm_pkg_filename = pkg.filename
+            if cover_images:
+                self.cover_images = [
+                    self._upload_cover_image(c) for c in cover_images
+                ]
 
-        if cover_images:
-            self.cover_images = [
-                self._upload_cover_image(c) for c in cover_images
-            ]
+            if cover_image:
+                cover_image_hash = cover_image.split('-')[-1]
+                for optional_cover_image in self.cover_images:
+                    if cover_image_hash in optional_cover_image:
+                        self.cover_image = optional_cover_image
+                        break
+                else:
+                    self.cover_image = cover_image
 
-        if cover_image:
-            cover_image_hash = cover_image.split('-')[-1]
-            for optional_cover_image in self.cover_images:
-                if cover_image_hash in optional_cover_image:
-                    self.cover_image = optional_cover_image
-                    break
-            else:
-                self.cover_image = cover_image
+            return Response(
+                status=200,
+                json_body={'status': 'success'},
+                content_type='application/json'
+            )
 
-        return Response(status=200)
+        except Exception as e:
+            logging.error("Error in studio_upload_files: {0}".format(str(e)))
+            return Response(
+                status=500,
+                json_body={'error': _('An error occurred while uploading files.')},
+                content_type='application/json'
+            )
 
     def _read_zip(self, pkg):
         input_zip = ZipFile(pkg.file)
