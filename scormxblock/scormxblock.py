@@ -12,6 +12,7 @@ from lxml import etree
 from urlparse import urlparse
 import urllib
 import user_agents
+import boto3
 
 from crum import get_current_request
 from django.template import Context, Template
@@ -53,6 +54,7 @@ from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUpload
 
 from student.roles import get_platform_role, DEVELOPER_LEVEL, PLATFORM_SUPER_ADMIN_LEVEL
 
+logging.getLogger('botocore').setLevel(logging.WARNING)
 
 logger = logging.getLogger(__name__)
 # Make '_' a no-op so we can scrape strings
@@ -278,64 +280,92 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     )
     has_author_view = True
 
+    def get_s3_client(self):
+        """
+        Get S3 client with credentials from settings
+        Returns:
+            boto3.client: Configured S3 client
+        """
+        aws_access_key_id = settings.DJFS.get('aws_access_key_id')
+        aws_secret_access_key = settings.DJFS.get('aws_secret_access_key')
+        return boto3.client('s3', 
+            aws_access_key_id=aws_access_key_id, 
+            aws_secret_access_key=aws_secret_access_key)
+
     # region Studio handler
     @XBlock.handler
     def studio_upload_files(self, request, suffix=''):
         from django.utils.translation import ugettext as _
 
-        pkg = request.POST.get('scorm_pkg', None)
-        cover_image = request.POST.get('cover_image', None)
-        cover_images = request._request.FILES.getlist('cover_images[]')
-        limited_file_size = 300 * 1024 * 1024  # 300 MB
+        try:
+            pkg = request.POST.get('scorm_pkg', None)
+            cover_image = request.POST.get('cover_image', None)
+            cover_images = request._request.FILES.getlist('cover_images[]')
+            limited_file_size = 300 * 1024 * 1024  # 300 MB
 
-        user = request._request.user
+            user = request._request.user
 
-        def check_file_size(file):
-            return limited_file_size < file.size
+            def check_file_size(file):
+                return limited_file_size < file.size
 
-        def has_permission(user):
-            requestor_access_level = get_platform_role(user)
-            return requestor_access_level in (DEVELOPER_LEVEL, PLATFORM_SUPER_ADMIN_LEVEL)
+            def has_permission(user):
+                requestor_access_level = get_platform_role(user)
+                return requestor_access_level in (DEVELOPER_LEVEL, PLATFORM_SUPER_ADMIN_LEVEL)
 
-        if pkg and check_file_size(pkg.file) and not has_permission(user):
-            return Response(status=403, json_body={'error': _('Your file is too large.')}, content_type='application/json')
+            if pkg and check_file_size(pkg.file) and not has_permission(user):
+                return Response(
+                    status=403,
+                    json_body={'error': _('Your file is too large.')},
+                    content_type='application/json'
+                )
 
-        if pkg:
-            with ZipFile(pkg.file, 'r') as zip_fs:
-                mf = zip_fs.read('imsmanifest.xml')
-                self.scorm_pkg_version, scorm_index, scorm_launch = self._get_scorm_info(mf)
+            if pkg:
+                with ZipFile(pkg.file, 'r') as zip_fs:
+                    mf = zip_fs.read('imsmanifest.xml')
+                    self.scorm_pkg_version, scorm_index, scorm_launch = self._get_scorm_info(mf)
 
-            pkg_id = uuid.uuid4().hex
+                pkg_id = uuid.uuid4().hex
+                pkg_id = self._upload_scorm_pkg(pkg, pkg_id)
+                self.scorm_pkg = os.path.join(pkg_id, scorm_index)
+                self.scorm_pkg_modified = timezone.now()
+                if scorm_launch is not None:
+                    self.scorm_launch_data = str(scorm_launch)
 
-            pkg_id = self._upload_scorm_pkg(pkg, pkg_id)
-            self.scorm_pkg = os.path.join(pkg_id, scorm_index)
-            self.scorm_pkg_modified = timezone.now()
-            if scorm_launch is not None:
-                self.scorm_launch_data = str(scorm_launch)
+                # store SCORM zip file
+                self._upload_scorm_zip(pkg.file, pkg_id)
+                self.scorm_pkg_filename = pkg.filename
 
-            # store SCORM zip file
-            self._upload_scorm_zip(pkg.file, pkg_id)
-            self.scorm_pkg_filename = pkg.filename
+            if cover_images:
+                self.cover_images = [
+                    self._upload_cover_image(c) for c in cover_images
+                ]
 
-        if cover_images:
-            self.cover_images = [
-                self._upload_cover_image(c) for c in cover_images
-            ]
+            if cover_image:
+                cover_image_hash = cover_image.split('-')[-1]
+                for optional_cover_image in self.cover_images:
+                    if cover_image_hash in optional_cover_image:
+                        self.cover_image = optional_cover_image
+                        break
+                else:
+                    self.cover_image = cover_image
 
-        if cover_image:
-            cover_image_hash = cover_image.split('-')[-1]
-            for optional_cover_image in self.cover_images:
-                if cover_image_hash in optional_cover_image:
-                    self.cover_image = optional_cover_image
-                    break
-            else:
-                self.cover_image = cover_image
+            return Response(
+                status=200,
+                json_body={'status': 'success'},
+                content_type='application/json'
+            )
 
-        return Response(status=200)
+        except Exception as e:
+            logging.error("Error in studio_upload_files: {0}".format(str(e)))
+            return Response(
+                status=500,
+                json_body={'error': _('An error occurred while uploading files.')},
+                content_type='application/json'
+            )
 
     def _read_zip(self, pkg):
         input_zip = ZipFile(pkg.file)
-        new_zip = {}
+        zip_contents = {}
 
         for filename in input_zip.namelist():
             if isinstance(filename, unicode):
@@ -347,16 +377,16 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 except UnicodeDecodeError:
                     uname = filename.decode('latin-1')
                     newname = uname.encode('utf-8')
-            new_zip[newname] = input_zip.read(filename)
+            zip_contents[newname] = input_zip.read(filename)
 
         in_memory = BytesIO()
         zf = ZipFile(in_memory, mode="w")
-        for x, y in new_zip.items():
+        for x, y in zip_contents.items():
             zf.writestr(x, y)
         zf.close()
         in_memory.seek(0)
 
-        return ZipFS(in_memory)
+        return ZipFS(in_memory), zip_contents
 
     def _upload_scorm_zip(self, zip_file, pkg_id):
         """
@@ -392,11 +422,92 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             pass
 
     def _upload_scorm_pkg(self, pkg, pkg_id):
-        fs = self._read_zip(pkg)
+        fs, zip_contents = self._read_zip(pkg)
         _ = self.runtime.service(self, 'i18n').ugettext
 
         try:
-            copy_dir(fs, u'/', self.fs, pkg_id.decode('utf-8'))
+            if isinstance(self.fs, OSFS):
+                copy_dir(fs, u'/', self.fs, pkg_id.decode('utf-8'))
+            else:
+                s3_client = self.get_s3_client()
+                # Get S3 target prefix from XBlock filesystem
+                target_prefix = None
+                if hasattr(self.fs, 'dir_path'):
+                    target_prefix = self.fs.dir_path.lstrip('/')
+                
+                if target_prefix:
+                    s3_base_path = os.path.join(target_prefix, pkg_id)
+                else:
+                    s3_base_path = pkg_id
+                
+                file_count = len(zip_contents)
+                logging.info("Uploading {0} files from SCORM package to S3...".format(file_count))
+                
+                from concurrent.futures import ThreadPoolExecutor, as_completed
+                from functools import partial
+                
+                def upload_file_to_s3(file_path, file_content):
+                    """Upload a single file to S3"""
+                    try:
+                        s3_key = os.path.join(s3_base_path, file_path)
+                        
+                        # Determine content type based on file extension
+                        content_type = 'application/octet-stream'
+                        if file_path.endswith('.html') or file_path.endswith('.htm'):
+                            content_type = 'text/html'
+                        elif file_path.endswith('.css'):
+                            content_type = 'text/css'
+                        elif file_path.endswith('.js'):
+                            content_type = 'application/javascript'
+                        elif file_path.endswith('.jpg') or file_path.endswith('.jpeg'):
+                            content_type = 'image/jpeg'
+                        elif file_path.endswith('.png'):
+                            content_type = 'image/png'
+                        elif file_path.endswith('.gif'):
+                            content_type = 'image/gif'
+                        elif file_path.endswith('.xml'):
+                            content_type = 'application/xml'
+                        
+                        # Upload file to S3 with public read access
+                        s3_client.put_object(
+                            Bucket=settings.DJFS.get('bucket'),
+                            Key=s3_key,
+                            Body=file_content,
+                            ContentType=content_type,
+                            ACL='public-read'
+                        )
+                        return True, file_path
+                    except Exception as e:
+                        logging.error("Error uploading {0}: {1}".format(file_path, str(e)))
+                        return False, file_path
+                
+                # Create thread pool with max 10 workers for parallel upload
+                with ThreadPoolExecutor(max_workers=10) as executor:
+                    # Submit all upload tasks to thread pool
+                    future_to_file = {
+                        executor.submit(upload_file_to_s3, file_path, file_content): file_path 
+                        for file_path, file_content in zip_contents.items()
+                    }
+                    
+                    # Track upload progress
+                    completed = 0
+                    failed_files = []
+                    
+                    # Process completed tasks
+                    for future in as_completed(future_to_file):
+                        completed += 1
+                        success, file_path = future.result()
+                        
+                        if not success:
+                            failed_files.append(file_path)
+                            
+                        logging.info("Upload progress: {0}/{1} - {2}".format(completed, file_count, file_path))
+                
+                # Check if any files failed to upload
+                if failed_files:
+                    logging.error("Failed to upload {0} files: {1}".format(len(failed_files), failed_files))
+                    raise XBlockSaveError([], ['scorm_pkg'], _('Error in uploading some files to S3'))
+                
         except IOError:
             raise XBlockSaveError([], ['scorm_pkg'], _('Error in uploading scorm package'))
         return pkg_id
@@ -765,7 +876,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             info['status'] = SCORM_STATUS.FAILED
 
         # The `cmi.completion_status` is supported by scormV2004 standard only. But here we just add an additional support for scormV12
-        # cmi.completion_status (“completed”, “incomplete”, “not attempted”, “unknown”, RW) Indicates whether the learner has completed the SCO
+        # cmi.completion_status ("completed", "incomplete", "not attempted", "unknown", RW) Indicates whether the learner has completed the SCO
         lesson_status = data.get('cmi.completion_status')
         if lesson_status == 'completed':
             info['status'] = SCORM_STATUS.SUCCEED
@@ -791,7 +902,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             info['status'] = SCORM_STATUS.FAILED
 
         # Doc: https://scorm.com/scorm-explained/technical-scorm/run-time/run-time-reference/?utm_source=google&utm_medium=natural_search#section-2
-        # cmi.completion_status (“completed”, “incomplete”, “not attempted”, “unknown”, RW) Indicates whether the learner has completed the SCO
+        # cmi.completion_status ("completed", "incomplete", "not attempted", "unknown", RW) Indicates whether the learner has completed the SCO
         success_status = data.get('cmi.completion_status')
         if success_status == 'completed':
             info['status'] = SCORM_STATUS.SUCCEED
