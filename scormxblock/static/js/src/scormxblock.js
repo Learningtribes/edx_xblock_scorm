@@ -42,6 +42,9 @@
             setTimeout(function(){ syncScoreValue()},2000);
             setTimeout(function(){ syncScoreValue()},5000);
             setTimeout(function(){ syncScoreValue()},10000);
+
+            // Add periodic call to syncScormRuntimeInfo ( Call every 9 seconds )
+            setInterval(syncScormRuntimeInfo, 9000);
         }
 
         function syncScormRuntimeInfo () {
