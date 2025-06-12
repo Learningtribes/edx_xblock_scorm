@@ -734,6 +734,38 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         raise JsonHandlerError(400, _(msg))
 
     @XBlock.json_handler
+    def sync_runtime_info(self, data, suffix=''):
+        try:
+            package_version = data['package_version']
+            package_date = data['package_date']
+        except KeyError:
+            self.raise_handler_error("missing parameters.")
+
+        if self.is_pkg_expired(package_date):
+            return {'error': _('scorm package expired, refresh page to get new content.')}
+
+        if package_version == SCORM_VERSION.V12:
+            default = SCORM_12_RUNTIME_DEFAULT
+            default['cmi.core.student_id'] = str(self.runtime.user_id)
+            default['cmi.core.student_name'] = User.objects.get(id=self.runtime.user_id).username
+            if self.scorm_runtime_data.get('cmi.core.exit', None):
+                if self.scorm_runtime_data.get('cmi.core.exit') == 'suspend':
+                    default['cmi.core.entry'] = 'resume'
+        elif package_version == SCORM_VERSION.V2004:
+            default = SCORM_2004_RUNTIME_DEFAULT
+            default['cmi.learner_id'] = str(self.runtime.user_id)
+            default['cmi.learner_name'] = User.objects.get(id=self.runtime.user_id).username
+            if self.scorm_runtime_data.get('cmi.exit', None):
+                if self.scorm_runtime_data.get('cmi.exit') == 'suspend':
+                    default['cmi.entry'] = 'resume'
+        else:
+            self.raise_handler_error('error scorm package version')
+
+        default['cmi.launch_data'] = self.scorm_launch_data
+        data = dict(default, **self.scorm_runtime_data)
+        return {"value": data}
+
+    @XBlock.json_handler
     def scorm_get_value(self, data, suffix=''):
         _ = self.ugettext
         try:
@@ -861,7 +893,10 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     def extract_runtime_info_12(data):
         info = {'status': SCORM_STATUS.IN_PROGRESS}
         if 'cmi.core.score.raw' in data:
-            info['raw'] = float(data['cmi.core.score.raw'])
+            try:
+                info['raw'] = float(data['cmi.core.score.raw'])
+            except Exception:
+                info['raw'] = 0.0
             info['mini'] = float(data.get('cmi.core.score.min', 0.0))
             if 'cmi.core.score.max' in data:
                 info['maxi'] = float(data.get('cmi.core.score.max'))
@@ -909,14 +944,17 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
         return info
 
+    def extract_runtime_info(self, data, version):
+        if version == SCORM_VERSION.V12:
+            return self.extract_runtime_info_12(data)
+        if version == SCORM_VERSION.V2004:
+            return self.extract_runtime_info_2004(data)
+
+        self.raise_handler_error('error scorm pkg version')
+
     def update_scorm_status(self, data, version):
 
-        if version == SCORM_VERSION.V12:
-            info = self.extract_runtime_info_12(data)
-        elif version == SCORM_VERSION.V2004:
-            info = self.extract_runtime_info_2004(data)
-        else:
-            self.raise_handler_error('error scorm pkg version')
+        info = self.extract_runtime_info(data, version)
 
         score = None
         if 'raw' in info:
