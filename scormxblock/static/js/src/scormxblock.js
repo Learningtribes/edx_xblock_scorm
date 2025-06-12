@@ -46,10 +46,13 @@
 
         function syncScormRuntimeInfo () {
             scormRuntimeInfo = undefined
+
+            const csrftoken = GetCookie('csrftoken');
             fetch(syncRuntimeInfoUrl, {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
                 },
                 body: JSON.stringify(getPackageData())
             }).then(resp => resp.json().then(resp => {
