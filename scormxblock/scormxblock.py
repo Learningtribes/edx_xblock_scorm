@@ -762,7 +762,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             self.raise_handler_error('error scorm package version')
 
         default['cmi.launch_data'] = self.scorm_launch_data
-        data = dict(**default, **self.scorm_runtime_data)
+        data = dict(default, **self.scorm_runtime_data)
         return {"value": data}
 
     @XBlock.json_handler
