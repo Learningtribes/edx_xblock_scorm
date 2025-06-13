@@ -735,6 +735,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
     @XBlock.json_handler
     def sync_runtime_info(self, data, suffix=''):
+        _ = self.ugettext
         try:
             package_version = data['package_version']
             package_date = data['package_date']
