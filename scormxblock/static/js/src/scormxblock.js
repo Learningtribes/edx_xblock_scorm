@@ -55,8 +55,8 @@
                 },
                 body: JSON.stringify(getPackageData())
             }).then(resp => resp.json().then(resp => {
-                if(content.error) {
-                    alert(content.error)
+                if (resp.error) {
+                    alert(resp.error)
                 } else {
                     scormRuntimeInfo = resp.value
                 }
