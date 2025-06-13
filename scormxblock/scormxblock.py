@@ -288,8 +288,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         """
         aws_access_key_id = settings.DJFS.get('aws_access_key_id')
         aws_secret_access_key = settings.DJFS.get('aws_secret_access_key')
-        return boto3.client('s3', 
-            aws_access_key_id=aws_access_key_id, 
+        return boto3.client('s3',
+            aws_access_key_id=aws_access_key_id,
             aws_secret_access_key=aws_secret_access_key)
 
     # region Studio handler
@@ -434,23 +434,23 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 target_prefix = None
                 if hasattr(self.fs, 'dir_path'):
                     target_prefix = self.fs.dir_path.lstrip('/')
-                
+
                 if target_prefix:
                     s3_base_path = os.path.join(target_prefix, pkg_id)
                 else:
                     s3_base_path = pkg_id
-                
+
                 file_count = len(zip_contents)
                 logging.info("Uploading {0} files from SCORM package to S3...".format(file_count))
-                
+
                 from concurrent.futures import ThreadPoolExecutor, as_completed
                 from functools import partial
-                
+
                 def upload_file_to_s3(file_path, file_content):
                     """Upload a single file to S3"""
                     try:
                         s3_key = os.path.join(s3_base_path, file_path)
-                        
+
                         # Determine content type based on file extension
                         content_type = 'application/octet-stream'
                         if file_path.endswith('.html') or file_path.endswith('.htm'):
@@ -467,7 +467,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                             content_type = 'image/gif'
                         elif file_path.endswith('.xml'):
                             content_type = 'application/xml'
-                        
+
                         # Upload file to S3 with public read access
                         s3_client.put_object(
                             Bucket=settings.DJFS.get('bucket'),
@@ -480,34 +480,34 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                     except Exception as e:
                         logging.error("Error uploading {0}: {1}".format(file_path, str(e)))
                         return False, file_path
-                
+
                 # Create thread pool with max 10 workers for parallel upload
                 with ThreadPoolExecutor(max_workers=10) as executor:
                     # Submit all upload tasks to thread pool
                     future_to_file = {
-                        executor.submit(upload_file_to_s3, file_path, file_content): file_path 
+                        executor.submit(upload_file_to_s3, file_path, file_content): file_path
                         for file_path, file_content in zip_contents.items()
                     }
-                    
+
                     # Track upload progress
                     completed = 0
                     failed_files = []
-                    
+
                     # Process completed tasks
                     for future in as_completed(future_to_file):
                         completed += 1
                         success, file_path = future.result()
-                        
+
                         if not success:
                             failed_files.append(file_path)
-                            
+
                         logging.info("Upload progress: {0}/{1} - {2}".format(completed, file_count, file_path))
-                
+
                 # Check if any files failed to upload
                 if failed_files:
                     logging.error("Failed to upload {0} files: {1}".format(len(failed_files), failed_files))
                     raise XBlockSaveError([], ['scorm_pkg'], _('Error in uploading some files to S3'))
-                
+
         except IOError:
             raise XBlockSaveError([], ['scorm_pkg'], _('Error in uploading scorm package'))
         return pkg_id
@@ -734,6 +734,39 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         raise JsonHandlerError(400, _(msg))
 
     @XBlock.json_handler
+    def sync_runtime_info(self, data, suffix=''):
+        _ = self.ugettext
+        try:
+            package_version = data['package_version']
+            package_date = data['package_date']
+        except KeyError:
+            self.raise_handler_error("missing parameters.")
+
+        if self.is_pkg_expired(package_date):
+            return {'error': _('scorm package expired, refresh page to get new content.')}
+
+        if package_version == SCORM_VERSION.V12:
+            default = SCORM_12_RUNTIME_DEFAULT
+            default['cmi.core.student_id'] = str(self.runtime.user_id)
+            default['cmi.core.student_name'] = User.objects.get(id=self.runtime.user_id).username
+            if self.scorm_runtime_data.get('cmi.core.exit', None):
+                if self.scorm_runtime_data.get('cmi.core.exit') == 'suspend':
+                    default['cmi.core.entry'] = 'resume'
+        elif package_version == SCORM_VERSION.V2004:
+            default = SCORM_2004_RUNTIME_DEFAULT
+            default['cmi.learner_id'] = str(self.runtime.user_id)
+            default['cmi.learner_name'] = User.objects.get(id=self.runtime.user_id).username
+            if self.scorm_runtime_data.get('cmi.exit', None):
+                if self.scorm_runtime_data.get('cmi.exit') == 'suspend':
+                    default['cmi.entry'] = 'resume'
+        else:
+            self.raise_handler_error('error scorm package version')
+
+        default['cmi.launch_data'] = self.scorm_launch_data
+        data = dict(default, **self.scorm_runtime_data)
+        return {"value": data}
+
+    @XBlock.json_handler
     def scorm_get_value(self, data, suffix=''):
         _ = self.ugettext
         try:
@@ -861,7 +894,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     def extract_runtime_info_12(data):
         info = {'status': SCORM_STATUS.IN_PROGRESS}
         if 'cmi.core.score.raw' in data:
-            info['raw'] = float(data['cmi.core.score.raw'])
+            if data.get('cmi.core.score.raw'):
+                info['raw'] = float(data.get('cmi.core.score.raw'))
             info['mini'] = float(data.get('cmi.core.score.min', 0.0))
             if 'cmi.core.score.max' in data:
                 info['maxi'] = float(data.get('cmi.core.score.max'))
@@ -886,11 +920,11 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     @staticmethod
     def extract_runtime_info_2004(data):
         info = {'status': SCORM_STATUS.IN_PROGRESS}
-        if 'cmi.score.raw' in data and 'cmi.score.max' in data and 'cmi.score.min' in data:
+        if data.get('cmi.score.raw') and data.get('cmi.score.max') and data.get('cmi.score.min'):
             info['raw'] = float(data['cmi.score.raw'])
             info['maxi'] = float(data['cmi.score.max'])
             info['mini'] = float(data['cmi.score.min'])
-        elif 'cmi.score.scaled' in data:
+        elif data.get('cmi.score.scaled'):
             info['raw'] = float(data['cmi.score.scaled'])
             info['maxi'] = 1.0
             info['mini'] = 0.0
@@ -909,15 +943,17 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
         return info
 
+    def extract_runtime_info(self, data, version):
+        if version == SCORM_VERSION.V12:
+            return self.extract_runtime_info_12(data)
+        if version == SCORM_VERSION.V2004:
+            return self.extract_runtime_info_2004(data)
+
+        self.raise_handler_error('error scorm pkg version')
+
     def update_scorm_status(self, data, version):
 
-        if version == SCORM_VERSION.V12:
-            info = self.extract_runtime_info_12(data)
-        elif version == SCORM_VERSION.V2004:
-            info = self.extract_runtime_info_2004(data)
-        else:
-            self.raise_handler_error('error scorm pkg version')
-
+        info = self.extract_runtime_info(data, version)
         score = None
         if 'raw' in info:
             score = Score(raw_earned=(info['raw'] - info['mini']),

@@ -6,11 +6,13 @@
         const enforce_commitUrl = runtime.handlerUrl(element, 'scorm_enforce_commit');
         const getValueUrl = runtime.handlerUrl(element, 'scorm_get_value');
         const syncScoreUrl = runtime.handlerUrl(element, 'sync_score_value')
+        const syncRuntimeInfoUrl = runtime.handlerUrl(element, 'sync_runtime_info')
         const package_version = settings['scorm_pkg_version_value'];
         const package_date = settings['scorm_pkg_modified_value'];
         const ratio_value = settings['ratio_value'];
         var timerId;
         let pendingValues = null;
+        let scormRuntimeInfo
 
         function scormInit() {
             var $scormFrame = $('#scorm-object-frame')
@@ -40,6 +42,33 @@
             setTimeout(function(){ syncScoreValue()},2000);
             setTimeout(function(){ syncScoreValue()},5000);
             setTimeout(function(){ syncScoreValue()},10000);
+
+         }
+
+        function syncScormRuntimeInfo () {
+            if (scormRuntimeInfo) {
+                scormRuntimeInfo = Object.assign(scormRuntimeInfo, pendingValues || {})
+            }
+
+            fetch(syncRuntimeInfoUrl, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': GetCookie('csrftoken'),
+                },
+                body: JSON.stringify(getPackageData())
+            }).then(resp => resp.json().then(resp => {
+                if (resp.error) {
+                    alert(resp.error)
+                } else {
+                    scormRuntimeInfo = resp.value
+                }
+            }))
+        }
+
+        function getValueInRuntimeInfo (name) {
+            if (!scormRuntimeInfo) return
+            return scormRuntimeInfo[name]
         }
 
         function Initialize(value) {
@@ -53,6 +82,9 @@
         }
 
         function GetValue(name) {
+            const value = getValueInRuntimeInfo(name)
+            if (value !== undefined) return value
+
             const data = getPackageData();
             data['name'] = name;
             const resp = $.ajax({
@@ -306,6 +338,7 @@
         }
 
         function initPendingValues(){
+            syncScormRuntimeInfo()
             pendingValues = getPackageData();
         }
 
