@@ -894,10 +894,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     def extract_runtime_info_12(data):
         info = {'status': SCORM_STATUS.IN_PROGRESS}
         if 'cmi.core.score.raw' in data:
-            try:
-                info['raw'] = float(data['cmi.core.score.raw'])
-            except Exception:
-                info['raw'] = 0.0
+            info['raw'] = float(data.get('cmi.core.score.raw', 0.0))
             info['mini'] = float(data.get('cmi.core.score.min', 0.0))
             if 'cmi.core.score.max' in data:
                 info['maxi'] = float(data.get('cmi.core.score.max'))
@@ -922,11 +919,11 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     @staticmethod
     def extract_runtime_info_2004(data):
         info = {'status': SCORM_STATUS.IN_PROGRESS}
-        if 'cmi.score.raw' in data and 'cmi.score.max' in data and 'cmi.score.min' in data:
+        if data.get('cmi.score.raw') and data.get('cmi.score.max') and data.get('cmi.score.min'):
             info['raw'] = float(data['cmi.score.raw'])
             info['maxi'] = float(data['cmi.score.max'])
             info['mini'] = float(data['cmi.score.min'])
-        elif 'cmi.score.scaled' in data:
+        elif data.get('cmi.score.scaled'):
             info['raw'] = float(data['cmi.score.scaled'])
             info['maxi'] = 1.0
             info['mini'] = 0.0
