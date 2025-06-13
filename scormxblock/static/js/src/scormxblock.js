@@ -12,7 +12,6 @@
         const ratio_value = settings['ratio_value'];
         var timerId;
         let pendingValues = null;
-        let isCommitCalled = false;
         let scormRuntimeInfo
 
         function scormInit() {
@@ -44,19 +43,10 @@
             setTimeout(function(){ syncScoreValue()},5000);
             setTimeout(function(){ syncScoreValue()},10000);
 
-            // Add periodic call to syncScormRuntimeInfo if isCommitCalled is true
-            setInterval(
-                function() {
-                    if (isCommitCalled) {
-                        syncScormRuntimeInfo();
-                    }
-                },
-                1000
-            );
          }
 
         function syncScormRuntimeInfo () {
-            isCommitCalled = false;
+            // scormRuntimeInfo = undefined
 
             fetch(syncRuntimeInfoUrl, {
                 method: 'POST',
@@ -278,7 +268,6 @@
         }
 
         function Commit(value) {
-            isCommitCalled = true;
             $.ajax({
                 type: "POST",
                 url: commitUrl,
