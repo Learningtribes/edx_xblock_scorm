@@ -46,7 +46,7 @@
         }
 
         function syncScormRuntimeInfo () {
-            scormRuntimeInfo = undefined
+            // scormRuntimeInfo = undefined
             fetch(syncRuntimeInfoUrl, {
                 method: 'POST',
                 headers: {
