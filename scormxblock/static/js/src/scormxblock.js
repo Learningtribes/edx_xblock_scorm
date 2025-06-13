@@ -272,7 +272,7 @@
                 type: "POST",
                 url: commitUrl,
                 data: JSON.stringify(pendingValues),
-                async: false,
+                async: true,
                 success: function (response) {
                     if (typeof response['scorm_score_value'] !== "undefined") {
                         $(".lesson_score", element).html(response['scorm_score_value']);
