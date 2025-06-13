@@ -46,7 +46,9 @@
          }
 
         function syncScormRuntimeInfo () {
-            // scormRuntimeInfo = undefined
+            if (scormRuntimeInfo) {
+                scormRuntimeInfo = Object.assign(scormRuntimeInfo, pendingValues || {})
+            }
 
             fetch(syncRuntimeInfoUrl, {
                 method: 'POST',
@@ -336,8 +338,8 @@
         }
 
         function initPendingValues(){
-            pendingValues = getPackageData();
             syncScormRuntimeInfo()
+            pendingValues = getPackageData();
         }
 
 
