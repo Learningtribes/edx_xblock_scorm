@@ -449,6 +449,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 def upload_file_to_s3(file_path, file_content):
                     """Upload a single file to S3"""
                     try:
+                        file_path = unicode(file_path, 'utf-8') if isinstance(file_path, str) else file_path
                         s3_key = os.path.join(s3_base_path, file_path)
 
                         # Determine content type based on file extension
