@@ -13,6 +13,7 @@ from urlparse import urlparse
 import urllib
 import user_agents
 import boto3
+import traceback
 
 from crum import get_current_request
 from django.template import Context, Template
@@ -356,7 +357,9 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             )
 
         except Exception as e:
-            logging.error("Error in studio_upload_files: {0}".format(str(e)))
+            logging.error(
+                u"Error in studio_upload_files: {0}\n{1}".format(str(e), traceback.format_exc())
+            )
             return Response(
                 status=500,
                 json_body={'error': _('An error occurred while uploading files.')},
@@ -449,7 +452,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 def upload_file_to_s3(file_path, file_content):
                     """Upload a single file to S3"""
                     try:
-                        file_path = unicode(file_path, 'utf-8') if isinstance(file_path, str) else file_path
+                        file_path = file_path.decode('utf-8') if isinstance(file_path, str) else file_path
                         s3_key = os.path.join(s3_base_path, file_path)
 
                         # Determine content type based on file extension
@@ -479,7 +482,9 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                         )
                         return True, file_path
                     except Exception as e:
-                        logging.error("Error uploading {0}: {1}".format(file_path, str(e)))
+                        logging.error(
+                            u"Error uploading {0}: {1}\n{2}".format(file_path, str(e), traceback.format_exc())
+                        )
                         return False, file_path
 
                 # Create thread pool with max 10 workers for parallel upload
@@ -502,11 +507,11 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                         if not success:
                             failed_files.append(file_path)
 
-                        logging.info("Upload progress: {0}/{1} - {2}".format(completed, file_count, file_path))
+                        logging.info(u"Upload progress: {0}/{1} - {2}".format(completed, file_count, file_path))
 
                 # Check if any files failed to upload
                 if failed_files:
-                    logging.error("Failed to upload {0} files: {1}".format(len(failed_files), failed_files))
+                    logging.error(u"Failed to upload {0} files: {1}".format(len(failed_files), failed_files))
                     raise XBlockSaveError([], ['scorm_pkg'], _('Error in uploading some files to S3'))
 
         except IOError:
