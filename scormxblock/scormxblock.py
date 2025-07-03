@@ -422,7 +422,6 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                     s3_file.write(bytes_io.getvalue())
         except IOError:
             raise XBlockSaveError([], ['scorm_pkg'], _('Error in uploading scorm package'))
-            pass
 
     def _upload_scorm_pkg(self, pkg, pkg_id):
         fs, zip_contents = self._read_zip(pkg)
