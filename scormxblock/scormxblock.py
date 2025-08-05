@@ -468,6 +468,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                             content_type = 'image/png'
                         elif file_path.endswith('.gif'):
                             content_type = 'image/gif'
+                        elif file_path.endswith('.svg'):
+                            content_type = 'image/svg+xml'
                         elif file_path.endswith('.xml'):
                             content_type = 'application/xml'
 
