@@ -592,6 +592,9 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     def has_submitted_answer(self):
         return self.scorm_status != SCORM_STATUS.UNATTENDED
 
+    def is_incomplete(self):
+        return self.scorm_status in (SCORM_STATUS.UNATTENDED, SCORM_STATUS.IN_PROGRESS)
+
     def get_progress(self):
         pg = 0
         if self.scorm_pkg_version == SCORM_VERSION.V2004:
@@ -967,7 +970,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                           raw_possible=(info['maxi'] - info['mini']))
 
         if score:
-            if not self.has_submitted_answer() or self.allows_rescore():
+            if self.is_incomplete() or self.allows_rescore():
                 self.set_score(score)
                 self._publish_grade(self.get_score())
 
