@@ -232,7 +232,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     )
 
     scorm_allow_rescore = Boolean(
-        default=False,
+        default=True,
         scope=Scope.settings,
         enforce_type=True,
         display_name=_("Rescore"),
@@ -276,7 +276,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
     editable_fields = (
         'scorm_pkg', 'scorm_pkg_filename', 'display_name',
-        'has_score', 'weight', 'scorm_allow_rescore',
+        'has_score', 'weight',
         'open_new_tab', 'instruction', 'cover_image'
     )
     has_author_view = True
