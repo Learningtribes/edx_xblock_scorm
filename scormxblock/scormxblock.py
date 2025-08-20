@@ -232,7 +232,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     )
 
     scorm_allow_rescore = Boolean(
-        default=False,
+        default=True,
         scope=Scope.settings,
         enforce_type=True,
         display_name=_("Rescore"),
