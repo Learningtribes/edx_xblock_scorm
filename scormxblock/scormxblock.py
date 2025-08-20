@@ -561,7 +561,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         return 1.0
 
     def allows_rescore(self):
-        return self.has_score and self.scorm_allow_rescore
+        return self.scorm_allow_rescore
 
     def set_score(self, score):
         self.scorm_score = self.max_score() * score.raw_earned / score.raw_possible
