@@ -236,6 +236,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         scope=Scope.settings,
         enforce_type=True,
         display_name=_("Rescore"),
+        hidden=True,
         help=_("Does this SCORM allow users to submit answer multiple times?")
     )
 
@@ -276,7 +277,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
     editable_fields = (
         'scorm_pkg', 'scorm_pkg_filename', 'display_name',
-        'has_score', 'weight',
+        'has_score', 'weight', 'scorm_allow_rescore',
         'open_new_tab', 'instruction', 'cover_image'
     )
     has_author_view = True
