@@ -236,7 +236,6 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         scope=Scope.settings,
         enforce_type=True,
         display_name=_("Rescore"),
-        hidden=True,
         help=_("Does this SCORM allow users to submit answer multiple times?")
     )
 
