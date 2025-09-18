@@ -91,6 +91,9 @@
                 type: "POST",
                 url: getValueUrl,
                 data: JSON.stringify(data),
+                headers: {
+                    'X-CSRFToken': GetCookie('csrftoken')
+                },
                 async: false
             });
             const content = JSON.parse(resp.responseText);
@@ -237,6 +240,9 @@
                     type: "POST",
                     url: commitUrl,
                     data: JSON.stringify(pendingValues),
+                    headers: {
+                        'X-CSRFToken': GetCookie('csrftoken')
+                    },
                     async: false,
                     success: function (response) {
                         if (typeof response['scorm_score_value'] !== "undefined") {
@@ -256,6 +262,9 @@
                     type: "POST",
                     url: enforce_commitUrl,
                     data: JSON.stringify(pendingValues),
+                    headers: {
+                        'X-CSRFToken': GetCookie('csrftoken')
+                    },
                     async: false,
                     success: function (response) {
                         if (typeof response['scorm_score_value'] !== "undefined") {
@@ -274,6 +283,9 @@
                 type: "POST",
                 url: commitUrl,
                 data: JSON.stringify(pendingValues),
+                headers: {
+                    'X-CSRFToken': GetCookie('csrftoken')
+                },
                 async: false,
                 success: function (response) {
                     if (typeof response['scorm_score_value'] !== "undefined") {
@@ -393,6 +405,9 @@
             const resp = $.ajax({
                 type: "GET",
                 url: runtime.handlerUrl(element, 'ping'),
+                headers: {
+                    'X-CSRFToken': GetCookie('csrftoken')
+                },
                 async: false
             });
             return resp.status === 200;
@@ -403,6 +418,9 @@
             $.ajax({
                 type: "GET",
                 url: syncScoreUrl,
+                headers: {
+                    'X-CSRFToken': GetCookie('csrftoken')
+                },
                 async: true,
                 success: function(response) {
                     $(".lesson_score", element).html(response['scorm_score_value']);
