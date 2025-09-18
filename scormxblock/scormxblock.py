@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
 
+from copy import deepcopy
 import io
 import os
 import pkg_resources
@@ -753,14 +754,14 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             return {'error': _('scorm package expired, refresh page to get new content.')}
 
         if package_version == SCORM_VERSION.V12:
-            default = SCORM_12_RUNTIME_DEFAULT
+            default = deepcopy(SCORM_12_RUNTIME_DEFAULT)
             default['cmi.core.student_id'] = str(self.runtime.user_id)
             default['cmi.core.student_name'] = User.objects.get(id=self.runtime.user_id).username
             if self.scorm_runtime_data.get('cmi.core.exit', None):
                 if self.scorm_runtime_data.get('cmi.core.exit') == 'suspend':
                     default['cmi.core.entry'] = 'resume'
         elif package_version == SCORM_VERSION.V2004:
-            default = SCORM_2004_RUNTIME_DEFAULT
+            default = deepcopy(SCORM_2004_RUNTIME_DEFAULT)
             default['cmi.learner_id'] = str(self.runtime.user_id)
             default['cmi.learner_name'] = User.objects.get(id=self.runtime.user_id).username
             if self.scorm_runtime_data.get('cmi.exit', None):
