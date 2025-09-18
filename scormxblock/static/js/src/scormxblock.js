@@ -94,7 +94,12 @@
                 headers: {
                     'X-CSRFToken': GetCookie('csrftoken')
                 },
-                async: false
+                async: false,
+                error: function (xhr) {
+                    if (xhr.status === 403) {
+                        alert('CSRF token missing or incorrect. Please refresh the page and try again.');
+                    }
+                }
             });
             const content = JSON.parse(resp.responseText);
             if(content.error) {
@@ -241,6 +246,11 @@
                             $(".lesson_score", element).html(response['scorm_score_value']);
                         }
                         $(".success_status", element).html(response['scorm_status_value']);
+                    },
+                    error: function (xhr) {
+                        if (xhr.status === 403) {
+                            alert('CSRF token missing or incorrect. Please refresh the page and try again.');
+                        }
                     }
                 });
                 initPendingValues();
@@ -262,6 +272,11 @@
                         $(".lesson_score", element).html(response['scorm_score_value']);
                     }
                     $(".success_status", element).html(response['scorm_status_value']);
+                },
+                error: function (xhr) {
+                    if (xhr.status === 403) {
+                        alert('CSRF token missing or incorrect. Please refresh the page and try again.');
+                    }
                 }
             });
             initPendingValues();
@@ -318,7 +333,6 @@
                 'package_version': package_version
             }
         }
-
 
         function pingServer() {
             const resp = $.ajax({
