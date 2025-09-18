@@ -324,9 +324,6 @@
             const resp = $.ajax({
                 type: "GET",
                 url: runtime.handlerUrl(element, 'ping'),
-                headers: {
-                    'X-CSRFToken': GetCookie('csrftoken')
-                },
                 async: false
             });
             return resp.status === 200;
@@ -337,9 +334,6 @@
             $.ajax({
                 type: "GET",
                 url: syncScoreUrl,
-                headers: {
-                    'X-CSRFToken': GetCookie('csrftoken')
-                },
                 async: true,
                 success: function(response) {
                     $(".lesson_score", element).html(response['scorm_score_value']);
