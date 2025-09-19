@@ -82,30 +82,27 @@
         }
 
         function GetValue(name) {
-            const value = getValueInRuntimeInfo(name)
-            if (value !== undefined) return value
-
-            const data = getPackageData();
-            data['name'] = name;
-            const resp = $.ajax({
-                type: "POST",
-                url: getValueUrl,
-                data: JSON.stringify(data),
+            fetch(getValueUrl, {
+                method: 'POST',
                 headers: {
-                    'X-CSRFToken': GetCookie('csrftoken')
+                  'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                  'X-CSRFToken': GetCookie('csrftoken')
                 },
-                async: false,
-                error: function (xhr) {
-                    if (xhr.status === 403) {
-                        alert('CSRF token missing or incorrect. Please refresh the page and try again.');
+                body: JSON.stringify(data),
+                credentials: 'same-origin',
+                keepalive: true
+            }).then(function(response) {
+                if (response.ok) {
+                    const content = response.json();
+                    if(content.error) {
+                        alert(content.error);
+                    } else {
+                        return content.value;
                     }
+                } else if (response.status === 403) {
+                    alert('CSRF token missing or incorrect for GET request');
                 }
             });
-            const content = JSON.parse(resp.responseText);
-            if(content.error) {
-                alert(content.error)
-            }
-            return content.value;
         }
 
         function SetValue(name, value) {
@@ -233,52 +230,65 @@
 
         function Enforce_Commit() {
             if (('cmi.score.raw' in pendingValues && 'cmi.score.max' in pendingValues && 'cmi.score.min' in pendingValues) || ('cmi.core.score.raw' in pendingValues && 'cmi.core.score.max' in pendingValues && 'cmi.core.score.min' in pendingValues) || ('cmi.score.scaled' in pendingValues)) {
-                $.ajax({
-                    type: "POST",
-                    url: enforce_commitUrl,
-                    data: JSON.stringify(pendingValues),
+                fetch(enforce_commitUrl, {
+                    method: 'POST',
                     headers: {
-                        'X-CSRFToken': GetCookie('csrftoken')
+                      'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                      'X-CSRFToken': GetCookie('csrftoken')
                     },
-                    async: false,
-                    success: function (response) {
-                        if (typeof response['scorm_score_value'] !== "undefined") {
-                            $(".lesson_score", element).html(response['scorm_score_value']);
+                    body: JSON.stringify(pendingValues),
+                    credentials: 'same-origin',
+                    keepalive: true
+                }).then(function(response) {
+                    if (response.ok) {
+                        const content = response.json();
+                        if(content.error) {
+                            alert(content.error);
                         }
-                        $(".success_status", element).html(response['scorm_status_value']);
-                    },
-                    error: function (xhr) {
-                        if (xhr.status === 403) {
-                            alert('CSRF token missing or incorrect. Please refresh the page and try again.');
+
+                        if (typeof content['scorm_score_value'] !== "undefined") {
+                            $(".lesson_score", element).html(content['scorm_score_value']);
                         }
+                        $(".success_status", element).html(content['scorm_status_value']);
+
+                    } else if (response.status === 403) {
+                        alert('CSRF token missing or incorrect for GET request');
                     }
                 });
+
                 initPendingValues();
             }
             return 'true';
         }
 
         function Commit(value) {
-            $.ajax({
-                type: "POST",
-                url: commitUrl,
-                data: JSON.stringify(pendingValues),
+
+            fetch(commitUrl, {
+                method: 'POST',
                 headers: {
-                    'X-CSRFToken': GetCookie('csrftoken')
+                  'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                  'X-CSRFToken': GetCookie('csrftoken')
                 },
-                async: false,
-                success: function (response) {
-                    if (typeof response['scorm_score_value'] !== "undefined") {
-                        $(".lesson_score", element).html(response['scorm_score_value']);
+                body: JSON.stringify(pendingValues),
+                credentials: 'same-origin',
+                keepalive: true
+            }).then(function(response) {
+                if (response.ok) {
+                    const content = response.json();
+                    if(content.error) {
+                        alert(content.error);
                     }
-                    $(".success_status", element).html(response['scorm_status_value']);
-                },
-                error: function (xhr) {
-                    if (xhr.status === 403) {
-                        alert('CSRF token missing or incorrect. Please refresh the page and try again.');
+
+                    if (typeof content['scorm_score_value'] !== "undefined") {
+                        $(".lesson_score", element).html(content['scorm_score_value']);
                     }
+                    $(".success_status", element).html(content['scorm_status_value']);
+
+                } else if (response.status === 403) {
+                    alert('CSRF token missing or incorrect for GET request');
                 }
             });
+
             initPendingValues();
             return 'true';
         }
