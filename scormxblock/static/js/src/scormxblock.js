@@ -33,10 +33,16 @@
 
             $('.launch-button').click(function() {
                 let usageId = element.dataset.usageId;
-                $('.xblock-student_view[data-usage-id="'+usageId+'"]').addClass('fullscreen_scormxblock_view');
-                $('.xblock-student_view[data-usage-id="'+usageId+'"] #scorm-object-frame').removeClass('hidden');
-                $('.xblock-student_view[data-usage-id="'+usageId+'"] #scorm-object-frame').css('height', '100%');
+
+                let iframe = $('.xblock-student_view[data-usage-id="'+usageId+'"] #scorm-object-frame');
                 $('.xblock-student_view[data-usage-id="'+usageId+'"] .launch-div').addClass('hidden');
+                $('.xblock-student_view[data-usage-id="'+usageId+'"]').addClass('fullscreen_scormxblock_view');
+
+                iframe.removeClass('hidden');
+                $iframe.on('load', function() {
+                $(this).css('height', '100vh');
+                    $('.xblock-student_view[data-usage-id="'+usageId+'"] #scorm-object-frame').css('height', '100vh');
+                });
 
                 $('.launch-button').addClass('disabled');
                 $('.launch-before').toggleClass('hidden');
