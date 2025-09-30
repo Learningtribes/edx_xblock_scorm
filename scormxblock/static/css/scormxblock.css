@@ -18,6 +18,11 @@
     z-index: 999999;
 }
 
+.exit-fullscreen-button {
+    position: flex;
+    top: 10px;
+}
+
 .scormxblock_hostframe {
 	border: 0;
 	height: 300px;
