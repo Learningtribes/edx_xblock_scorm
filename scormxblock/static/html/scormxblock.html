@@ -26,10 +26,10 @@
             <p class="launch-content launch-after hidden">{% trans "Your e-learning module has been opened in a new tab. Please, close the new tab after you completed the module." %}</p>
             <div class="button-container">
                 <button class="launch-button"><a href="{{ scorm_pkg_value }}" rel="opener" target="_blank">{% trans "Launch" %}</a></button>
-                <a role="button" class="fresh-button btn" href="javascript:window.location.reload();"><i class="fal fa-redo-alt"></i>{% trans "Refresh" %}</a>
             </div>
         </div>
     </div>
+    <iframe id="scorm-object-frame" class="scorm_object hidden" data-src="{{ scorm_pkg_value }}"></iframe>
     {% elif scorm_pkg_value %}
         <iframe id="scorm-object-frame" class="scorm_object" data-src="{{ scorm_pkg_value }}"></iframe>
     {% endif %}

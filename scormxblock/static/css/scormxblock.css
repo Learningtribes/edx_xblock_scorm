@@ -8,6 +8,14 @@
 	 display: none;
  }
 
+.fullscreen_scormxblock_view {
+    position: fixed;
+    left: 0px;
+    top: 0px;
+    width: 100vw;
+    height: 100vh;
+    overflow: auto;
+}
 
 .scormxblock_hostframe {
 	border: 0;
