@@ -35,6 +35,7 @@
                 let usageId = element.dataset.usageId;
                 $('.xblock-student_view[data-usage-id="'+usageId+'"]').addClass('fullscreen_scormxblock_view');
                 $('.xblock-student_view[data-usage-id="block-v1:edX+NCCV_0008+2025-10-10+type@scormxblock+block@0fbbe21b1eca4b05b15ac149be834296"] #scorm-object-frame').removeClass('hidden');
+                $('.xblock-student_view[data-usage-id="block-v1:edX+NCCV_0008+2025-10-10+type@scormxblock+block@0fbbe21b1eca4b05b15ac149be834296"] #id-scormxblock-launcher').addClass('hidden');
 
                 $('.launch-button').addClass('disabled');
                 $('.launch-before').toggleClass('hidden');
