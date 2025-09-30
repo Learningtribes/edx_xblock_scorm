@@ -1,33 +1,31 @@
 {% load i18n %}
 <div class="themeable-xblock scormxblock_block">
-    <div id="id-scormxblock-launcher">
-        <div class="block-header-wrapper scorm-header-wrapper">
-            <h3 class="scorm-header">{{ display_name }}</h3>
-            {% if has_score_value %}
-            <p class="scorm_process">
-                <span class="fal fa-bullseye-pointer"></span>
-                <span class="lesson_score">{{ scorm_score_value }}</span>
-                <span class="static_score">/{% blocktrans count weight_value as num_points %}{{ num_points }} point possible{% plural %}{{num_points }} points possible{% endblocktrans %} ({% trans graded_status %})</span>
-                <span class="success_status">{{ scorm_status_value }}</span>
-            </p>
-            {% endif %}
-        </div>
-          <div class="block-label scorm-label">
-            <span class="fal fa-file-audio block-label-icon"></span>
-            <span class="block-label-text">{% trans 'SCORM' %}</span>
-          </div>
-        <hr class="sep-line">
-        {% if open_new_tab_value and scorm_pkg_value %}
-        <div class="launch-div">
-            <div class="instruction">{{ instruction_value }}</div>
-            <div class="preview">{% if cover_image_value %}<img src="{{ cover_image_value }}" alt="preview" />{% endif %}</div>
-            <div class="description">
-                <h2 class="content-title">{% trans "Open in a new tab" %}</h2>
-                <p class="launch-content launch-before">{% trans "Click on the button below to open the module in a new tab. If the module does not open properly, please refresh the page" %}</p>
-                <p class="launch-content launch-after hidden">{% trans "Your e-learning module has been opened in a new tab. Please, close the new tab after you completed the module." %}</p>
-                <div class="button-container">
-                    <button class="launch-button">{% trans "Launch" %}</button>
-                </div>
+    <div class="block-header-wrapper scorm-header-wrapper">
+        <h3 class="scorm-header">{{ display_name }}</h3>
+        {% if has_score_value %}
+        <p class="scorm_process">
+            <span class="fal fa-bullseye-pointer"></span>
+            <span class="lesson_score">{{ scorm_score_value }}</span>
+            <span class="static_score">/{% blocktrans count weight_value as num_points %}{{ num_points }} point possible{% plural %}{{num_points }} points possible{% endblocktrans %} ({% trans graded_status %})</span>
+            <span class="success_status">{{ scorm_status_value }}</span>
+        </p>
+        {% endif %}
+    </div>
+      <div class="block-label scorm-label">
+        <span class="fal fa-file-audio block-label-icon"></span>
+        <span class="block-label-text">{% trans 'SCORM' %}</span>
+      </div>
+    <hr class="sep-line">
+    {% if open_new_tab_value and scorm_pkg_value %}
+    <div class="launch-div">
+        <div class="instruction">{{ instruction_value }}</div>
+        <div class="preview">{% if cover_image_value %}<img src="{{ cover_image_value }}" alt="preview" />{% endif %}</div>
+        <div class="description">
+            <h2 class="content-title">{% trans "Open in a new tab" %}</h2>
+            <p class="launch-content launch-before">{% trans "Click on the button below to open the module in a new tab. If the module does not open properly, please refresh the page" %}</p>
+            <p class="launch-content launch-after hidden">{% trans "Your e-learning module has been opened in a new tab. Please, close the new tab after you completed the module." %}</p>
+            <div class="button-container">
+                <button class="launch-button">{% trans "Launch" %}</button>
             </div>
         </div>
     </div>
