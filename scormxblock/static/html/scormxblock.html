@@ -29,7 +29,7 @@
             </div>
         </div>
     </div>
-    <iframe id="scorm-object-frame" class="scorm_object hidden" data-src="{{ scorm_pkg_value }}"></iframe>
+    <iframe id="scorm-object-frame" class="scorm_object" data-src="{{ scorm_pkg_value }}" style="height: 0px"></iframe>
     {% elif scorm_pkg_value %}
         <iframe id="scorm-object-frame" class="scorm_object" data-src="{{ scorm_pkg_value }}"></iframe>
     {% endif %}

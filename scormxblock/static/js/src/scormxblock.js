@@ -34,7 +34,7 @@
             $('.launch-button').click(function() {
                 let usageId = element.dataset.usageId;
                 $('.xblock-student_view[data-usage-id="'+usageId+'"]').addClass('fullscreen_scormxblock_view');
-                $('.xblock-student_view[data-usage-id="'+usageId+'"] #scorm-object-frame').removeClass('hidden');
+                $('.xblock-student_view[data-usage-id="'+usageId+'"] #scorm-object-frame').css('height', '100%');;
                 $('.xblock-student_view[data-usage-id="'+usageId+'"] .launch-div').addClass('hidden');
 
                 $('.launch-button').addClass('disabled');
