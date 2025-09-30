@@ -87,6 +87,12 @@
         }
 
         function GetValue(name) {
+            const value = getValueInRuntimeInfo(name)
+            if (value !== undefined) return value
+
+            const data = getPackageData();
+            data['name'] = name;
+
             fetch(getValueUrl, {
                 method: 'POST',
                 headers: {
