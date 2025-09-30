@@ -39,7 +39,7 @@
                 $('.xblock-student_view[data-usage-id="'+usageId+'"]').addClass('fullscreen_scormxblock_view');
 
                 iframe.removeClass('hidden');
-                $iframe.on('load', function() {
+                iframe.on('load', function() {
                 $(this).css('height', '100vh');
                     $('.xblock-student_view[data-usage-id="'+usageId+'"] #scorm-object-frame').css('height', '100vh');
                 });
