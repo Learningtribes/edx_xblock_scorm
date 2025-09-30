@@ -19,8 +19,10 @@
 }
 
 .exit-fullscreen-button {
-    position: flex;
-    top: 10px;
+    cursor: pointer;
+    position: fixed;
+    top: 20px;
+    right: 60px;
 }
 
 .scormxblock_hostframe {

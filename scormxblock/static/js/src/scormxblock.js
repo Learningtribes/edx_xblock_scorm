@@ -10,9 +10,10 @@
         const package_version = settings['scorm_pkg_version_value'];
         const package_date = settings['scorm_pkg_modified_value'];
         const ratio_value = settings['ratio_value'];
-        var timerId;
+        let usageId = element.dataset.usageId;
         let pendingValues = null;
-        let scormRuntimeInfo
+        let scormRuntimeInfo;
+        var timerId;
 
         function scormInit() {
             var $scormFrame = $('#scorm-object-frame')
@@ -31,9 +32,16 @@
               $scormFrame.on('load', resetIframeSize)
             }
 
-            $('.launch-button').click(function() {
-                let usageId = element.dataset.usageId;
+            $('.exit-fullscreen-button').click(function() {
+                let iframe = $('.xblock-student_view[data-usage-id="'+usageId+'"] #scorm-object-frame');
+                $('.xblock-student_view[data-usage-id="'+usageId+'"] .launch-div').removeClass('hidden');
+                $('.xblock-student_view[data-usage-id="'+usageId+'"]').removeClass('fullscreen_scormxblock_view');
 
+                iframe.addClass('hidden');
+                iframe.css('height', '0px');
+            })
+
+            $('.launch-button').click(function() {
                 let iframe = $('.xblock-student_view[data-usage-id="'+usageId+'"] #scorm-object-frame');
                 $('.xblock-student_view[data-usage-id="'+usageId+'"] .launch-div').addClass('hidden');
                 $('.xblock-student_view[data-usage-id="'+usageId+'"]').addClass('fullscreen_scormxblock_view');
@@ -41,7 +49,7 @@
                 iframe.removeClass('hidden');
                 iframe.on('load', function() {
                 $(this).css('height', '100vh');
-                    $('.xblock-student_view[data-usage-id="'+usageId+'"] #scorm-object-frame').css('height', '100vh');
+                    iframe.css('height', '100vh');
                 });
 
                 $('.launch-button').addClass('disabled');
