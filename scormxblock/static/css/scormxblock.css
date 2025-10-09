@@ -8,6 +8,11 @@
 	 display: none;
  }
 
+.hidden {
+    display: none !important;
+    visibility: hidden;
+}
+
 .fullscreen_scormxblock_view {
     position: fixed;
     left: 0px;

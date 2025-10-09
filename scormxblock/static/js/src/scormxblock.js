@@ -39,7 +39,7 @@
             $('.exit-fullscreen-button').click(function() {
                 let container = isInLMS(element) ? '.xblock-student_view' : '.xblock-author_view';
                 let iframe = $(container + '[data-usage-id="'+usageId+'"] #scorm-object-frame');
-                $('.xblock-student_view[data-usage-id="'+usageId+'"] .exit-fullscreen-button').addClass('hidden');
+                $(container + '[data-usage-id="'+usageId+'"] .exit-fullscreen-button').addClass('hidden');
                 iframe.removeClass('fullscreen_scormxblock_view');
 
                 iframe.addClass('hidden');
@@ -68,7 +68,7 @@
 
                 if (!iframe.hasClass('fullscreen_scormxblock_view')) {
                     iframe.addClass('fullscreen_scormxblock_view');
-                    $('.xblock-student_view[data-usage-id="'+usageId+'"] .exit-fullscreen-button').removeClass('hidden');
+                    $(container + '[data-usage-id="'+usageId+'"] .exit-fullscreen-button').removeClass('hidden');
 
                     iframe.removeClass('hidden');
                     iframe.on('load', function() {
