@@ -26,11 +26,15 @@
     z-index: 99999999999;
     background-color: white;
     height: 30px;
-    wdith: 130px;
+    width: 130px;
     border-radius: 5px;
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.fa-xmark-large {
+    margin-right: 5px;
 }
 
 .scormxblock_hostframe {
