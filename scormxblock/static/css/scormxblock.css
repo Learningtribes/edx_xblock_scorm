@@ -16,6 +16,7 @@
     height: 100vh !important;
     overflow: auto;
     z-index: 999999;
+    background-color: white;
 }
 
 .exit-fullscreen-button {
