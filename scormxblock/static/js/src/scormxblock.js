@@ -40,25 +40,21 @@
                 iframe.addClass('hidden');
                 iframe.css('height', '0px');
 
-                $('.launch-button').removeClass('disabled');
-                $('.launch-before').toggleClass('hidden');
-                $('.launch-after').toggleClass('hidden');
             })
 
             $('.launch-button').click(function() {
                 let iframe = $('.xblock-student_view[data-usage-id="'+usageId+'"] #scorm-object-frame');
-                iframe.addClass('fullscreen_scormxblock_view');
-                $('.xblock-student_view[data-usage-id="'+usageId+'"] .exit-fullscreen-button').removeClass('hidden');
 
-                iframe.removeClass('hidden');
-                iframe.on('load', function() {
-                $(this).css('height', '100vh');
-                    iframe.css('height', '100vh');
-                });
+                if (!iframe.hasClass('fullscreen_scormxblock_view')) {
+                    iframe.addClass('fullscreen_scormxblock_view');
+                    $('.xblock-student_view[data-usage-id="'+usageId+'"] .exit-fullscreen-button').removeClass('hidden');
 
-                $('.launch-button').addClass('disabled');
-                $('.launch-before').toggleClass('hidden');
-                $('.launch-after').toggleClass('hidden');
+                    iframe.removeClass('hidden');
+                    iframe.on('load', function() {
+                    $(this).css('height', '100vh');
+                        iframe.css('height', '100vh');
+                    });
+                }
             })
 
             // Get runtime score value due to unexpected terminal action
