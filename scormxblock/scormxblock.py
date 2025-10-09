@@ -150,8 +150,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         default=False,
         scope=Scope.settings,
         enforce_type=True,
-        display_name=_('New Tab'),
-        help=_('Open module in a new tab. This option will only apply to users with a compatible browser.')
+        display_name=_('Fullscreen'),
+        help=_('Open module in fullscreen.')
     )
 
     fs = Filesystem(scope=Scope.settings)
