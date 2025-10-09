@@ -39,6 +39,10 @@
 
                 iframe.addClass('hidden');
                 iframe.css('height', '0px');
+
+                $('.launch-button').removeClass('disabled');
+                $('.launch-before').toggleClass('hidden');
+                $('.launch-after').toggleClass('hidden');
             })
 
             $('.launch-button').click(function() {
@@ -52,6 +56,9 @@
                     iframe.css('height', '100vh');
                 });
 
+                $('.launch-button').addClass('disabled');
+                $('.launch-before').toggleClass('hidden');
+                $('.launch-after').toggleClass('hidden');
             })
 
             // Get runtime score value due to unexpected terminal action
