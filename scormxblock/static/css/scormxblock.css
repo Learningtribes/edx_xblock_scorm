@@ -21,8 +21,10 @@
 .exit-fullscreen-button {
     cursor: pointer;
     position: fixed;
-    top: 20px;
-    right: 60px;
+    top: 10px;
+    right: 150px;
+    z-index: 99999999999;
+    background-color: white;
 }
 
 .scormxblock_hostframe {
