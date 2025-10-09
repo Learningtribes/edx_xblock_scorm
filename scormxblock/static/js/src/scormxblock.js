@@ -33,7 +33,7 @@
             }
 
             function isInLMS(xblockElement) {
-                return xblockElement.closest('.xblock').hasClass('xblock-student_view');
+                return $(xblockElement).closest('.xblock').hasClass('xblock-student_view');
             }
 
             $('.exit-fullscreen-button').click(function() {
