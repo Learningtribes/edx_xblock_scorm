@@ -34,6 +34,10 @@
     justify-content: center;
 }
 
+.close-button-text {
+    background-color: white;
+}
+
 .fa-xmark-large {
     margin-right: 5px;
 }
