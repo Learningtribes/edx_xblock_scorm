@@ -1,6 +1,10 @@
 {% load i18n %}
 {% if scorm_pkg_value %}
 <div class="themeable-xblock scormxblock_block">
+    <div class="exit-fullscreen-button hidden">
+        <i class="fa-regular fa-xmark-large"></i>
+        <span class="close-button-text">{% trans 'Close' %}</span>
+    </div>
     {% if open_new_tab_value %}
     <div class="launch-div">
         <div class="instruction">{{ instruction_value }}</div>
@@ -12,6 +16,7 @@
             </div>
         </div>
     </div>
+    <iframe id="scorm-object-frame" class="scorm_object hidden" data-src="{{ scorm_pkg_value }}"></iframe>
     {% else %}
     <iframe id="scorm-object-frame" class="scorm_object" src="{{ cms_path }}"></iframe>
     {% endif %}

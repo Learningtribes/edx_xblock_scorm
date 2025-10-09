@@ -33,7 +33,7 @@
             }
 
             $('.exit-fullscreen-button').click(function() {
-                let iframe = $('.xblock-student_view[data-usage-id="'+usageId+'"] #scorm-object-frame');
+                let iframe = $('.xblock-student_view[data-usage-id="'+usageId+'"], .xblock-author_view[data-usage-id="'+usageId+'"] #scorm-object-frame');
                 $('.xblock-student_view[data-usage-id="'+usageId+'"] .exit-fullscreen-button').addClass('hidden');
                 iframe.removeClass('fullscreen_scormxblock_view');
 
@@ -58,7 +58,7 @@
             })
 
             $('.launch-button').click(function() {
-                let iframe = $('.xblock-student_view[data-usage-id="'+usageId+'"] #scorm-object-frame');
+                let iframe = $('.xblock-student_view[data-usage-id="'+usageId+'"], .xblock-author_view[data-usage-id="'+usageId+'"] #scorm-object-frame');
 
                 if (!iframe.hasClass('fullscreen_scormxblock_view')) {
                     iframe.addClass('fullscreen_scormxblock_view');
