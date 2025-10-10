@@ -20,7 +20,7 @@
     width: 100vw !important;
     height: 100vh !important;
     overflow: auto;
-    z-index: 999999;
+    z-index: 10002;
     background-color: white;
 }
 
@@ -29,7 +29,7 @@
     position: fixed;
     top: 5px;
     right: 5px;
-    z-index: 99999999999;
+    z-index: 20000;
     background-color: white;
     height: 30px;
     width: 140px;
