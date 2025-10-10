@@ -162,9 +162,6 @@
                         message: window.gettext('Access Denied'),
                     });
 
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
                 }
             });
         }
