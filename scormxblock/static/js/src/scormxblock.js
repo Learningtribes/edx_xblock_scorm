@@ -367,7 +367,7 @@
                     }
                     $(".success_status", element).html(content['scorm_status_value']);
 
-                } else if (response.status === 403) {
+                } else if (response.status === 403) {   // Maybe it's a CSRF token error, we reload the page
                     LearningTribes.Notification.Error({
                         title: window.gettext('Internal Server Error.'),
                         message: window.gettext('Access Denied'),
