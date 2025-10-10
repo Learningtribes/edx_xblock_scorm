@@ -219,9 +219,7 @@
           if (!document.cookie) {
             return null;
           }
-          // const xsrfCookies = document.cookie.split(';')
-          //   .map(c => c.trim())
-          //   .filter(c => c.startsWith(name + '='));
+
           const xsrfCookies = document.cookie.split(';')
             .map(function(c) {
                 return c.trim();
