@@ -103,7 +103,11 @@
                     LearningTribes.Notification.Error({
                         title: window.gettext('Internal Server Error.'),
                         message: window.gettext(resp.error),
-                    })
+                    });
+
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
                 } else {
                     scormRuntimeInfo = resp.value
                 }
@@ -145,15 +149,22 @@
                 if (response.ok) {
                     const content = response.json();
                     if(content.error) {
-                        alert(content.error);
+                        LearningTribes.Notification.Error({
+                            title: window.gettext('Internal Server Error.'),
+                            message: window.gettext(content.error),
+                        });
                     } else {
                         return content.value;
                     }
                 } else if (response.status === 403) {
                     LearningTribes.Notification.Error({
                         title: window.gettext('Internal Server Error.'),
-                        message: window.gettext('CSRF token missing or incorrect for GET request'),
-                    })
+                        message: window.gettext('Access Denied'),
+                    });
+
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
                 }
             });
         }
@@ -296,7 +307,10 @@
                     if (response.ok) {
                         const content = response.json();
                         if(content.error) {
-                            alert(content.error);
+                            LearningTribes.Notification.Error({
+                                title: window.gettext('Internal Server Error.'),
+                                message: window.gettext(content.error),
+                            });
                         }
 
                         if (typeof content['scorm_score_value'] !== "undefined") {
@@ -307,8 +321,12 @@
                     } else if (response.status === 403) {
                         LearningTribes.Notification.Error({
                             title: window.gettext('Internal Server Error.'),
-                            message: window.gettext('CSRF token missing or incorrect for GET request'),
-                        })
+                            message: window.gettext('Access Denied'),
+                        });
+
+                        setTimeout(function() {
+                            location.reload();
+                        }, 2000);
                     }
                 });
 
@@ -332,7 +350,10 @@
                 if (response.ok) {
                     const content = response.json();
                     if(content.error) {
-                        alert(content.error);
+                        LearningTribes.Notification.Error({
+                            title: window.gettext('Internal Server Error.'),
+                            message: window.gettext(content.error),
+                        });
                     }
 
                     if (typeof content['scorm_score_value'] !== "undefined") {
@@ -343,8 +364,12 @@
                 } else if (response.status === 403) {
                     LearningTribes.Notification.Error({
                         title: window.gettext('Internal Server Error.'),
-                        message: window.gettext('CSRF token missing or incorrect for GET request'),
-                    })
+                        message: window.gettext('Access Denied'),
+                    });
+
+                    setTimeout(function() {
+                        location.reload();
+                    }, 2000);
                 }
             });
 
