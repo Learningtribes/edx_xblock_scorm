@@ -253,12 +253,18 @@
             if (CheckSafariMobile()) {
                 const csrftoken = GetCookie('csrftoken');
                 pendingValues['csrfmiddlewaretoken'] = csrftoken;
+
                 var params = new URLSearchParams(pendingValues);
-                navigator.sendBeacon(ios_commitUrl, params);
-                setTimeout(function(){ syncScoreValue()},2000);
-                setTimeout(function(){ syncScoreValue()},5000);
-                setTimeout(function(){ syncScoreValue()},10000);
-                initPendingValues();
+                const success = navigator.sendBeacon(ios_commitUrl, params);
+
+                if (success) {
+                    setTimeout(function(){ syncScoreValue()},2000);
+                    setTimeout(function(){ syncScoreValue()},5000);
+                    setTimeout(function(){ syncScoreValue()},10000);
+
+                    initPendingValues();
+                }
+
                 return 'true';
             } else {
                 const csrftoken = GetCookie('csrftoken');
@@ -277,12 +283,15 @@
                     }
                   })
                   .then(function(data) {
+
+                    initPendingValues();
+
                     if (typeof data['scorm_score_value'] !== "undefined") {
                       $(".lesson_score", element).html(data['scorm_score_value']);
                     }
                     $(".success_status", element).html(data['scorm_status_value']);
                   });
-                initPendingValues();
+
                 return 'true';
             }
         }
@@ -308,6 +317,8 @@
                             });
                         }
 
+                        initPendingValues();
+
                         if (typeof content['scorm_score_value'] !== "undefined") {
                             $(".lesson_score", element).html(content['scorm_score_value']);
                         }
@@ -325,7 +336,6 @@
                     }
                 });
 
-                initPendingValues();
             }
             return 'true';
         }
@@ -351,6 +361,8 @@
                         });
                     }
 
+                    initPendingValues();
+
                     if (typeof content['scorm_score_value'] !== "undefined") {
                         $(".lesson_score", element).html(content['scorm_score_value']);
                     }
@@ -368,7 +380,6 @@
                 }
             });
 
-            initPendingValues();
             return 'true';
         }
 
