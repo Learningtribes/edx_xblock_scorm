@@ -289,6 +289,13 @@
                         $(".lesson_score", element).html(data['scorm_score_value']);
                     }
                     $(".success_status", element).html(data['scorm_status_value']);
+                }).catch(function(error) {
+                    if (!navigator.onLine || error.message.includes('Failed to fetch')) {
+                        LearningTribes.Notification.Error({
+                            title: window.gettext('Internal Server Error.'),
+                            message: window.gettext('Please check your network'),
+                        });
+                    }
                 });
 
                 return 'true';
@@ -333,6 +340,13 @@
                             location.reload();
                         }, 2000);
                     }
+                }).catch(function(error) {
+                    if (!navigator.onLine || error.message.includes('Failed to fetch')) {
+                        LearningTribes.Notification.Error({
+                            title: window.gettext('Internal Server Error.'),
+                            message: window.gettext('Please check your network'),
+                        });
+                    }
                 });
 
             }
@@ -376,6 +390,13 @@
                     setTimeout(function() {
                         location.reload();
                     }, 2000);
+                }
+            }).catch(function(error) {
+                if (!navigator.onLine || error.message.includes('Failed to fetch')) {
+                    LearningTribes.Notification.Error({
+                        title: window.gettext('Internal Server Error.'),
+                        message: window.gettext('Please check your network'),
+                    });
                 }
             });
 
