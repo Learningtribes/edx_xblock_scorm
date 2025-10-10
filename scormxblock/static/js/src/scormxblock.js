@@ -267,30 +267,29 @@
 
                 return 'true';
             } else {
-                const csrftoken = GetCookie('csrftoken');
                 fetch(commitUrl, {
                     method: 'POST',
                     headers: {
                       'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-                      'X-CSRFToken': csrftoken
+                      'X-CSRFToken': GetCookie('csrftoken');
                     },
                     body: JSON.stringify(pendingValues),
                     credentials: 'same-origin',
                     keepalive: true
                 }).then(function(response) {
-                    if (response.ok) {
-                      return response.json();
-                    }
-                  })
-                  .then(function(data) {
+                      if (response.ok) {
+                          return response.json();
+                      }
 
+                })
+                .then(function(data) {
                     initPendingValues();
 
                     if (typeof data['scorm_score_value'] !== "undefined") {
-                      $(".lesson_score", element).html(data['scorm_score_value']);
+                        $(".lesson_score", element).html(data['scorm_score_value']);
                     }
                     $(".success_status", element).html(data['scorm_status_value']);
-                  });
+                });
 
                 return 'true';
             }
@@ -315,9 +314,9 @@
                                 title: window.gettext('Internal Server Error.'),
                                 message: window.gettext(content.error),
                             });
+                        } else {
+                            initPendingValues();
                         }
-
-                        initPendingValues();
 
                         if (typeof content['scorm_score_value'] !== "undefined") {
                             $(".lesson_score", element).html(content['scorm_score_value']);
@@ -359,9 +358,9 @@
                             title: window.gettext('Internal Server Error.'),
                             message: window.gettext(content.error),
                         });
+                    } else {
+                        initPendingValues();
                     }
-
-                    initPendingValues();
 
                     if (typeof content['scorm_score_value'] !== "undefined") {
                         $(".lesson_score", element).html(content['scorm_score_value']);
@@ -384,7 +383,7 @@
         }
 
         function initPendingValues(){
-            syncScormRuntimeInfo()
+            syncScormRuntimeInfo();
             pendingValues = getPackageData();
         }
 
