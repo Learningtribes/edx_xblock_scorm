@@ -100,7 +100,10 @@
                 body: JSON.stringify(getPackageData())
             }).then(resp => resp.json().then(resp => {
                 if (resp.error) {
-                    alert(resp.error)
+                    LearningTribes.Notification.Error({
+                        title: window.gettext('Internal Server Error.'),
+                        message: window.gettext(resp.error),
+                    })
                 } else {
                     scormRuntimeInfo = resp.value
                 }
@@ -147,7 +150,10 @@
                         return content.value;
                     }
                 } else if (response.status === 403) {
-                    alert('CSRF token missing or incorrect for GET request');
+                    LearningTribes.Notification.Error({
+                        title: window.gettext('Internal Server Error.'),
+                        message: window.gettext('CSRF token missing or incorrect for GET request'),
+                    })
                 }
             });
         }
@@ -299,7 +305,10 @@
                         $(".success_status", element).html(content['scorm_status_value']);
 
                     } else if (response.status === 403) {
-                        alert('CSRF token missing or incorrect for GET request');
+                        LearningTribes.Notification.Error({
+                            title: window.gettext('Internal Server Error.'),
+                            message: window.gettext('CSRF token missing or incorrect for GET request'),
+                        })
                     }
                 });
 
@@ -332,7 +341,10 @@
                     $(".success_status", element).html(content['scorm_status_value']);
 
                 } else if (response.status === 403) {
-                    alert('CSRF token missing or incorrect for GET request');
+                    LearningTribes.Notification.Error({
+                        title: window.gettext('Internal Server Error.'),
+                        message: window.gettext('CSRF token missing or incorrect for GET request'),
+                    })
                 }
             });
 
