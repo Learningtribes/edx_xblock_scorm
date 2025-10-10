@@ -271,7 +271,7 @@
                     method: 'POST',
                     headers: {
                       'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-                      'X-CSRFToken': GetCookie('csrftoken');
+                      'X-CSRFToken': GetCookie('csrftoken')
                     },
                     body: JSON.stringify(pendingValues),
                     credentials: 'same-origin',
@@ -495,10 +495,6 @@
                     }
                 }
             })
-            // if (!open_new_tab) {
-            //     $('#scorm-object-frame')[0].contentWindow.onbeforeunload = function () {
-            //         Commit('value');
-            //     }
-            // }
+
         });
     }
