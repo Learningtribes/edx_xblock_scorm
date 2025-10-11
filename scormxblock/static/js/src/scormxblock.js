@@ -101,7 +101,7 @@
             }).then(resp => resp.json().then(resp => {
                 if (resp.error) {
                     LearningTribes.Notification.Error({
-                        title: window.gettext('Internal Server Error.'),
+                        title: window.gettext("Internal Server Error"),
                         message: window.gettext(resp.error),
                     });
 
@@ -150,7 +150,7 @@
                     const content = response.json();
                     if(content.error) {
                         LearningTribes.Notification.Error({
-                            title: window.gettext('Internal Server Error.'),
+                            title: window.gettext("Internal Server Error"),
                             message: window.gettext(content.error),
                         });
                     } else {
@@ -158,8 +158,8 @@
                     }
                 } else if (response.status === 403) {
                     LearningTribes.Notification.Error({
-                        title: window.gettext('Internal Server Error.'),
-                        message: window.gettext('Access Denied'),
+                        title: window.gettext("Internal Server Error"),
+                        message: window.gettext("Access Denied"),
                     });
 
                 }
@@ -292,8 +292,8 @@
                 }).catch(function(error) {
                     if (!navigator.onLine || error.message.includes('Failed to fetch')) {
                         LearningTribes.Notification.Error({
-                            title: window.gettext('Internal Server Error.'),
-                            message: window.gettext('Please check your network'),
+                            title: window.gettext("Internal Server Error"),
+                            message: window.gettext("Please check your network"),
                         });
                     }
                 });
@@ -318,7 +318,7 @@
                         const content = response.json();
                         if(content.error) {
                             LearningTribes.Notification.Error({
-                                title: window.gettext('Internal Server Error.'),
+                                title: window.gettext("Internal Server Error"),
                                 message: window.gettext(content.error),
                             });
                         } else {
@@ -332,8 +332,8 @@
 
                     } else if (response.status === 403) {
                         LearningTribes.Notification.Error({
-                            title: window.gettext('Internal Server Error.'),
-                            message: window.gettext('Access Denied'),
+                            title: window.gettext("Internal Server Error"),
+                            message: window.gettext("Access Denied"),
                         });
 
                         setTimeout(function() {
@@ -343,8 +343,8 @@
                 }).catch(function(error) {
                     if (!navigator.onLine || error.message.includes('Failed to fetch')) {
                         LearningTribes.Notification.Error({
-                            title: window.gettext('Internal Server Error.'),
-                            message: window.gettext('Please check your network'),
+                            title: window.gettext("Internal Server Error"),
+                            message: window.gettext("Please check your network"),
                         });
                     }
                 });
@@ -369,7 +369,7 @@
                     const content = response.json();
                     if(content.error) {
                         LearningTribes.Notification.Error({
-                            title: window.gettext('Internal Server Error.'),
+                            title: window.gettext("Internal Server Error"),
                             message: window.gettext(content.error),
                         });
                     } else {
@@ -383,8 +383,8 @@
 
                 } else if (response.status === 403) {   // Maybe it's a CSRF token error, we reload the page
                     LearningTribes.Notification.Error({
-                        title: window.gettext('Internal Server Error.'),
-                        message: window.gettext('Access Denied'),
+                        title: window.gettext("Internal Server Error"),
+                        message: window.gettext("Access Denied"),
                     });
 
                     setTimeout(function() {
@@ -394,8 +394,8 @@
             }).catch(function(error) {
                 if (!navigator.onLine || error.message.includes('Failed to fetch')) {
                     LearningTribes.Notification.Error({
-                        title: window.gettext('Internal Server Error.'),
-                        message: window.gettext('Please check your network'),
+                        title: window.gettext("Internal Server Error"),
+                        message: window.gettext("Please check your network"),
                     });
                 }
             });

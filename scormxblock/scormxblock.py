@@ -134,7 +134,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         values={"min": 0, "step": 0.1},
         enforce_type=True,
         display_name=_('Weight'),
-        help=_('Relative weight in this course section')
+        help=_("Relative weight in this course section")
     )
 
     ratio = String(
@@ -143,15 +143,15 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         values=("16:9", "4:3", "1:1"),
         enforce_type=True,
         display_name=_('Ratio'),
-        help=_('Aspect ratio of this module')
+        help=_("Aspect ratio of this module")
     )
 
     open_new_tab = Boolean(
         default=False,
         scope=Scope.settings,
         enforce_type=True,
-        display_name=_('Fullscreen'),
-        help=_('Open module in fullscreen.')
+        display_name=_('Full screen'),
+        help=_("Allow the module to open in full screen")
     )
 
     fs = Filesystem(scope=Scope.settings)
@@ -185,15 +185,15 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         scope=Scope.settings,
         values=SCORM_VERSION,
         enforce_type=True,
-        display_name=_('Version'),
-        help=_('Version of scorm, 1.2 or 2004')
+        display_name=_("Version"),
+        help=_("Version of scorm, 1.2 or 2004")
     )
 
     scorm_pkg_modified = DateTime(
         scope=Scope.settings,
         enforce_type=True,
-        display_name=_('Upload time'),
-        help=_('SCORM package upload time utc')
+        display_name=_("Upload time"),
+        help=_("SCORM package upload time utc")
     )
 
     _scorm_runtime_data = Dict(
@@ -205,8 +205,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     scorm_runtime_modified = DateTime(
         scope=Scope.user_state,
         enforce_type=True,
-        display_name=_('Runtime Modified Time'),
-        help=_('SCORM runtime modified time utc')
+        display_name=_("Runtime Modified Time"),
+        help=_("SCORM runtime modified time utc")
     )
 
     scorm_status = String(
@@ -972,10 +972,12 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 self.scorm_status = info['status']
             else:
                 logger.info(
-                    'miss score data of {} within argument [{}] for student {}'.format(
+                    "refused to publish score {} for student id {} in {} [{}]".format(
+                        score.raw_earned,
+                        str(self.runtime.user_id),
                         self.scope_ids.usage_id.to_deprecated_string(),
-                        data,
-                        str(self.runtime.user_id))
+                        data
+                    )
                 )
 
         else:
