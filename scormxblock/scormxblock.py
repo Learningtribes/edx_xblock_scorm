@@ -970,6 +970,14 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 self._publish_grade(self.get_score())
 
                 self.scorm_status = info['status']
+            else:
+                logger.info(
+                    'miss score data of {} within argument [{}] for student {}'.format(
+                        self.scope_ids.usage_id.to_deprecated_string(),
+                        data,
+                        str(self.runtime.user_id))
+                )
+
         else:
             if info['status'] == SCORM_STATUS.SUCCEED:
                 user_id = self.scope_ids.user_id
