@@ -10,7 +10,6 @@
         const package_version = settings['scorm_pkg_version_value'];
         const package_date = settings['scorm_pkg_modified_value'];
         const ratio_value = settings['ratio_value'];
-        let usageId = element.dataset.usageId;
         let pendingValues = null;
         let scormRuntimeInfo;
         var timerId;
