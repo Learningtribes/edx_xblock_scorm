@@ -28,7 +28,7 @@
     cursor: pointer;
     position: fixed;
     top: 5px;
-    right: 10px;
+    right: 16px;
     z-index: 20000;
     background-color: rgba(255, 255, 255, 0.3);
     opacity: 0.5;
