@@ -13,6 +13,8 @@
         let pendingValues = null;
         let scormRuntimeInfo;
         var timerId;
+        let scormWindow = null;
+        let usageId = element.dataset.usageId;
 
         function scormInit() {
             var $scormFrame = $('#scorm-object-frame')
@@ -31,10 +33,19 @@
               $scormFrame.on('load', resetIframeSize)
             }
 
+            function isInLMS(xblockElement) {
+                return $(xblockElement).closest('.xblock').hasClass('xblock-student_view');
+            }
+
             $('.launch-button').click(function() {
                 $('.launch-button').addClass('disabled');
                 $('.launch-before').toggleClass('hidden');
                 $('.launch-after').toggleClass('hidden');
+
+                let container = isInLMS(element) ? '.xblock-student_view' : '.xblock-author_view';
+                let url = $(container + '[data-usage-id="'+usageId+'"] .launch-button').attr('data-href');
+
+                scormWindow = window.open(url, '_blank');
             })
 
             // Get runtime score value due to unexpected terminal action
@@ -59,10 +70,9 @@
                 body: JSON.stringify(getPackageData())
             }).then(resp => resp.json().then(resp => {
                 if (resp.error) {
-                    LearningTribes.Notification.Error({
-                        title: window.gettext("Internal Server Error"),
-                        message: window.gettext(resp.error),
-                    });
+                    if (scormWindow && !scormWindow.closed) {
+                        scormWindow.alert(window.gettext("Internal Server Error"));
+                    }
 
                     setTimeout(function() {
                         location.reload();
@@ -108,18 +118,16 @@
                 if (response.ok) {
                     const content = response.json();
                     if(content.error) {
-                        LearningTribes.Notification.Error({
-                            title: window.gettext("Internal Server Error"),
-                            message: window.gettext(content.error),
-                        });
+                        if (scormWindow && !scormWindow.closed) {
+                            scormWindow.alert(window.gettext("Internal Server Error"));
+                        }
                     } else {
                         return content.value;
                     }
                 } else if (response.status === 403) {
-                    LearningTribes.Notification.Error({
-                        title: window.gettext("Internal Server Error"),
-                        message: window.gettext("Access Denied"),
-                    });
+                    if (scormWindow && !scormWindow.closed) {
+                       scormWindow.alert(window.gettext("Access Denied"));
+                    }
 
                 }
             });
@@ -250,10 +258,9 @@
                     $(".success_status", element).html(data['scorm_status_value']);
                 }).catch(function(error) {
                     if (!navigator.onLine || error.message.includes('Failed to fetch')) {
-                        LearningTribes.Notification.Error({
-                            title: window.gettext("Internal Server Error"),
-                            message: window.gettext("Please check your network"),
-                        });
+                        if (scormWindow && !scormWindow.closed) {
+                            scormWindow.alert(window.gettext("Please check your network"));
+                        }
                     }
                 });
 
@@ -276,10 +283,9 @@
                     if (response.ok) {
                         const content = response.json();
                         if(content.error) {
-                            LearningTribes.Notification.Error({
-                                title: window.gettext("Internal Server Error"),
-                                message: window.gettext(content.error),
-                            });
+                            if (scormWindow && !scormWindow.closed) {
+                                scormWindow.alert(window.gettext("Internal Server Error"));
+                            }
                         } else {
                             initPendingValues();
                         }
@@ -290,10 +296,9 @@
                         $(".success_status", element).html(content['scorm_status_value']);
 
                     } else if (response.status === 403) {
-                        LearningTribes.Notification.Error({
-                            title: window.gettext("Internal Server Error"),
-                            message: window.gettext("Access Denied"),
-                        });
+                        if (scormWindow && !scormWindow.closed) {
+                            scormWindow.alert(window.gettext("Access Denied"));
+                        }
 
                         setTimeout(function() {
                             location.reload();
@@ -301,10 +306,9 @@
                     }
                 }).catch(function(error) {
                     if (!navigator.onLine || error.message.includes('Failed to fetch')) {
-                        LearningTribes.Notification.Error({
-                            title: window.gettext("Internal Server Error"),
-                            message: window.gettext("Please check your network"),
-                        });
+                        if (scormWindow && !scormWindow.closed) {
+                            scormWindow.alert(window.gettext("Please check your network"));
+                        }
                     }
                 });
 
@@ -327,10 +331,9 @@
                 if (response.ok) {
                     const content = response.json();
                     if(content.error) {
-                        LearningTribes.Notification.Error({
-                            title: window.gettext("Internal Server Error"),
-                            message: window.gettext(content.error),
-                        });
+                        if (scormWindow && !scormWindow.closed) {
+                            scormWindow.alert(window.gettext("Internal Server Error"));
+                        }
                     } else {
                         initPendingValues();
                     }
@@ -341,10 +344,9 @@
                     $(".success_status", element).html(content['scorm_status_value']);
 
                 } else if (response.status === 403) {   // Maybe it's a CSRF token error, we reload the page
-                    LearningTribes.Notification.Error({
-                        title: window.gettext("Internal Server Error"),
-                        message: window.gettext("Access Denied"),
-                    });
+                    if (scormWindow && !scormWindow.closed) {
+                        scormWindow.alert(window.gettext("Access Denied"));
+                    }
 
                     setTimeout(function() {
                         location.reload();
@@ -352,10 +354,9 @@
                 }
             }).catch(function(error) {
                 if (!navigator.onLine || error.message.includes('Failed to fetch')) {
-                    LearningTribes.Notification.Error({
-                        title: window.gettext("Internal Server Error"),
-                        message: window.gettext("Please check your network"),
-                    });
+                    if (scormWindow && !scormWindow.closed) {
+                        scormWindow.alert(window.gettext("Please check your network"));
+                    }
                 }
             });
 
