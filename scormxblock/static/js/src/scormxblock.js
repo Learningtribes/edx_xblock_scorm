@@ -215,17 +215,15 @@
         };
 
         window.addEventListener('beforeunload', function(event) {
-            console.log('--- Closing --------------');
-            event.preventDefault();
-
+            console.log('--- Closing ----------------');
             if (scormWindow) {
                 console.log('Closing Tab Page...');
                 scormWindow.close()
+                console.log('--- Closed -----------------');
             }
-            console.log('--- Closed ---------------');
 
+            console.log('--- Calling Extra_Commit() ---');
             Extra_Commit();
-            console.log('--- Extra_Commit() -------');
         });
 
         function Extra_Commit() {
