@@ -217,7 +217,7 @@
         window.onbeforeunload = function () {
             Extra_Commit();
 
-            if (scormWindow && !scormWindow.closed) {
+            if (scormWindow) {
                 scormWindow.close()
             }
         };
