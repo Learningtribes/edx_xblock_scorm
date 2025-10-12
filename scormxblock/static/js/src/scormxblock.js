@@ -214,13 +214,19 @@
             }
         };
 
-        window.onbeforeunload = function () {
-            Extra_Commit();
+        window.addEventListener('beforeunload', function(event) {
+            console.log('--- Closing --------------');
+            event.preventDefault();
 
             if (scormWindow) {
+                console.log('Closing Tab Page...');
                 scormWindow.close()
             }
-        };
+            console.log('--- Closed ---------------');
+
+            Extra_Commit();
+            console.log('--- Extra_Commit() -------');
+        });
 
         function Extra_Commit() {
             if (CheckSafariMobile()) {
