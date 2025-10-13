@@ -20,10 +20,10 @@
         }
 
         let container = isInLMS(element) ? '.xblock-student_view' : '.xblock-author_view';
+        let iframe = $(container + '[data-usage-id="'+usageId+'"] #scorm-object-frame');
+        let iframe_container = $(container + '[data-usage-id="'+usageId+'"] .scorm_object_container');
 
         function quitFullscreen() {
-            let iframe_container = $(container + '[data-usage-id="'+usageId+'"] .scorm_object_container');
-            let iframe = $(container + '[data-usage-id="'+usageId+'"] #scorm-object-frame');
             iframe_container.removeClass('fullscreen_scormxblock_view');
 
             function updateQueryParam(url, key, value) {
@@ -44,7 +44,6 @@
         }
 
         function scormInit() {
-            let iframe = $(container + '[data-usage-id="'+usageId+'"] #scorm-object-frame');
             var ratios = {
                 '4:3': 0.75,
                 '16:9': 0.5625,
@@ -65,8 +64,6 @@
             let launch_button_selector = container + '[data-usage-id="'+usageId+'"] .launch-button';
 
             $(launch_button_selector).click(function() {
-                let iframe_container = $(container + '[data-usage-id="'+usageId+'"] .scorm_object_container');
-
                 if (!iframe_container.hasClass('fullscreen_scormxblock_view')) {
                     iframe_container.addClass('fullscreen_scormxblock_view');
                 }
