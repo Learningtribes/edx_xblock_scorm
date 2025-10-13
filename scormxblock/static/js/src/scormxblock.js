@@ -36,8 +36,10 @@
                 return $(xblockElement).closest('.xblock').hasClass('xblock-student_view');
             }
 
+            let container = isInLMS(element) ? '.xblock-student_view' : '.xblock-author_view';
+            let launch_button_selector = container + '[data-usage-id="'+usageId+'"] .launch-button';
+
             $('.exit-fullscreen-button').click(function() {
-                let container = isInLMS(element) ? '.xblock-student_view' : '.xblock-author_view';
                 let iframe = $(container + '[data-usage-id="'+usageId+'"] #scorm-object-frame');
                 $(container + '[data-usage-id="'+usageId+'"] .exit-fullscreen-button').addClass('hidden');
                 iframe.removeClass('fullscreen_scormxblock_view');
@@ -61,7 +63,7 @@
 
             })
 
-            $('.launch-button').click(function() {
+            $(launch_button_selector).click(function() {
                 let container = isInLMS(element) ? '.xblock-student_view' : '.xblock-author_view';
                 let iframe = $(container + '[data-usage-id="'+usageId+'"] #scorm-object-frame');
 
