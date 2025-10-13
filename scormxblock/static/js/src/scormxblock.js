@@ -121,9 +121,6 @@
         function Terminate(value) {
             Commit(value);
             clearInterval(timerId);
-
-            quitFullscreen();
-
             return 'true';
         }
 
