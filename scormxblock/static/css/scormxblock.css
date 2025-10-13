@@ -4,6 +4,11 @@
 	height: 675px;
 	border: none;
  }
+
+.scormxblock_block .scorm_object .scorm-object-header {
+    position: relative;
+}
+
  .success_status {
 	 display: none;
  }

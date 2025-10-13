@@ -10,10 +10,6 @@
             <span class="success_status">{{ scorm_status_value }}</span>
         </p>
         {% endif %}
-        <div class="exit-fullscreen-button hidden">
-            <i class="fa-regular fa-xmark-large"></i>
-            <span class="close-button-text">{% trans 'Close' %}</span>
-        </div>
     </div>
       <div class="block-label scorm-label">
         <span class="fal fa-file-audio block-label-icon"></span>
@@ -24,7 +20,14 @@
     <div class="launch-div">
         <div class="instruction">{{ instruction_value }}</div>
 
-        <iframe id="scorm-object-frame" class="scorm_object" data-src="{{ scorm_pkg_value }}"></iframe>
+        <iframe id="scorm-object-frame" class="scorm_object" data-src="{{ scorm_pkg_value }}">
+            <div class="scorm-object-header">
+                <div class="exit-fullscreen-button hidden">
+                    <i class="fa-regular fa-xmark-large"></i>
+                    <span class="close-button-text">{% trans 'Close' %}</span>
+                </div>
+            </div>
+        </iframe>
 
         <div class="description">
             <h2 class="content-title">{% trans "Open in full screen" %}</h2>
