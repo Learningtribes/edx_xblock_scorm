@@ -9,7 +9,15 @@
     <div class="launch-div">
         <div class="instruction">{{ instruction_value }}</div>
 
-        <iframe id="scorm-object-frame" class="scorm_object" src="{{ cms_path }}"></iframe>
+        <div class="scorm_object_container">
+            <div class="scorm-object-header hidden">
+                <div class="exit-fullscreen-button">
+                    <i class="fa-regular fa-xmark-large"></i>
+                    <span class="close-button-text">{% trans 'Close' %}</span>
+                </div>
+            </div>
+            <iframe id="scorm-object-frame" class="scorm_object" src="{{ cms_path }}"></iframe>
+        </div>
 
         <div class="description">
             <h2 class="content-title">{% trans "Open in full screen" %}</h2>
