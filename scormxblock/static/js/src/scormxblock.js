@@ -15,6 +15,31 @@
         let scormRuntimeInfo;
         var timerId;
 
+        function quitFullscreen() {
+            let iframe_container = $(container + '[data-usage-id="'+usageId+'"] .scorm_object_container');
+            let iframe = $(container + '[data-usage-id="'+usageId+'"] #scorm-object-frame');
+            $(container + '[data-usage-id="'+usageId+'"] .scorm-object-header').addClass('hidden');
+            iframe_container.removeClass('fullscreen_scormxblock_view');
+
+            iframe.css('height', '0px');
+
+            function updateQueryParam(url, key, value) {
+                var separator = url.indexOf('?') !== -1 ? '&' : '?';
+                var re = new RegExp('([?&])' + key + '=[^&]*');
+                if (re.test(url)) {
+                    return url.replace(re, '$1' + key + '=' + encodeURIComponent(value));
+                } else {
+                    return url + separator + key + '=' + encodeURIComponent(value);
+                }
+            }
+            // For some SCORM pkgs, they show "Ending Text" after learner clicks on "Exit Button".
+            // So we refresh the iframe.src to reload the content before the learner clicks the "Launch Button" again.
+            let newURL = updateQueryParam(iframe[0].src, 'lt_refresh_time', new Date().getTime());
+            iframe[0].src = newURL;
+            iframe.attr('data-src', newURL);
+
+        }
+
         function scormInit() {
             var $scormFrame = $('#scorm-object-frame')
             var ratios = {
@@ -39,30 +64,7 @@
             let container = isInLMS(element) ? '.xblock-student_view' : '.xblock-author_view';
             let launch_button_selector = container + '[data-usage-id="'+usageId+'"] .launch-button';
 
-            $('.exit-fullscreen-button').click(function() {
-                let iframe_container = $(container + '[data-usage-id="'+usageId+'"] .scorm_object_container');
-                let iframe = $(container + '[data-usage-id="'+usageId+'"] #scorm-object-frame');
-                $(container + '[data-usage-id="'+usageId+'"] .scorm-object-header').addClass('hidden');
-                iframe_container.removeClass('fullscreen_scormxblock_view');
-
-                iframe.css('height', '0px');
-
-                function updateQueryParam(url, key, value) {
-                    var separator = url.indexOf('?') !== -1 ? '&' : '?';
-                    var re = new RegExp('([?&])' + key + '=[^&]*');
-                    if (re.test(url)) {
-                        return url.replace(re, '$1' + key + '=' + encodeURIComponent(value));
-                    } else {
-                        return url + separator + key + '=' + encodeURIComponent(value);
-                    }
-                }
-                // For some SCORM pkgs, they show "Ending Text" after learner clicks on "Exit Button".
-                // So we refresh the iframe.src to reload the content before the learner clicks the "Launch Button" again.
-                let newURL = updateQueryParam(iframe[0].src, 'lt_refresh_time', new Date().getTime());
-                iframe[0].src = newURL;
-                iframe.attr('data-src', newURL);
-
-            })
+            $('.exit-fullscreen-button').click(quitFullscreen)
 
             $(launch_button_selector).click(function() {
                 let iframe_container = $(container + '[data-usage-id="'+usageId+'"] .scorm_object_container');
@@ -85,7 +87,7 @@
             setTimeout(function(){ syncScoreValue()},5000);
             setTimeout(function(){ syncScoreValue()},10000);
 
-         }
+        }
 
         function syncScormRuntimeInfo () {
             if (scormRuntimeInfo) {
@@ -517,6 +519,13 @@
                     }
                 }
             })
+
+            $(document).on('keydown', function(e) {
+                 if (e.key === 'Escape') {
+                     console.log('ESC pressed！');
+                     quitFullscreen();
+                 }
+            });
 
         });
     }
