@@ -13,6 +13,9 @@
 
 .scorm_object_container .scorm-object-header {
     display: flex;
+    height: 30px;
+    justify-content: right;
+    align-items: center;
 }
 
  .success_status {
@@ -37,13 +40,9 @@
 
 .exit-fullscreen-button {
     cursor: pointer;
-    position: fixed;
-    top: 5px;
-    right: 16px;
     z-index: 20000;
-    background-color: rgba(255, 255, 255, 0.3);
-    opacity: 0.5;
-    height: 40px;
+    background-color: white;
+    height: 20px;
     width: 125px;
     border-radius: 5px;
     display: flex;

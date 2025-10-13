@@ -40,7 +40,7 @@
             let launch_button_selector = container + '[data-usage-id="'+usageId+'"] .launch-button';
 
             $('.exit-fullscreen-button').click(function() {
-                let iframe_container = $(container + '[data-usage-id="'+usageId+'"].scorm_object_container');
+                let iframe_container = $(container + '[data-usage-id="'+usageId+'"] .scorm_object_container');
                 let iframe = $(container + '[data-usage-id="'+usageId+'"] #scorm-object-frame');
                 $(container + '[data-usage-id="'+usageId+'"] .exit-fullscreen-button').addClass('hidden');
                 iframe_container.removeClass('fullscreen_scormxblock_view');
@@ -65,7 +65,7 @@
             })
 
             $(launch_button_selector).click(function() {
-                let iframe_container = $(container + '[data-usage-id="'+usageId+'"].scorm_object_container');
+                let iframe_container = $(container + '[data-usage-id="'+usageId+'"] .scorm_object_container');
                 let iframe = $(container + '[data-usage-id="'+usageId+'"] #scorm-object-frame');
 
                 if (!iframe_container.hasClass('fullscreen_scormxblock_view')) {
