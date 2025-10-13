@@ -481,6 +481,13 @@
                 window.API_1484_11 = new SCORM_2004_API();
             })
 
+            document.addEventListener('keyup', function(e) {
+                if (e.keyCode === 27 || e.key === 'Escape') {
+                    console.log('ESC pressed!');
+                    quitFullscreen();
+                }
+            });
+
             if (!window.loadingScormModuleMap) {
                 window.loadingScormModuleMap = {}
             }
