@@ -490,13 +490,6 @@
                 window.API_1484_11 = new SCORM_2004_API();
             })
 
-            $(document).on('keydown', function(e) {
-                 if (e.keyCode === 27 || e.key === 'Escape') {
-                     console.log('ESC pressed!');
-                     quitFullscreen();
-                 }
-            });
-
             if (!window.loadingScormModuleMap) {
                 window.loadingScormModuleMap = {}
             }
@@ -524,6 +517,13 @@
                     $iFrame.onload = function() {
                         window.loadedScormModules.push(element.dataset.usageId)
                         clearInterval(window.loadingScormModuleMap[element.dataset.usageId])
+
+                        const keyEventTargetFrame = $iFrame.contentWindow.document.querySelector('iframe') || $iFrame;
+                        keyEventTargetFrame.contentWindow.document.addEventListener('keyup', e => {
+                            if (e.keyCode === 27 || e.key === 'Escape') {
+                                quitFullscreen()
+                            }
+                        })
                     }
                 }
             })
