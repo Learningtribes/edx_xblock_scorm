@@ -518,10 +518,11 @@
                         window.loadedScormModules.push(element.dataset.usageId)
                         clearInterval(window.loadingScormModuleMap[element.dataset.usageId])
 
+                        // A SCORM pkg can have more than 1 <iframe>, we just setup event listener for the first one:
                         const keyEventTargetFrame = $iFrame.contentWindow.document.querySelector('iframe') || $iFrame;
                         keyEventTargetFrame.contentWindow.document.addEventListener('keyup', e => {
                             if (e.keyCode === 27 || e.key === 'Escape') {
-                                quitFullscreen()
+                                quitFullscreen();       // Quite full screen mode
                             }
                         })
                     }
