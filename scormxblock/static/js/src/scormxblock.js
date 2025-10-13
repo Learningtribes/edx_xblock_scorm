@@ -40,9 +40,10 @@
             let launch_button_selector = container + '[data-usage-id="'+usageId+'"] .launch-button';
 
             $('.exit-fullscreen-button').click(function() {
+                let iframe_container = $(container + '[data-usage-id="'+usageId+'"].scorm_object_container');
                 let iframe = $(container + '[data-usage-id="'+usageId+'"] #scorm-object-frame');
                 $(container + '[data-usage-id="'+usageId+'"] .exit-fullscreen-button').addClass('hidden');
-                iframe.removeClass('fullscreen_scormxblock_view');
+                iframe_container.removeClass('fullscreen_scormxblock_view');
 
                 iframe.css('height', '0px');
 
@@ -64,11 +65,11 @@
             })
 
             $(launch_button_selector).click(function() {
-                let container = isInLMS(element) ? '.xblock-student_view' : '.xblock-author_view';
+                let iframe_container = $(container + '[data-usage-id="'+usageId+'"].scorm_object_container');
                 let iframe = $(container + '[data-usage-id="'+usageId+'"] #scorm-object-frame');
 
-                if (!iframe.hasClass('fullscreen_scormxblock_view')) {
-                    iframe.addClass('fullscreen_scormxblock_view');
+                if (!iframe_container.hasClass('fullscreen_scormxblock_view')) {
+                    iframe_container.addClass('fullscreen_scormxblock_view');
                     $(container + '[data-usage-id="'+usageId+'"] .exit-fullscreen-button').removeClass('hidden');
 
                     iframe.on('load', function() {

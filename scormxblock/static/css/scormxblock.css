@@ -5,8 +5,14 @@
 	border: none;
  }
 
-.scormxblock_block .scorm_object .scorm-object-header {
-    position: relative;
+.scorm_object_container {
+	width: 100%;
+	height: 675px;
+	border: none;
+}
+
+.scorm_object_container .scorm-object-header {
+    display: flex;
 }
 
  .success_status {
