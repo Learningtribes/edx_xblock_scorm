@@ -18,9 +18,13 @@
     align-items: center;
 }
 
- .success_status {
-	 display: none;
- }
+.success_status {
+    display: none;
+}
+
+.button-container .fa-expand {
+    margin-right: 5px;
+}
 
 .hidden {
     display: none !important;
@@ -55,7 +59,7 @@
     opacity: 1;
 }
 
-.fa-xmark-large {
+.fa-compress {
     margin-right: 5px;
 }
 
