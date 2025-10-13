@@ -28,22 +28,6 @@
             iframe_container.removeClass('fullscreen_scormxblock_view');
 
             iframe.css('height', '0px');
-
-            function updateQueryParam(url, key, value) {
-                var separator = url.indexOf('?') !== -1 ? '&' : '?';
-                var re = new RegExp('([?&])' + key + '=[^&]*');
-                if (re.test(url)) {
-                    return url.replace(re, '$1' + key + '=' + encodeURIComponent(value));
-                } else {
-                    return url + separator + key + '=' + encodeURIComponent(value);
-                }
-            }
-            // For some SCORM pkgs, they show "Ending Text" after learner clicks on "Exit Button".
-            // So we refresh the iframe.src to reload the content before the learner clicks the "Launch Button" again.
-            let newURL = updateQueryParam(iframe[0].src, 'lt_refresh_time', new Date().getTime());
-            iframe[0].src = newURL;
-            iframe.attr('data-src', newURL);
-
         }
 
         function scormInit() {

@@ -22,8 +22,12 @@
     display: none;
 }
 
-.button-container .fa-expand {
+.fa-expand {
     margin-right: 5px;
+}
+
+.launch-button {
+    margin-top: 10px;
 }
 
 .hidden {
