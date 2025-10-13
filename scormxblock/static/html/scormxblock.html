@@ -23,7 +23,9 @@
     {% if open_new_tab_value and scorm_pkg_value %}
     <div class="launch-div">
         <div class="instruction">{{ instruction_value }}</div>
-        <div class="preview">{% if cover_image_value %}<img src="{{ cover_image_value }}" alt="preview" />{% endif %}</div>
+
+        <iframe id="scorm-object-frame" class="scorm_object hidden" data-src="{{ scorm_pkg_value }}"></iframe>
+
         <div class="description">
             <h2 class="content-title">{% trans "Open in full screen" %}</h2>
             <div class="button-container">
@@ -31,7 +33,6 @@
             </div>
         </div>
     </div>
-    <iframe id="scorm-object-frame" class="scorm_object hidden" data-src="{{ scorm_pkg_value }}"></iframe>
     {% elif scorm_pkg_value %}
         <iframe id="scorm-object-frame" class="scorm_object" data-src="{{ scorm_pkg_value }}"></iframe>
     {% endif %}
