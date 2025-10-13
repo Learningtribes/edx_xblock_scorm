@@ -44,20 +44,20 @@
         }
 
         function scormInit() {
-            var $scormFrame = $('#scorm-object-frame')
+            let iframe = $(container + '[data-usage-id="'+usageId+'"] #scorm-object-frame');
             var ratios = {
                 '4:3': 0.75,
                 '16:9': 0.5625,
                 '1:1': 1,
             }
             var resetIframeSize = function () {
-              $scormFrame.height($scormFrame.width() * ratios[ratio_value]);
+              iframe.height(iframe.width() * ratios[ratio_value]);
             }
-            if ($scormFrame.length){
+            if (iframe.length){
               $(window).resize(function () {
                 resetIframeSize();
               })
-              $scormFrame.on('load', resetIframeSize)
+              iframe.on('load', resetIframeSize)
             }
 
             $('.exit-fullscreen-button').click(quitFullscreen)
@@ -66,7 +66,6 @@
 
             $(launch_button_selector).click(function() {
                 let iframe_container = $(container + '[data-usage-id="'+usageId+'"] .scorm_object_container');
-                let iframe = $(container + '[data-usage-id="'+usageId+'"] #scorm-object-frame');
 
                 if (!iframe_container.hasClass('fullscreen_scormxblock_view')) {
                     iframe_container.addClass('fullscreen_scormxblock_view');
