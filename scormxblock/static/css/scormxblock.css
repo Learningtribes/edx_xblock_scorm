@@ -5,6 +5,12 @@
 	border: none;
 }
 
+.scormxblock_block .fullscreen_scormxblock_view .scorm_object {
+	width: 100%;
+	height: calc(100vh - 30px) !important;
+	border: none;
+}
+
 .scorm_object_container {
 	width: 100%;
 	border: none;

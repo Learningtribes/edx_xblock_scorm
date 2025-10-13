@@ -26,8 +26,6 @@
             let iframe = $(container + '[data-usage-id="'+usageId+'"] #scorm-object-frame');
             iframe_container.removeClass('fullscreen_scormxblock_view');
 
-            iframe.css('height', '');
-
             function updateQueryParam(url, key, value) {
                 var separator = url.indexOf('?') !== -1 ? '&' : '?';
                 var re = new RegExp('([?&])' + key + '=[^&]*');
@@ -72,8 +70,6 @@
 
                 if (!iframe_container.hasClass('fullscreen_scormxblock_view')) {
                     iframe_container.addClass('fullscreen_scormxblock_view');
-
-                    iframe.css('height', '100vh');
                 }
             })
 
