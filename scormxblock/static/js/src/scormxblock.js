@@ -26,6 +26,8 @@
             let iframe = $(container + '[data-usage-id="'+usageId+'"] #scorm-object-frame');
             iframe_container.removeClass('fullscreen_scormxblock_view');
 
+            iframe.css('height', '');
+
             function updateQueryParam(url, key, value) {
                 var separator = url.indexOf('?') !== -1 ? '&' : '?';
                 var re = new RegExp('([?&])' + key + '=[^&]*');
