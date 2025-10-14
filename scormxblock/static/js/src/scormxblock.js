@@ -25,7 +25,7 @@
 
         function quitFullscreen() {
             iframe_container.removeClass('fullscreen_scormxblock_view');
-
+/*
             function updateQueryParam(url, key, value) {
                 var separator = url.indexOf('?') !== -1 ? '&' : '?';
                 var re = new RegExp('([?&])' + key + '=[^&]*');
@@ -40,7 +40,7 @@
             let newURL = updateQueryParam(iframe[0].src, 'lt_refresh_time', new Date().getTime());
             iframe[0].src = newURL;
             iframe.attr('data-src', newURL);
-
+*/
         }
 
         function scormInit() {

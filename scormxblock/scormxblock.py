@@ -78,17 +78,6 @@ SCORM_STATUS = namedtuple('ScormStatus', [
 SCORM_VERSION = namedtuple('ScormVersion', ['V12', 'V2004'])('SCORM12', 'SCORM2004')
 
 
-def is_compatible(request):
-    """Ignore IE/Safari browsers to open scorm content in new tab due to postMessage() limitation.
-    """
-    http_user_agent = request.META.get('HTTP_USER_AGENT')
-    user_agent = user_agents.parse(http_user_agent)
-    browser_family = user_agent.browser.family
-    if browser_family == 'IE' or "Safari" in browser_family:
-        return False
-    return True
-
-
 @XBlock.needs('request', 'fs', 'i18n', 'user')
 class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     """
@@ -147,7 +136,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     )
 
     open_new_tab = Boolean(
-        default=False,
+        default=True,
         scope=Scope.settings,
         enforce_type=True,
         display_name=_('Full screen'),
@@ -278,7 +267,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     editable_fields = (
         'scorm_pkg', 'scorm_pkg_filename', 'display_name',
         'has_score', 'weight',
-        'open_new_tab', 'instruction', 'cover_image'
+        'instruction', 'cover_image'
     )
     has_author_view = True
 
