@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import division
 
+from copy import deepcopy
 import io
 import os
 import pkg_resources
@@ -77,17 +78,6 @@ SCORM_STATUS = namedtuple('ScormStatus', [
 SCORM_VERSION = namedtuple('ScormVersion', ['V12', 'V2004'])('SCORM12', 'SCORM2004')
 
 
-def is_compatible(request):
-    """Ignore IE/Safari browsers to open scorm content in new tab due to postMessage() limitation.
-    """
-    http_user_agent = request.META.get('HTTP_USER_AGENT')
-    user_agent = user_agents.parse(http_user_agent)
-    browser_family = user_agent.browser.family
-    if browser_family == 'IE' or "Safari" in browser_family:
-        return False
-    return True
-
-
 @XBlock.needs('request', 'fs', 'i18n', 'user')
 class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     """
@@ -133,7 +123,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         values={"min": 0, "step": 0.1},
         enforce_type=True,
         display_name=_('Weight'),
-        help=_('Relative weight in this course section')
+        help=_("Relative weight in this course section")
     )
 
     ratio = String(
@@ -142,15 +132,15 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         values=("16:9", "4:3", "1:1"),
         enforce_type=True,
         display_name=_('Ratio'),
-        help=_('Aspect ratio of this module')
+        help=_("Aspect ratio of this module")
     )
 
     open_new_tab = Boolean(
-        default=False,
+        default=True,
         scope=Scope.settings,
         enforce_type=True,
-        display_name=_('New Tab'),
-        help=_('Open module in a new tab. This option will only apply to users with a compatible browser.')
+        display_name=_('Full screen'),
+        help=_("Allow the module to open in full screen")
     )
 
     fs = Filesystem(scope=Scope.settings)
@@ -184,15 +174,15 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         scope=Scope.settings,
         values=SCORM_VERSION,
         enforce_type=True,
-        display_name=_('Version'),
-        help=_('Version of scorm, 1.2 or 2004')
+        display_name=_("Version"),
+        help=_("Version of scorm, 1.2 or 2004")
     )
 
     scorm_pkg_modified = DateTime(
         scope=Scope.settings,
         enforce_type=True,
-        display_name=_('Upload time'),
-        help=_('SCORM package upload time utc')
+        display_name=_("Upload time"),
+        help=_("SCORM package upload time utc")
     )
 
     _scorm_runtime_data = Dict(
@@ -204,8 +194,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     scorm_runtime_modified = DateTime(
         scope=Scope.user_state,
         enforce_type=True,
-        display_name=_('Runtime Modified Time'),
-        help=_('SCORM runtime modified time utc')
+        display_name=_("Runtime Modified Time"),
+        help=_("SCORM runtime modified time utc")
     )
 
     scorm_status = String(
@@ -277,7 +267,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     editable_fields = (
         'scorm_pkg', 'scorm_pkg_filename', 'display_name',
         'has_score', 'weight',
-        'open_new_tab', 'instruction', 'cover_image'
+        'instruction', 'cover_image'
     )
     has_author_view = True
 
@@ -681,9 +671,6 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                                            'has_score', 'scorm_status', 'scorm_pkg',
                                            'scorm_file', 'lesson_score', 'success_status',
                                            'open_new_tab', 'instruction', 'cover_image')
-        request = get_current_request()
-        if fields_data['open_new_tab_value']:
-            fields_data['open_new_tab_value'] = is_compatible(request)
         fields_data['graded_status'] = 'ungraded'
         if self.graded and fields_data['has_score'] and fields_data['weight'] != 0:
             fields_data['graded_status'] = 'graded'
@@ -753,14 +740,14 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             return {'error': _('scorm package expired, refresh page to get new content.')}
 
         if package_version == SCORM_VERSION.V12:
-            default = SCORM_12_RUNTIME_DEFAULT
+            default = deepcopy(SCORM_12_RUNTIME_DEFAULT)
             default['cmi.core.student_id'] = str(self.runtime.user_id)
             default['cmi.core.student_name'] = User.objects.get(id=self.runtime.user_id).username
             if self.scorm_runtime_data.get('cmi.core.exit', None):
                 if self.scorm_runtime_data.get('cmi.core.exit') == 'suspend':
                     default['cmi.core.entry'] = 'resume'
         elif package_version == SCORM_VERSION.V2004:
-            default = SCORM_2004_RUNTIME_DEFAULT
+            default = deepcopy(SCORM_2004_RUNTIME_DEFAULT)
             default['cmi.learner_id'] = str(self.runtime.user_id)
             default['cmi.learner_name'] = User.objects.get(id=self.runtime.user_id).username
             if self.scorm_runtime_data.get('cmi.exit', None):
@@ -967,13 +954,44 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                           raw_possible=(info['maxi'] - info['mini']))
 
         if score:
+            # log the data without suspend_data
+            log_data = deepcopy(data)
+            if log_data.get('cmi.suspend_data'):
+                log_data.pop('cmi.suspend_data')
+            logger.info("scorm_commit SCORE Usage: %s, User: %s, Data: %s",
+                self.scope_ids.usage_id.to_deprecated_string(),
+                self.runtime.user_id,
+                log_data
+            )
+
             if not self.has_submitted_answer() or self.allows_rescore():
                 self.set_score(score)
                 self._publish_grade(self.get_score())
 
                 self.scorm_status = info['status']
+            else:
+                logger.info(
+                    "refused to publish score {} for student id {} in {} [{}]".format(
+                        score.raw_earned,
+                        str(self.runtime.user_id),
+                        self.scope_ids.usage_id.to_deprecated_string(),
+                        data
+                    )
+                )
+
         else:
             if info['status'] == SCORM_STATUS.SUCCEED:
+
+                # log the data without suspend_data
+                log_data = deepcopy(data)
+                if log_data.get('cmi.suspend_data'):
+                    log_data.pop('cmi.suspend_data')
+                logger.info("scorm_commit SUCCEED Usage: %s, User: %s, Data: %s",
+                    self.scope_ids.usage_id.to_deprecated_string(),
+                    self.runtime.user_id,
+                    log_data
+                )
+
                 user_id = self.scope_ids.user_id
                 user_obj = User.objects.get(id=user_id)
                 course_key = CourseKey.from_string('{}'.format(self.course_id))

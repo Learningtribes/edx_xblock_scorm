@@ -3,11 +3,78 @@
 	width: 100%;
 	height: 675px;
 	border: none;
- }
- .success_status {
-	 display: none;
- }
+}
 
+.scormxblock_block .fullscreen_scormxblock_view .scorm_object {
+	width: 100%;
+	height: calc(100vh - 30px) !important;
+	border: none;
+}
+
+.scorm_object_container {
+	width: 100%;
+	border: none;
+}
+
+.scorm_object_container .scorm-object-header {
+    display: none;
+}
+
+.success_status {
+    display: none;
+}
+
+.fa-expand {
+    margin-right: 5px;
+}
+
+.launch-button {
+    margin-top: 10px;
+}
+
+.hidden {
+    display: none !important;
+    visibility: hidden;
+}
+
+.fullscreen_scormxblock_view {
+    position: fixed;
+    left: 0px;
+    top: 0px;
+    width: 100vw !important;
+    height: 100vh !important;
+    overflow: auto;
+    z-index: 10002;
+    background-color: white;
+}
+
+.fullscreen_scormxblock_view .scorm-object-header {
+    display: flex;
+    height: 30px;
+    justify-content: right;
+    align-items: center;
+}
+
+.exit-fullscreen-button {
+    cursor: pointer;
+    z-index: 20000;
+    background-color: white;
+    height: 20px;
+    width: 230px;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.exit-fullscreen-button:hover {
+    background-color: white;
+    opacity: 1;
+}
+
+.fa-compress {
+    margin-right: 5px;
+}
 
 .scormxblock_hostframe {
 	border: 0;

@@ -10,31 +10,63 @@
         const package_version = settings['scorm_pkg_version_value'];
         const package_date = settings['scorm_pkg_modified_value'];
         const ratio_value = settings['ratio_value'];
-        var timerId;
+        let usageId = element.dataset.usageId;
         let pendingValues = null;
-        let scormRuntimeInfo
+        let scormRuntimeInfo;
+        var timerId;
+
+        function isInLMS(xblockElement) {
+            return $(xblockElement).closest('.xblock').hasClass('xblock-student_view');
+        }
+
+        let container = isInLMS(element) ? '.xblock-student_view' : '.xblock-author_view';
+        let iframe = $(container + '[data-usage-id="'+usageId+'"] #scorm-object-frame');
+        let iframe_container = $(container + '[data-usage-id="'+usageId+'"] .scorm_object_container');
+
+        function quitFullscreen() {
+            iframe_container.removeClass('fullscreen_scormxblock_view');
+/*
+            function updateQueryParam(url, key, value) {
+                var separator = url.indexOf('?') !== -1 ? '&' : '?';
+                var re = new RegExp('([?&])' + key + '=[^&]*');
+                if (re.test(url)) {
+                    return url.replace(re, '$1' + key + '=' + encodeURIComponent(value));
+                } else {
+                    return url + separator + key + '=' + encodeURIComponent(value);
+                }
+            }
+            // For some SCORM pkgs, they show "Ending Text" after learner clicks on "Exit Button".
+            // So we refresh the iframe.src to reload the content before the learner clicks the "Launch Button" again.
+            let newURL = updateQueryParam(iframe[0].src, 'lt_refresh_time', new Date().getTime());
+            iframe[0].src = newURL;
+            iframe.attr('data-src', newURL);
+*/
+        }
 
         function scormInit() {
-            var $scormFrame = $('#scorm-object-frame')
             var ratios = {
                 '4:3': 0.75,
                 '16:9': 0.5625,
                 '1:1': 1,
             }
             var resetIframeSize = function () {
-              $scormFrame.height($scormFrame.width() * ratios[ratio_value]);
+              iframe.height(iframe.width() * ratios[ratio_value]);
             }
-            if ($scormFrame.length){
+            if (iframe.length){
               $(window).resize(function () {
                 resetIframeSize();
               })
-              $scormFrame.on('load', resetIframeSize)
+              iframe.on('load', resetIframeSize)
             }
 
-            $('.launch-button').click(function() {
-                $('.launch-button').addClass('disabled');
-                $('.launch-before').toggleClass('hidden');
-                $('.launch-after').toggleClass('hidden');
+            $('.exit-fullscreen-button').click(quitFullscreen)
+
+            let launch_button_selector = container + '[data-usage-id="'+usageId+'"] .launch-button';
+
+            $(launch_button_selector).click(function() {
+                if (!iframe_container.hasClass('fullscreen_scormxblock_view')) {
+                    iframe_container.addClass('fullscreen_scormxblock_view');
+                }
             })
 
             // Get runtime score value due to unexpected terminal action
@@ -43,7 +75,7 @@
             setTimeout(function(){ syncScoreValue()},5000);
             setTimeout(function(){ syncScoreValue()},10000);
 
-         }
+        }
 
         function syncScormRuntimeInfo () {
             if (scormRuntimeInfo) {
@@ -59,7 +91,10 @@
                 body: JSON.stringify(getPackageData())
             }).then(resp => resp.json().then(resp => {
                 if (resp.error) {
-                    alert(resp.error)
+                    LearningTribes.Notification.Error({
+                        title: window.gettext("We're having trouble saving your work"),
+                        message: window.gettext(resp.error),
+                    });
                 } else {
                     scormRuntimeInfo = resp.value
                 }
@@ -87,17 +122,35 @@
 
             const data = getPackageData();
             data['name'] = name;
-            const resp = $.ajax({
-                type: "POST",
-                url: getValueUrl,
-                data: JSON.stringify(data),
-                async: false
+
+            fetch(getValueUrl, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                  'X-CSRFToken': GetCookie('csrftoken')
+                },
+                body: JSON.stringify(data),
+                credentials: 'same-origin',
+                keepalive: true
+            }).then(function(response) {
+                if (response.ok) {
+                    const content = response.json();
+                    if(content.error) {
+                        LearningTribes.Notification.Error({
+                            title: window.gettext("We're having trouble saving your work"),
+                            message: window.gettext(content.error),
+                        });
+                    } else {
+                        return content.value;
+                    }
+                } else if (response.status === 403) {
+                    LearningTribes.Notification.Error({
+                        title: window.gettext("We're having trouble saving your work"),
+                        message: window.gettext("An error has occurred. Please try reloading the page."),
+                    });
+
+                }
             });
-            const content = JSON.parse(resp.responseText);
-            if(content.error) {
-                alert(content.error)
-            }
-            return content.value;
         }
 
         function SetValue(name, value) {
@@ -153,9 +206,7 @@
           if (!document.cookie) {
             return null;
           }
-          // const xsrfCookies = document.cookie.split(';')
-          //   .map(c => c.trim())
-          //   .filter(c => c.startsWith(name + '='));
+
           const xsrfCookies = document.cookie.split(';')
             .map(function(c) {
                 return c.trim();
@@ -186,159 +237,153 @@
         };
 
         function Extra_Commit() {
-            if (CheckChrome() || CheckSafari() && !CheckSafariMobile()) {
+            if (CheckSafariMobile()) {
                 const csrftoken = GetCookie('csrftoken');
+                pendingValues['csrfmiddlewaretoken'] = csrftoken;
+
+                var params = new URLSearchParams(pendingValues);
+                const success = navigator.sendBeacon(ios_commitUrl, params);
+
+                if (success) {
+                    setTimeout(function(){ syncScoreValue()},2000);
+                    setTimeout(function(){ syncScoreValue()},5000);
+                    setTimeout(function(){ syncScoreValue()},10000);
+
+                    initPendingValues();
+                }
+
+                return 'true';
+            } else {
                 fetch(commitUrl, {
                     method: 'POST',
                     headers: {
                       'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-                      'X-CSRFToken': csrftoken
+                      'X-CSRFToken': GetCookie('csrftoken')
                     },
                     body: JSON.stringify(pendingValues),
                     credentials: 'same-origin',
                     keepalive: true
+                }).then(function(response) {
+                      if (response.ok) {
+                          return response.json();
+                      }
+
                 })
-                  // .then(response => {
-                  //   if (response.ok) {
-                  //     return response.json();
-                  //   }
-                  // })
-                  // .then(data => {
-                  //   if (typeof data['scorm_score_value'] !== "undefined") {
-                  //     $(".lesson_score", element).html(data['scorm_score_value']);
-                  //   }
-                  //   $(".success_status", element).html(data['scorm_status_value']);
-                  // });
-                  .then(function(response) {
-                    if (response.ok) {
-                      return response.json();
-                    }
-                  })
-                  .then(function(data) {
+                .then(function(data) {
+                    initPendingValues();
+
                     if (typeof data['scorm_score_value'] !== "undefined") {
-                      $(".lesson_score", element).html(data['scorm_score_value']);
+                        $(".lesson_score", element).html(data['scorm_score_value']);
                     }
                     $(".success_status", element).html(data['scorm_status_value']);
-                  });
-                initPendingValues();
-                return 'true';
-            } else if (CheckSafariMobile()) {
-                const csrftoken = GetCookie('csrftoken');
-                pendingValues['csrfmiddlewaretoken'] = csrftoken;
-                var params = new URLSearchParams(pendingValues);
-                navigator.sendBeacon(ios_commitUrl, params);
-                setTimeout(function(){ syncScoreValue()},2000);
-                setTimeout(function(){ syncScoreValue()},5000);
-                setTimeout(function(){ syncScoreValue()},10000);
-                initPendingValues();
-                return 'true';
-            } else {
-                $.ajax({
-                    type: "POST",
-                    url: commitUrl,
-                    data: JSON.stringify(pendingValues),
-                    async: false,
-                    success: function (response) {
-                        if (typeof response['scorm_score_value'] !== "undefined") {
-                            $(".lesson_score", element).html(response['scorm_score_value']);
-                        }
-                        $(".success_status", element).html(response['scorm_status_value']);
+                }).catch(function(error) {
+                    if (!navigator.onLine || error.message.includes('Failed to fetch')) {
+                        LearningTribes.Notification.Error({
+                            title: window.gettext("We're having trouble saving your work"),
+                            message: window.gettext("Please check your network connection."),
+                        });
                     }
                 });
-                initPendingValues();
+
                 return 'true';
             }
         }
 
         function Enforce_Commit() {
-            if (('cmi.score.raw' in pendingValues && 'cmi.score.max' in pendingValues && 'cmi.score.min' in pendingValues) || ('cmi.core.score.raw' in pendingValues && 'cmi.core.score.max' in pendingValues && 'cmi.core.score.min' in pendingValues) || ('cmi.score.scaled' in pendingValues)) {
-                $.ajax({
-                    type: "POST",
-                    url: enforce_commitUrl,
-                    data: JSON.stringify(pendingValues),
-                    async: false,
-                    success: function (response) {
-                        if (typeof response['scorm_score_value'] !== "undefined") {
-                            $(".lesson_score", element).html(response['scorm_score_value']);
+            if (('cmi.score.raw' in pendingValues && 'cmi.score.max' in pendingValues && 'cmi.score.min' in pendingValues) || ('cmi.core.score.raw' in pendingValues && 'cmi.core.score.max' in pendingValues && 'cmi.core.score.min' in pendingValues) || ('cmi.core.lesson_status' in pendingValues)  || ('cmi.success_status' in pendingValues) || ('cmi.score.scaled' in pendingValues)) {
+                fetch(enforce_commitUrl, {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                      'X-CSRFToken': GetCookie('csrftoken')
+                    },
+                    body: JSON.stringify(pendingValues),
+                    credentials: 'same-origin',
+                    keepalive: true
+                }).then(function(response) {
+                    if (response.ok) {
+                        const content = response.json();
+                        if(content.error) {
+                            LearningTribes.Notification.Error({
+                                title: window.gettext("We're having trouble saving your work"),
+                                message: window.gettext(content.error),
+                            });
+                        } else {
+                            initPendingValues();
                         }
-                        $(".success_status", element).html(response['scorm_status_value']);
+
+                        if (typeof content['scorm_score_value'] !== "undefined") {
+                            $(".lesson_score", element).html(content['scorm_score_value']);
+                        }
+                        $(".success_status", element).html(content['scorm_status_value']);
+
+                    } else if (response.status === 403) {
+                        LearningTribes.Notification.Error({
+                            title: window.gettext("We're having trouble saving your work"),
+                            message: window.gettext("An error has occurred. Please try reloading the page."),
+                        });
+                    }
+                }).catch(function(error) {
+                    if (!navigator.onLine || error.message.includes('Failed to fetch')) {
+                        LearningTribes.Notification.Error({
+                            title: window.gettext("We're having trouble saving your work"),
+                            message: window.gettext("Please check your network connection."),
+                        });
                     }
                 });
-                initPendingValues();
+
             }
             return 'true';
         }
 
         function Commit(value) {
-            $.ajax({
-                type: "POST",
-                url: commitUrl,
-                data: JSON.stringify(pendingValues),
-                async: false,
-                success: function (response) {
-                    if (typeof response['scorm_score_value'] !== "undefined") {
-                        $(".lesson_score", element).html(response['scorm_score_value']);
+
+            fetch(commitUrl, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                  'X-CSRFToken': GetCookie('csrftoken')
+                },
+                body: JSON.stringify(pendingValues),
+                credentials: 'same-origin',
+                keepalive: true
+            }).then(function(response) {
+                if (response.ok) {
+                    const content = response.json();
+                    if(content.error) {
+                        LearningTribes.Notification.Error({
+                            title: window.gettext("We're having trouble saving your work"),
+                            message: window.gettext(content.error),
+                        });
+                    } else {
+                        initPendingValues();
                     }
-                    $(".success_status", element).html(response['scorm_status_value']);
+
+                    if (typeof content['scorm_score_value'] !== "undefined") {
+                        $(".lesson_score", element).html(content['scorm_score_value']);
+                    }
+                    $(".success_status", element).html(content['scorm_status_value']);
+
+                } else if (response.status === 403) {   // Maybe it's a CSRF token error
+                    LearningTribes.Notification.Error({
+                        title: window.gettext("We're having trouble saving your work"),
+                        message: window.gettext("An error has occurred. Please try reloading the page."),
+                    });
+                }
+            }).catch(function(error) {
+                if (!navigator.onLine || error.message.includes('Failed to fetch')) {
+                    LearningTribes.Notification.Error({
+                        title: window.gettext("We're having trouble saving your work"),
+                        message: window.gettext("Please check your network connection."),
+                    });
                 }
             });
-            initPendingValues();
+
             return 'true';
-            // if (CheckChrome() || CheckSafari() && !CheckSafariMobile()) {
-            //     const csrftoken = GetCookie('csrftoken');
-            //     fetch(commitUrl, {
-            //         method: 'POST',
-            //         headers: {
-            //           'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-            //           'X-CSRFToken': csrftoken
-            //         },
-            //         body: JSON.stringify(pendingValues),
-            //         credentials: 'same-origin',
-            //         keepalive: true
-            //     })
-            //       .then(response => {
-            //         if (response.ok) {
-            //           return response.json();
-            //         }
-            //       })
-            //       .then(data => {
-            //         if (typeof data['scorm_score_value'] !== "undefined") {
-            //           $(".lesson_score", element).html(data['scorm_score_value']);
-            //         }
-            //         $(".success_status", element).html(data['scorm_status_value']);
-            //       });
-            //     initPendingValues();
-            //     return 'true';
-            // } else if (CheckSafariMobile()) {
-            //     const csrftoken = GetCookie('csrftoken');
-            //     pendingValues['csrfmiddlewaretoken'] = csrftoken;
-            //     var params = new URLSearchParams(pendingValues);
-            //     navigator.sendBeacon(ios_commitUrl, params);
-            //     setTimeout(function(){ syncScoreValue()},2000);
-            //     setTimeout(function(){ syncScoreValue()},5000);
-            //     setTimeout(function(){ syncScoreValue()},10000);
-            //     initPendingValues();
-            //     return 'true';
-            // } else {
-            //     $.ajax({
-            //         type: "POST",
-            //         url: commitUrl,
-            //         data: JSON.stringify(pendingValues),
-            //         async: false,
-            //         success: function (response) {
-            //             if (typeof response['scorm_score_value'] !== "undefined") {
-            //                 $(".lesson_score", element).html(response['scorm_score_value']);
-            //             }
-            //             $(".success_status", element).html(response['scorm_status_value']);
-            //         }
-            //     });
-            //     initPendingValues();
-            //     return 'true';
-            // }
         }
 
         function initPendingValues(){
-            syncScormRuntimeInfo()
+            syncScormRuntimeInfo();
             pendingValues = getPackageData();
         }
 
@@ -388,7 +433,6 @@
             }
         }
 
-
         function pingServer() {
             const resp = $.ajax({
                 type: "GET",
@@ -416,10 +460,12 @@
             window.API = new SCORM_12_API();
             window.API_1484_11 = new SCORM_2004_API();
 
-            $('.launch-button', element).on('click', function() {
-                window.API = new SCORM_12_API();
-                window.API_1484_11 = new SCORM_2004_API();
-            })
+            document.addEventListener('keyup', function(e) {
+                if (e.keyCode === 27 || e.key === 'Escape') {
+                    console.log('ESC pressed!');
+                    quitFullscreen();
+                }
+            });
 
             if (!window.loadingScormModuleMap) {
                 window.loadingScormModuleMap = {}
@@ -448,13 +494,17 @@
                     $iFrame.onload = function() {
                         window.loadedScormModules.push(element.dataset.usageId)
                         clearInterval(window.loadingScormModuleMap[element.dataset.usageId])
+
+                        // A SCORM pkg can have more than 1 <iframe>, we just setup event listener for the first one:
+                        const keyEventTargetFrame = $iFrame.contentWindow.document.querySelector('iframe') || $iFrame;
+                        keyEventTargetFrame.contentWindow.document.addEventListener('keyup', e => {
+                            if (e.keyCode === 27 || e.key === 'Escape') {
+                                quitFullscreen();       // Quite full screen mode
+                            }
+                        })
                     }
                 }
             })
-            // if (!open_new_tab) {
-            //     $('#scorm-object-frame')[0].contentWindow.onbeforeunload = function () {
-            //         Commit('value');
-            //     }
-            // }
+
         });
     }
