@@ -954,6 +954,16 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                           raw_possible=(info['maxi'] - info['mini']))
 
         if score:
+            # log the data without suspend_data
+            log_data = deepcopy(data)
+            if log_data.get('cmi.suspend_data'):
+                log_data.pop('cmi.suspend_data')
+            logger.info("scorm_commit SCORE Usage: %s, User: %s, Data: %s",
+                self.scope_ids.usage_id.to_deprecated_string(),
+                self.runtime.user_id,
+                log_data
+            )
+
             if not self.has_submitted_answer() or self.allows_rescore():
                 self.set_score(score)
                 self._publish_grade(self.get_score())
@@ -971,6 +981,17 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
         else:
             if info['status'] == SCORM_STATUS.SUCCEED:
+
+                # log the data without suspend_data
+                log_data = deepcopy(data)
+                if log_data.get('cmi.suspend_data'):
+                    log_data.pop('cmi.suspend_data')
+                logger.info("scorm_commit SUCCEED Usage: %s, User: %s, Data: %s",
+                    self.scope_ids.usage_id.to_deprecated_string(),
+                    self.runtime.user_id,
+                    log_data
+                )
+
                 user_id = self.scope_ids.user_id
                 user_obj = User.objects.get(id=user_id)
                 course_key = CourseKey.from_string('{}'.format(self.course_id))
