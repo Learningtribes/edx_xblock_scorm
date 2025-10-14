@@ -92,13 +92,9 @@
             }).then(resp => resp.json().then(resp => {
                 if (resp.error) {
                     LearningTribes.Notification.Error({
-                        title: window.gettext("Internal Server Error"),
+                        title: window.gettext("We're having trouble saving your work"),
                         message: window.gettext(resp.error),
                     });
-
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
                 } else {
                     scormRuntimeInfo = resp.value
                 }
@@ -141,7 +137,7 @@
                     const content = response.json();
                     if(content.error) {
                         LearningTribes.Notification.Error({
-                            title: window.gettext("Internal Server Error"),
+                            title: window.gettext("We're having trouble saving your work"),
                             message: window.gettext(content.error),
                         });
                     } else {
@@ -149,8 +145,8 @@
                     }
                 } else if (response.status === 403) {
                     LearningTribes.Notification.Error({
-                        title: window.gettext("Internal Server Error"),
-                        message: window.gettext("Access Denied"),
+                        title: window.gettext("We're having trouble saving your work"),
+                        message: window.gettext("An error has occurred. Please try reloading the page."),
                     });
 
                 }
@@ -283,8 +279,8 @@
                 }).catch(function(error) {
                     if (!navigator.onLine || error.message.includes('Failed to fetch')) {
                         LearningTribes.Notification.Error({
-                            title: window.gettext("Internal Server Error"),
-                            message: window.gettext("Please check your network"),
+                            title: window.gettext("We're having trouble saving your work"),
+                            message: window.gettext("Please check your network connection."),
                         });
                     }
                 });
@@ -309,7 +305,7 @@
                         const content = response.json();
                         if(content.error) {
                             LearningTribes.Notification.Error({
-                                title: window.gettext("Internal Server Error"),
+                                title: window.gettext("We're having trouble saving your work"),
                                 message: window.gettext(content.error),
                             });
                         } else {
@@ -323,19 +319,15 @@
 
                     } else if (response.status === 403) {
                         LearningTribes.Notification.Error({
-                            title: window.gettext("Internal Server Error"),
-                            message: window.gettext("Access Denied"),
+                            title: window.gettext("We're having trouble saving your work"),
+                            message: window.gettext("An error has occurred. Please try reloading the page."),
                         });
-
-                        setTimeout(function() {
-                            location.reload();
-                        }, 2000);
                     }
                 }).catch(function(error) {
                     if (!navigator.onLine || error.message.includes('Failed to fetch')) {
                         LearningTribes.Notification.Error({
-                            title: window.gettext("Internal Server Error"),
-                            message: window.gettext("Please check your network"),
+                            title: window.gettext("We're having trouble saving your work"),
+                            message: window.gettext("Please check your network connection."),
                         });
                     }
                 });
@@ -360,7 +352,7 @@
                     const content = response.json();
                     if(content.error) {
                         LearningTribes.Notification.Error({
-                            title: window.gettext("Internal Server Error"),
+                            title: window.gettext("We're having trouble saving your work"),
                             message: window.gettext(content.error),
                         });
                     } else {
@@ -372,21 +364,17 @@
                     }
                     $(".success_status", element).html(content['scorm_status_value']);
 
-                } else if (response.status === 403) {   // Maybe it's a CSRF token error, we reload the page
+                } else if (response.status === 403) {   // Maybe it's a CSRF token error
                     LearningTribes.Notification.Error({
-                        title: window.gettext("Internal Server Error"),
-                        message: window.gettext("Access Denied"),
+                        title: window.gettext("We're having trouble saving your work"),
+                        message: window.gettext("An error has occurred. Please try reloading the page."),
                     });
-
-                    setTimeout(function() {
-                        location.reload();
-                    }, 2000);
                 }
             }).catch(function(error) {
                 if (!navigator.onLine || error.message.includes('Failed to fetch')) {
                     LearningTribes.Notification.Error({
-                        title: window.gettext("Internal Server Error"),
-                        message: window.gettext("Please check your network"),
+                        title: window.gettext("We're having trouble saving your work"),
+                        message: window.gettext("Please check your network connection."),
                     });
                 }
             });
