@@ -460,11 +460,6 @@
             window.API = new SCORM_12_API();
             window.API_1484_11 = new SCORM_2004_API();
 
-            $('.launch-button', element).on('click', function() {
-                window.API = new SCORM_12_API();
-                window.API_1484_11 = new SCORM_2004_API();
-            })
-
             document.addEventListener('keyup', function(e) {
                 if (e.keyCode === 27 || e.key === 'Escape') {
                     console.log('ESC pressed!');
