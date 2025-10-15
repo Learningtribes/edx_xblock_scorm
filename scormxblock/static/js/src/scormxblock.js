@@ -84,6 +84,7 @@
         function syncScormRuntimeInfo () {
             if (scormRuntimeInfo) {
                 scormRuntimeInfo = Object.assign(scormRuntimeInfo, pendingValues || {})
+                return
             }
 
             fetch(syncRuntimeInfoUrl, {
@@ -279,7 +280,6 @@
                             });
                         } else {
                             commit_success = true;
-                            initPendingValues();
                         }
 
                         if (typeof content['scorm_score_value'] !== "undefined") {
