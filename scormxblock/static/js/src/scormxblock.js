@@ -240,8 +240,6 @@
         function Extra_Commit() {
             if (isCommitting) return 'true';
 
-            isCommitting = true;
-
             if (CheckSafariMobile()) {
                 const csrftoken = GetCookie('csrftoken');
                 pendingValues['csrfmiddlewaretoken'] = csrftoken;
