@@ -256,7 +256,7 @@
         function performCommit(url) {
             let commit_success = false;
             // Clone a pendingValues for commit
-            clonedPendingValues = deepCopy(pendingValues);
+            const clonedPendingValues = deepCopy(pendingValues);
             // Reset the pendingValues, so other commit function will not make duplicated commit.
             pendingValues = getPackageData();
 
