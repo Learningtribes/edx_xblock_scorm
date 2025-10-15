@@ -302,8 +302,6 @@
             if (isCommitting) return 'true';
 
             if (('cmi.score.raw' in pendingValues && 'cmi.score.max' in pendingValues && 'cmi.score.min' in pendingValues) || ('cmi.core.score.raw' in pendingValues && 'cmi.core.score.max' in pendingValues && 'cmi.core.score.min' in pendingValues) || ('cmi.core.lesson_status' in pendingValues)  || ('cmi.success_status' in pendingValues) || ('cmi.score.scaled' in pendingValues)) {
-                isCommitting = true;
-
                 fetch(enforce_commitUrl, {
                     method: 'POST',
                     headers: {
