@@ -14,7 +14,10 @@
         let pendingValues = null;
         let scormRuntimeInfo;
         var timerId;
-        let isCommitting = false;   // a Locker for committing from Commit() & Enforce_Commit()
+
+        function deepCopy(obj) {
+            return JSON.parse(JSON.stringify(obj));
+        }
 
         function isInLMS(xblockElement) {
             return $(xblockElement).closest('.xblock').hasClass('xblock-student_view');
@@ -238,127 +241,31 @@
         };
 
         function Extra_Commit() {
-            if (isCommitting) return 'true';
+            performCommit(commitUrl);
 
-            if (CheckSafariMobile()) {
-                const csrftoken = GetCookie('csrftoken');
-                pendingValues['csrfmiddlewaretoken'] = csrftoken;
-
-                var params = new URLSearchParams(pendingValues);
-                const success = navigator.sendBeacon(ios_commitUrl, params);
-
-                isCommitting = false;
-
-                if (success) {
-                    setTimeout(function(){ syncScoreValue()},2000);
-                    setTimeout(function(){ syncScoreValue()},5000);
-                    setTimeout(function(){ syncScoreValue()},10000);
-
-                    initPendingValues();
-                }
-
-                return 'true';
-            } else {
-                fetch(commitUrl, {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-                      'X-CSRFToken': GetCookie('csrftoken')
-                    },
-                    body: JSON.stringify(pendingValues),
-                    credentials: 'same-origin',
-                    keepalive: true
-                }).then(function(response) {
-                      if (response.ok) {
-                          return response.json();
-                      }
-
-                })
-                .then(function(data) {
-                    initPendingValues();
-
-                    if (typeof data['scorm_score_value'] !== "undefined") {
-                        $(".lesson_score", element).html(data['scorm_score_value']);
-                    }
-                    $(".success_status", element).html(data['scorm_status_value']);
-                }).catch(function(error) {
-                    if (!navigator.onLine || error.message.includes('Failed to fetch')) {
-                        LearningTribes.Notification.Error({
-                            title: window.gettext("We're having trouble saving your work"),
-                            message: window.gettext("Please check your network connection."),
-                        });
-                    }
-                }).finally(() => {
-                    isCommitting = false;
-                });
-
-                return 'true';
-            }
+            return 'true';
         }
 
         function Enforce_Commit() {
-            if (isCommitting) return 'true';
-
             if (('cmi.score.raw' in pendingValues && 'cmi.score.max' in pendingValues && 'cmi.score.min' in pendingValues) || ('cmi.core.score.raw' in pendingValues && 'cmi.core.score.max' in pendingValues && 'cmi.core.score.min' in pendingValues) || ('cmi.core.lesson_status' in pendingValues)  || ('cmi.success_status' in pendingValues) || ('cmi.score.scaled' in pendingValues)) {
-                fetch(enforce_commitUrl, {
-                    method: 'POST',
-                    headers: {
-                      'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-                      'X-CSRFToken': GetCookie('csrftoken')
-                    },
-                    body: JSON.stringify(pendingValues),
-                    credentials: 'same-origin',
-                    keepalive: true
-                }).then(function(response) {
-                    if (response.ok) {
-                        const content = response.json();
-                        if(content.error) {
-                            LearningTribes.Notification.Error({
-                                title: window.gettext("We're having trouble saving your work"),
-                                message: window.gettext(content.error),
-                            });
-                        } else {
-                            initPendingValues();
-                        }
-
-                        if (typeof content['scorm_score_value'] !== "undefined") {
-                            $(".lesson_score", element).html(content['scorm_score_value']);
-                        }
-                        $(".success_status", element).html(content['scorm_status_value']);
-
-                    } else if (response.status === 403) {
-                        LearningTribes.Notification.Error({
-                            title: window.gettext("We're having trouble saving your work"),
-                            message: window.gettext("An error has occurred. Please try reloading the page."),
-                        });
-                    }
-                }).catch(function(error) {
-                    if (!navigator.onLine || error.message.includes('Failed to fetch')) {
-                        LearningTribes.Notification.Error({
-                            title: window.gettext("We're having trouble saving your work"),
-                            message: window.gettext("Please check your network connection."),
-                        });
-                    }
-                }).finally(() => {
-                    isCommitting = false;
-                });
-
+                performCommit(enforce_commitUrl);
             }
             return 'true';
         }
 
-        function Commit(value) {
-            if (isCommitting) return 'true';
+        function performCommit(url) {
+            let commit_success = false;
 
-            isCommitting = true;
+            clonedPendingValues = deepCopy(pendingValues);
+            pendingValues = getPackageData();
 
-            fetch(commitUrl, {
+            return fetch(url, {
                 method: 'POST',
                 headers: {
-                  'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-                  'X-CSRFToken': GetCookie('csrftoken')
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                    'X-CSRFToken': GetCookie('csrftoken')
                 },
-                body: JSON.stringify(pendingValues),
+                body: JSON.stringify(clonedPendingValues),
                 credentials: 'same-origin',
                 keepalive: true
             }).then(function(response) {
@@ -392,8 +299,14 @@
                     });
                 }
             }).finally(() => {
-                isCommitting = false;
+                if (commit_success === false) {
+                    pendingValues = Object.assign(clonedPendingValues, pendingValues || {});
+                }
             });
+        }
+
+        function Commit(value) {
+            performCommit(commitUrl);
 
             return 'true';
         }
