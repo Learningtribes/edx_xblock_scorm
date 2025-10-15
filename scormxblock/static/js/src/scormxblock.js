@@ -255,8 +255,9 @@
 
         function performCommit(url) {
             let commit_success = false;
-
+            // Clone a pendingValues for commit
             clonedPendingValues = deepCopy(pendingValues);
+            // Reset the pendingValues, so other commit function will not make duplicated commit.
             pendingValues = getPackageData();
 
             return fetch(url, {
@@ -277,6 +278,7 @@
                             message: window.gettext(content.error),
                         });
                     } else {
+                        commit_success = true;
                         initPendingValues();
                     }
 
@@ -299,7 +301,7 @@
                     });
                 }
             }).finally(() => {
-                if (commit_success === false) {
+                if (commit_success === false) { // recover cloned values if get commit failure
                     pendingValues = Object.assign(clonedPendingValues, pendingValues || {});
                 }
             });
