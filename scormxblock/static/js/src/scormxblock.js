@@ -14,6 +14,7 @@
         let pendingValues = null;
         let scormRuntimeInfo;
         var timerId;
+        let isCommitting = false;   // a Locker for committing from Commit() & Enforce_Commit()
 
         function isInLMS(xblockElement) {
             return $(xblockElement).closest('.xblock').hasClass('xblock-student_view');
@@ -237,12 +238,18 @@
         };
 
         function Extra_Commit() {
+            if (isCommitting) return 'true';
+
+            isCommitting = true;
+
             if (CheckSafariMobile()) {
                 const csrftoken = GetCookie('csrftoken');
                 pendingValues['csrfmiddlewaretoken'] = csrftoken;
 
                 var params = new URLSearchParams(pendingValues);
                 const success = navigator.sendBeacon(ios_commitUrl, params);
+
+                isCommitting = false;
 
                 if (success) {
                     setTimeout(function(){ syncScoreValue()},2000);
@@ -283,6 +290,8 @@
                             message: window.gettext("Please check your network connection."),
                         });
                     }
+                }).finally(() => {
+                    isCommitting = false;
                 });
 
                 return 'true';
@@ -290,7 +299,11 @@
         }
 
         function Enforce_Commit() {
+            if (isCommitting) return 'true';
+
             if (('cmi.score.raw' in pendingValues && 'cmi.score.max' in pendingValues && 'cmi.score.min' in pendingValues) || ('cmi.core.score.raw' in pendingValues && 'cmi.core.score.max' in pendingValues && 'cmi.core.score.min' in pendingValues) || ('cmi.core.lesson_status' in pendingValues)  || ('cmi.success_status' in pendingValues) || ('cmi.score.scaled' in pendingValues)) {
+                isCommitting = true;
+
                 fetch(enforce_commitUrl, {
                     method: 'POST',
                     headers: {
@@ -330,6 +343,8 @@
                             message: window.gettext("Please check your network connection."),
                         });
                     }
+                }).finally(() => {
+                    isCommitting = false;
                 });
 
             }
@@ -337,6 +352,9 @@
         }
 
         function Commit(value) {
+            if (isCommitting) return 'true';
+
+            isCommitting = true;
 
             fetch(commitUrl, {
                 method: 'POST',
@@ -377,6 +395,8 @@
                         message: window.gettext("Please check your network connection."),
                     });
                 }
+            }).finally(() => {
+                isCommitting = false;
             });
 
             return 'true';
