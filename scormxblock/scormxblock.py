@@ -979,28 +979,27 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                     )
                 )
 
-        else:
-            if info['status'] == SCORM_STATUS.SUCCEED:
+        if info['status'] == SCORM_STATUS.SUCCEED:
 
-                # log the data without suspend_data
-                log_data = deepcopy(data)
-                if log_data.get('cmi.suspend_data'):
-                    log_data.pop('cmi.suspend_data')
-                logger.info("scorm_commit SUCCEED Usage: %s, User: %s, Data: %s",
-                    self.scope_ids.usage_id.to_deprecated_string(),
-                    self.runtime.user_id,
-                    log_data
-                )
+            # log the data without suspend_data
+            log_data = deepcopy(data)
+            if log_data.get('cmi.suspend_data'):
+                log_data.pop('cmi.suspend_data')
+            logger.info("scorm_commit SUCCEED Usage: %s, User: %s, Data: %s",
+                self.scope_ids.usage_id.to_deprecated_string(),
+                self.runtime.user_id,
+                log_data
+            )
 
-                user_id = self.scope_ids.user_id
-                user_obj = User.objects.get(id=user_id)
-                course_key = CourseKey.from_string('{}'.format(self.course_id))
-                block_key = self.scope_ids.usage_id.to_deprecated_string()
-                blocks_to_complete = [(UsageKey.from_string(block_key), 1.0)]
+            user_id = self.scope_ids.user_id
+            user_obj = User.objects.get(id=user_id)
+            course_key = CourseKey.from_string('{}'.format(self.course_id))
+            block_key = self.scope_ids.usage_id.to_deprecated_string()
+            blocks_to_complete = [(UsageKey.from_string(block_key), 1.0)]
 
-                models.BlockCompletion.objects.submit_batch_completion(user_obj, course_key, blocks_to_complete)
+            models.BlockCompletion.objects.submit_batch_completion(user_obj, course_key, blocks_to_complete)
 
-                self.scorm_status = info['status']
+            self.scorm_status = info['status']
 
     @XBlock.handler
     def ping(self, request, suffix=''):
