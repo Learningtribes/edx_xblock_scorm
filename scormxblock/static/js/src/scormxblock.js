@@ -291,7 +291,7 @@
                             title: window.gettext("We're having trouble saving your work"),
                             message: window.gettext("An error has occurred. Please try reloading the page."),
                         });
-                    } else if (!navigator.onLine || status === 'error') {
+                    } else if (!navigator.onLine && status === 'error') {
                         LearningTribes.Notification.Error({
                             title: window.gettext("We're having trouble saving your work"),
                             message: window.gettext("Please check your network connection."),
