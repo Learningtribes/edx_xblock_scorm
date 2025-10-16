@@ -261,48 +261,47 @@
             // Reset the pendingValues, so other commit function will not make duplicated commit.
             pendingValues = getPackageData();
 
-            return fetch(url, {
-                method: 'POST',
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: JSON.stringify(clonedPendingValues),
+                contentType: 'application/json;charset=UTF-8',
                 headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
                     'X-CSRFToken': GetCookie('csrftoken')
                 },
-                body: JSON.stringify(clonedPendingValues),
-                credentials: 'same-origin',
-                keepalive: true
-            }).then(function(response) {
-                if (response.ok) {
-                    return response.json().then(function (content) {
-                        if(content.error) {
-                            LearningTribes.Notification.Error({
-                                title: window.gettext("We're having trouble saving your work"),
-                                message: window.gettext(content.error),
-                            });
-                        } else {
-                            commit_success = true;
-                        }
+                async: false, // Synchronous request for SCORM compatibility
+                success: function(content) {
+                    if(content.error) {
+                        LearningTribes.Notification.Error({
+                            title: window.gettext("We're having trouble saving your work"),
+                            message: window.gettext(content.error),
+                        });
+                    } else {
+                        commit_success = true;
+                    }
 
-                        if (typeof content['scorm_score_value'] !== "undefined") {
-                            $(".lesson_score", element).html(content['scorm_score_value']);
-                        }
-                        $(".success_status", element).html(content['scorm_status_value']);
-                    });
-                } else if (response.status === 403) {   // Maybe it's a CSRF token error
-                    LearningTribes.Notification.Error({
-                        title: window.gettext("We're having trouble saving your work"),
-                        message: window.gettext("An error has occurred. Please try reloading the page."),
-                    });
-                }
-            }).catch(function(error) {
-                if (!navigator.onLine || error.message.includes('Failed to fetch')) {
-                    LearningTribes.Notification.Error({
-                        title: window.gettext("We're having trouble saving your work"),
-                        message: window.gettext("Please check your network connection."),
-                    });
-                }
-            }).finally(() => {
-                if (commit_success === false) { // recover cloned values if get commit failure
-                    pendingValues = Object.assign({}, clonedPendingValues, pendingValues || {});
+                    if (typeof content['scorm_score_value'] !== "undefined") {
+                        $(".lesson_score", element).html(content['scorm_score_value']);
+                    }
+                    $(".success_status", element).html(content['scorm_status_value']);
+                },
+                error: function(xhr, status, error) {
+                    if (xhr.status === 403) {   // Maybe it's a CSRF token error
+                        LearningTribes.Notification.Error({
+                            title: window.gettext("We're having trouble saving your work"),
+                            message: window.gettext("An error has occurred. Please try reloading the page."),
+                        });
+                    } else if (!navigator.onLine || status === 'error') {
+                        LearningTribes.Notification.Error({
+                            title: window.gettext("We're having trouble saving your work"),
+                            message: window.gettext("Please check your network connection."),
+                        });
+                    }
+                },
+                complete: function() {
+                    if (commit_success === false) { // recover cloned values if get commit failure
+                        pendingValues = Object.assign({}, clonedPendingValues, pendingValues || {});
+                    }
                 }
             });
         }
