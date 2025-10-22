@@ -128,34 +128,20 @@
             const data = getPackageData();
             data['name'] = name;
 
-            fetch(getValueUrl, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-                  'X-CSRFToken': GetCookie('csrftoken')
-                },
-                body: JSON.stringify(data),
-                credentials: 'same-origin',
-                keepalive: true
-            }).then(function(response) {
-                if (response.ok) {
-                    const content = response.json();
-                    if(content.error) {
-                        LearningTribes.Notification.Error({
-                            title: window.gettext("We're having trouble saving your work"),
-                            message: window.gettext(content.error),
-                        });
-                    } else {
-                        return content.value;
-                    }
-                } else if (response.status === 403) {
-                    LearningTribes.Notification.Error({
-                        title: window.gettext("We're having trouble saving your work"),
-                        message: window.gettext("An error has occurred. Please try reloading the page."),
-                    });
-
-                }
+            const resp = $.ajax({
+                type: "POST",
+                url: getValueUrl,
+                data: JSON.stringify(data),
+                async: false,
             });
+            const content = JSON.parse(resp.responseText);
+            if(content.error) {
+                LearningTribes.Notification.Error({
+                    title: window.gettext("We're having trouble saving your work"),
+                    message: window.gettext(content.error),
+                });
+            }
+            return content.value;
         }
 
         function SetValue(name, value) {
