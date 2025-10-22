@@ -132,7 +132,7 @@
                 type: "POST",
                 url: getValueUrl,
                 data: JSON.stringify(data),
-                async: false,
+                async: false
             });
             const content = JSON.parse(resp.responseText);
             if(content.error) {
