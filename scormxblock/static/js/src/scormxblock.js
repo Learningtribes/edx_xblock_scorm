@@ -10,7 +10,12 @@
         const package_version = settings['scorm_pkg_version_value'];
         const package_date = settings['scorm_pkg_modified_value'];
         const ratio_value = settings['ratio_value'];
-        let usageId = element.dataset.usageId;
+        // Get usageId
+        let usageId = (element.dataset && element.dataset.usageId) || 
+                      $(element).data('usage-id') || 
+                      $(element).attr('data-usage-id') || 
+                      $(element).closest('.xblock').data('usage-id') ||
+                      $(element).closest('.xblock').attr('data-usage-id');
         let pendingValues = null;
         let scormRuntimeInfo;
         var timerId;
@@ -392,24 +397,28 @@
             Array.from(document.querySelectorAll('.xblock-student_view-scormxblock')).filter(function(xblock) {
                 return xblock.querySelector('.scorm_object')
             }).forEach(function(xblock, i) {
-                if (xblock.dataset.usageId !== element.dataset.usageId) return
-                if (window.loadingScormModuleMap[element.dataset.usageId] !== undefined) return
+                // Get xblock usageId
+                var xblockUsageId = (xblock.dataset && xblock.dataset.usageId) || 
+                                   $(xblock).data('usage-id') || 
+                                   $(xblock).attr('data-usage-id');
+                if (!usageId || xblockUsageId !== usageId) return
+                if (window.loadingScormModuleMap[usageId] !== undefined) return
 
                 var tomb = setInterval(() => {
                     if (window.loadedScormModules.length === i) loadScormIFrame();
                 }, i * 2000 + 1000);
 
                 function loadScormIFrame() {
-                    if (window.loadingScormModuleMap[element.dataset.usageId] !== undefined) return
-                    window.loadingScormModuleMap[element.dataset.usageId] = tomb
+                    if (window.loadingScormModuleMap[usageId] !== undefined) return
+                    window.loadingScormModuleMap[usageId] = tomb
 
                     window.API = new SCORM_12_API();
                     window.API_1484_11 = new SCORM_2004_API();
                     var $iFrame = xblock.querySelector('.scorm_object');
                     $iFrame.src = $iFrame.dataset.src;
                     $iFrame.onload = function() {
-                        window.loadedScormModules.push(element.dataset.usageId)
-                        clearInterval(window.loadingScormModuleMap[element.dataset.usageId])
+                        window.loadedScormModules.push(usageId)
+                        clearInterval(window.loadingScormModuleMap[usageId])
 
                         // A SCORM pkg can have more than 1 <iframe>, we just setup event listener for the first one:
                         const keyEventTargetFrame = $iFrame.contentWindow.document.querySelector('iframe') || $iFrame;
