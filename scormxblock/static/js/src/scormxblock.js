@@ -10,7 +10,6 @@
         const package_version = settings['scorm_pkg_version_value'];
         const package_date = settings['scorm_pkg_modified_value'];
         const ratio_value = settings['ratio_value'];
-        // Get usageId
         let usageId = (element.dataset && element.dataset.usageId) || 
                       $(element).data('usage-id') || 
                       $(element).attr('data-usage-id') || 
@@ -397,7 +396,6 @@
             Array.from(document.querySelectorAll('.xblock-student_view-scormxblock')).filter(function(xblock) {
                 return xblock.querySelector('.scorm_object')
             }).forEach(function(xblock, i) {
-                // Get xblock usageId
                 var xblockUsageId = (xblock.dataset && xblock.dataset.usageId) || 
                                    $(xblock).data('usage-id') || 
                                    $(xblock).attr('data-usage-id');
