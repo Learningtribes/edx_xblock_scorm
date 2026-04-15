@@ -36,8 +36,7 @@ from zipfile import ZipFile
 from io import BytesIO
 from xblockutils.studio_editable import StudioEditableXBlockMixin
 from xblockutils.fields import File
-from completion import models
-from opaque_keys.edx.keys import CourseKey, UsageKey
+
 
 try:
     from contentstore.views.assets import update_course_run_asset
@@ -991,13 +990,12 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 log_data
             )
 
-            user_id = self.scope_ids.user_id
-            user_obj = User.objects.get(id=user_id)
-            course_key = CourseKey.from_string('{}'.format(self.course_id))
-            block_key = self.scope_ids.usage_id.to_deprecated_string()
-            blocks_to_complete = [(UsageKey.from_string(block_key), 1.0)]
-
-            models.BlockCompletion.objects.submit_batch_completion(user_obj, course_key, blocks_to_complete)
+            # Use runtime.publish so the completion event passes through the LMS
+            # masquerade guard (module_render.py:522). The previous direct call to
+            # BlockCompletion.objects.submit_batch_completion() bypassed that guard and
+            # wrote a real BlockCompletion record for the student when an admin used
+            # "View as" masquerade, causing completion_date without a grade.
+            self.runtime.publish(self, 'completion', {'completion': 1.0})
 
             self.scorm_status = info['status']
 
