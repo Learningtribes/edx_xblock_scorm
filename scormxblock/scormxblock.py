@@ -51,7 +51,6 @@ from .mixins import ScorableXBlockMixin
 
 from .config import SupportedScormResources, SUPPORTED_SCORM_RESOURCES
 from fs.osfs import OSFS
-from django.core.files.uploadedfile import InMemoryUploadedFile, TemporaryUploadedFile
 
 from student.roles import get_platform_role, DEVELOPER_LEVEL, PLATFORM_SUPER_ADMIN_LEVEL
 
@@ -389,17 +388,11 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         """
         try:
             zip_file.seek(0)
-            if isinstance(zip_file, InMemoryUploadedFile):
-                # small file
-                binary_data = zip_file.read()
-                bytes_io = BytesIO(binary_data)
-                # logger.info('=== %s %s %s %s' % (type(zip_file), len(zip_file), len(binary_data), len(bytes_io.getvalue())))
-            elif isinstance(zip_file, TemporaryUploadedFile):
-                # large file
+            # Copy bytes from any file-like object instead of relying on a specific wrapper type.
+            if hasattr(zip_file, 'chunks'):
                 bytes_io = BytesIO(b''.join(zip_file.chunks()))
-                # logger.info('=== %s %s %s' % (type(zip_file), len(zip_file), len(bytes_io.getvalue())))
             else:
-                bytes_io = BytesIO()
+                bytes_io = BytesIO(zip_file.read())
 
             bytes_io.seek(0)
             file_path = pkg_id.decode('utf-8') + '.zip'
