@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from __future__ import division
+from __future__ import absolute_import, division, print_function, unicode_literals
 
 from copy import deepcopy
 import io
@@ -9,9 +9,10 @@ import uuid
 import logging
 import re
 from collections import namedtuple
+
 from lxml import etree
-from urlparse import urlparse
-import urllib
+import six
+from six.moves.urllib.parse import unquote, urlparse
 import user_agents
 import boto3
 import traceback
@@ -359,15 +360,17 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         zip_contents = {}
 
         for filename in input_zip.namelist():
-            if isinstance(filename, unicode):
+            if six.PY2 and isinstance(filename, six.text_type):
                 newname = filename.encode('utf-8')
-            elif isinstance(filename, str):
+            elif six.PY2 and isinstance(filename, six.binary_type):
                 try:
                     filename.decode('utf-8')
                     newname = filename
                 except UnicodeDecodeError:
                     uname = filename.decode('latin-1')
                     newname = uname.encode('utf-8')
+            else:
+                newname = filename
             zip_contents[newname] = input_zip.read(filename)
 
         in_memory = BytesIO()
@@ -600,7 +603,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
         # if isinstance(data, unicode):
         # raise ValueError("isinstance")
-        return data if isinstance(data, unicode) else data.decode("utf8")
+        return data if isinstance(data, six.text_type) else data.decode("utf8")
 
     def render_template(self, template_path, context={}):
 
@@ -615,7 +618,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
 
         data = {}
         pkg_url = ''
-        for k, v in self.fields.iteritems():
+        for k, v in six.iteritems(self.fields):
             if k in fields:
                 if not only_value:
                     data[k] = v
@@ -628,14 +631,14 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             pkg_url = self.fs.get_url(scorm_file_string)
         if pkg_url:
             if settings.DJFS['type'] == 's3fs':
-                pkg_url = urllib.unquote(urlparse(pkg_url).path)
+                pkg_url = unquote(urlparse(pkg_url).path)
             data['scorm_pkg_value'] = pkg_url
 
         if 'cover_image' in data and self.cover_image:
             cover_image_url = self.fs.get_url(self.cover_image)
             if cover_image_url:
                 if settings.DJFS['type'] == 's3fs':
-                    cover_image_url = urllib.unquote(urlparse(cover_image_url).path)
+                    cover_image_url = unquote(urlparse(cover_image_url).path)
                 data['cover_image_value'] = cover_image_url
 
         if 'scorm_score' in data and self.scorm_score == float(0) and self.lesson_score != float(0):
@@ -855,7 +858,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
         package_version = post_data.pop('package_version', '')
         expired, need_update = self.is_runtime_data_expired(package_date)
         update_data = {}
-        for x, y in post_data.iteritems():
+        for x, y in six.iteritems(post_data):
             update_data[x] = y
         if expired:
             self.scorm_runtime_data = {}
