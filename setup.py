@@ -32,6 +32,7 @@ setup(
         'web-fragments==0.2.2',
         'user-agents==2.1',
         'fs==2.4.16',
+        'six',
     ],
     dependency_links=[
         'git+https://github.com/Learningtribes/xblock-utils.git@hawthorn#egg=xblock-utils',
