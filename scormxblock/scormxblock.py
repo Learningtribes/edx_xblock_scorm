@@ -398,7 +398,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 bytes_io = BytesIO(zip_file.read())
 
             bytes_io.seek(0)
-            file_path = pkg_id.decode('utf-8') + '.zip'
+            # uuid.hex is text on Py3 and bytes-like str on Py2; never call .decode on text.
+            file_path = six.ensure_text(pkg_id) + u'.zip'
             if isinstance(self.fs, OSFS):
                 with self.fs.open(file_path, 'wb') as os_file:
                     os_file.write(bytes_io.getvalue())
@@ -411,10 +412,11 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     def _upload_scorm_pkg(self, pkg, pkg_id):
         fs, zip_contents = self._read_zip(pkg)
         _ = self.runtime.service(self, 'i18n').ugettext
+        pkg_id_text = six.ensure_text(pkg_id)
 
         try:
             if isinstance(self.fs, OSFS):
-                copy_dir(fs, u'/', self.fs, pkg_id.decode('utf-8'))
+                copy_dir(fs, u'/', self.fs, pkg_id_text)
             else:
                 s3_client = self.get_s3_client()
                 # Get S3 target prefix from XBlock filesystem
@@ -423,9 +425,9 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                     target_prefix = self.fs.dir_path.lstrip('/')
 
                 if target_prefix:
-                    s3_base_path = os.path.join(target_prefix, pkg_id)
+                    s3_base_path = os.path.join(target_prefix, pkg_id_text)
                 else:
-                    s3_base_path = pkg_id
+                    s3_base_path = pkg_id_text
 
                 file_count = len(zip_contents)
                 logging.info("Uploading {0} files from SCORM package to S3...".format(file_count))
@@ -436,7 +438,8 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 def upload_file_to_s3(file_path, file_content):
                     """Upload a single file to S3"""
                     try:
-                        file_path = file_path.decode('utf-8') if isinstance(file_path, str) else file_path
+                        if isinstance(file_path, six.binary_type):
+                            file_path = file_path.decode('utf-8')
                         s3_key = os.path.join(s3_base_path, file_path)
 
                         # Determine content type based on file extension
