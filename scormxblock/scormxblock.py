@@ -33,10 +33,10 @@ from web_fragments.fragment import Fragment
 from webob.response import Response
 from fs.copy import copy_dir
 from fs.zipfs import ZipFS
-from zipfile import ZipFile
+from zipfile import BadZipFile, ZipFile
 from io import BytesIO
-from xblockutils.studio_editable import StudioEditableXBlockMixin
-from xblockutils.fields import File
+from .studio_editable import StudioEditableXBlockMixin
+from .fields import File
 
 
 try:
@@ -285,7 +285,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
     # region Studio handler
     @XBlock.handler
     def studio_upload_files(self, request, suffix=''):
-        from django.utils.translation import ugettext as _
+        from django.utils.translation import gettext as _
 
         try:
             pkg = request.POST.get('scorm_pkg', None)
@@ -310,9 +310,27 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                 )
 
             if pkg:
-                with ZipFile(pkg.file, 'r') as zip_fs:
-                    mf = zip_fs.read('imsmanifest.xml')
-                    self.scorm_pkg_version, scorm_index, scorm_launch = self._get_scorm_info(mf)
+                try:
+                    with ZipFile(pkg.file, 'r') as zip_fs:
+                        for member in zip_fs.namelist():
+                            normalized = member.replace('\\', '/')
+                            parts = normalized.split('/')
+                            if (normalized.startswith('/') or '\x00' in member or
+                                    any(part == '..' for part in parts) or
+                                    re.match(r'^[A-Za-z]:', normalized)):
+                                return Response(
+                                    status=400,
+                                    json_body={'error': _('The SCORM package contains an invalid path.')},
+                                    content_type='application/json'
+                                )
+                        mf = zip_fs.read('imsmanifest.xml')
+                        self.scorm_pkg_version, scorm_index, scorm_launch = self._get_scorm_info(mf)
+                except (BadZipFile, KeyError, etree.XMLSyntaxError):
+                    return Response(
+                        status=400,
+                        json_body={'error': _('The SCORM package is invalid.')},
+                        content_type='application/json'
+                    )
 
                 pkg_id = uuid.uuid4().hex
                 pkg_id = self._upload_scorm_pkg(pkg, pkg_id)
@@ -957,7 +975,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             if log_data.get('cmi.suspend_data'):
                 log_data.pop('cmi.suspend_data')
             logger.info("scorm_commit SCORE Usage: %s, User: %s, Data: %s",
-                self.scope_ids.usage_id.to_deprecated_string(),
+                str(self.scope_ids.usage_id),
                 self.runtime.user_id,
                 log_data
             )
@@ -972,7 +990,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
                     "refused to publish score {} for student id {} in {} [{}]".format(
                         score.raw_earned,
                         str(self.runtime.user_id),
-                        self.scope_ids.usage_id.to_deprecated_string(),
+                        str(self.scope_ids.usage_id),
                         data
                     )
                 )
@@ -984,7 +1002,7 @@ class ScormXBlock(StudioEditableXBlockMixin, ScorableXBlockMixin, XBlock):
             if log_data.get('cmi.suspend_data'):
                 log_data.pop('cmi.suspend_data')
             logger.info("scorm_commit SUCCEED Usage: %s, User: %s, Data: %s",
-                self.scope_ids.usage_id.to_deprecated_string(),
+                str(self.scope_ids.usage_id),
                 self.runtime.user_id,
                 log_data
             )
