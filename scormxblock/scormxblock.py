@@ -17,7 +17,6 @@ import user_agents
 import boto3
 import traceback
 
-from crum import get_current_request
 from django.template import Context, Template
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime

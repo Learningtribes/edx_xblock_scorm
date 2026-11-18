@@ -16,6 +16,13 @@ loader = ResourceLoader(__name__)
 class StudioEditableXBlockMixin(BaseEditor):
     """Preserve LT File/readonly controls without replacing upstream validation."""
 
+    def ugettext(self, text):
+        """Translate text with the XBlock i18n service."""
+        service = self.runtime.service(self, 'i18n')
+        if service is None:
+            return text
+        return service.gettext(text)
+
     def _make_field_info(self, field_name, field):
         info = super()._make_field_info(field_name, field)
         if info is None:

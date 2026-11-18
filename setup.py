@@ -26,17 +26,15 @@ setup(
     packages=[
         'scormxblock',
     ],
+    python_requires='>=3.10',
     install_requires=[
-        'XBlock>=1.2.9',
-        'lxml',
-        'web-fragments>=0.2.2',
+        'Django>=5.2,<6',
+        'XBlock>=6.1,<7',
+        'lxml>=5,<6',
         'user-agents>=2.1',
         'fs>=2.4.16',
         'openedx-django-pyfs>=4.0.0',
-        'six',
-    ],
-    dependency_links=[
-        'git+https://github.com/Learningtribes/xblock-utils.git@hawthorn#egg=xblock-utils',
+        'six>=1.16',
     ],
     entry_points={
         'xblock.v1': [
